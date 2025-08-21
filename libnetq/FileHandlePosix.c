@@ -1,0 +1,131 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ *
+ * Permission is granted to use, copy, modify, and distribute this software
+ * under the MIT License. See LICENSE file for details.
+ */
+
+#include "config.h"
+#include "libnetq/FileHandle.h"
+
+#ifdef NQ_OS_UNIX
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#include <libnetq/Limits.h>
+#include <libnetq/Assert.h>
+
+NQFileHandle NQFileOpen(const char* path, NQFileOpenMode mode)
+{
+  int flags;
+
+  if (path == NULL) {
+    NQ_ASSERT_NOT_REACHED();
+    return NQ_INVALID_FILE;
+  }
+
+  flags = 0;
+  switch (mode) {
+  case NQ_FOPEN_READ:
+    flags |= O_RDONLY;
+    break;
+
+  case NQ_FOPEN_WRITE:
+    flags |= (O_WRONLY | O_CREAT | O_TRUNC);
+    break;
+
+  default:
+    NQ_ASSERT_NOT_REACHED();
+    return NQ_INVALID_FILE;
+  }
+
+  return open(path, flags, 0666);
+}
+
+void NQFileClose(NQFileHandle handle)
+{
+  NQ_ASSERT(NQFileIsValid(handle));
+  close(handle);
+}
+
+int NQFileRead(NQFileHandle handle, uint8_t* data, size_t size)
+{
+  int bytesRead;
+
+  NQ_ASSERT(NQFileIsValid(handle));
+
+  if (NQ_INT_MAX < size)
+    return -1;
+
+  do {
+    bytesRead = read(handle, data, size);
+    if (bytesRead >= 0)
+      return bytesRead;
+  } while (errno == EINTR);
+
+  return -1;
+}
+
+int NQFileWrite(NQFileHandle handle, const uint8_t* data, size_t size)
+{
+  int bytesWritten;
+
+  NQ_ASSERT(NQFileIsValid(handle));
+
+  if (NQ_INT_MAX < size)
+    return -1;
+
+  do {
+    bytesWritten = write(handle, data, size);
+    if (bytesWritten >= 0)
+      return bytesWritten;
+  } while (errno == EINTR);
+
+  return -1;
+}
+
+long long NQFileSeek(NQFileHandle handle, long long offset, NQFileSeekOrigin origin)
+{
+  int whence;
+
+  switch (origin) {
+  case NQ_FSEEK_SET:
+    whence = SEEK_SET;
+    break;
+
+  case NQ_FSEEK_CUR:
+    whence = SEEK_CUR;
+    break;
+
+  case NQ_FSEEK_END:
+    whence = SEEK_END;
+    break;
+
+  default:
+    NQ_ASSERT_NOT_REACHED();
+    return -1;
+  }
+
+  return (long long)lseek(handle, offset, whence);
+}
+
+long long NQFileGetSize(NQFileHandle handle)
+{
+  struct stat info;
+
+  if (fstat(handle, &info))
+    return false;
+
+  if (info.st_size > NQ_LLONG_MAX)
+    return -1;
+
+  return info.st_size;
+}
+
+#endif /* NQ_OS_UNIX */

@@ -1,0 +1,58 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ *
+ * Permission is granted to use, copy, modify, and distribute this software
+ * under the MIT License. See LICENSE file for details.
+ */
+
+#ifndef _LIBNETQ_MATH_H
+#define _LIBNETQ_MATH_H
+
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include <float.h>
+
+#include <libnetq/Basic.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+#define NQ_PI M_PI
+
+#ifndef M_PI_2
+#define M_PI_2 1.57079632679489661923
+#endif
+#define NQ_PI_2 M_PI_2
+
+#ifndef M_PI_4
+#define M_PI_4 0.785398163397448309616
+#endif
+#define NQ_PI_4 M_PI_4
+
+#ifndef M_SQRT2
+#define M_SQRT2 1.41421356237309504880
+#endif
+#define NQ_SQRT2 M_SQRT2
+
+#define NQGetMin(a, b) ((a) > (b) ? (b) : (a))
+#define NQGetMax(a, b) ((a) < (b) ? (b) : (a))
+#define NQGetClamp(_value, _min, _max) (_value > _min ? (_value < _max ? _value : _max) : _min)
+#define NQGetDiff(a, b) (NQGetMax(a, b) - NQGetMin(a, b))
+
+/* Greatest Common Divisor */
+NQ_EXPORT int64_t nq_gcd64(int64_t a, int64_t b);
+
+NQ_EXPORT unsigned nq_clz32(uint32_t number);
+NQ_EXPORT unsigned nq_clz64(uint64_t number);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _LIBNETQ_MATH_H */

@@ -1,0 +1,73 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ *
+ * Permission is granted to use, copy, modify, and distribute this software
+ * under the MIT License. See LICENSE file for details.
+ */
+
+#ifndef _LIBNETQ_TYPES_H
+#define _LIBNETQ_TYPES_H
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
+
+#include <libnetq/OS.h>
+#include <libnetq/Compiler.h>
+
+#define NQ_FALSE false
+#define NQ_TRUE true
+
+#define NQNotSize ((size_t)-1)
+#define NQNonUChar (-1)
+
+typedef bool NQBool;
+typedef int32_t NQInt32;
+typedef uint32_t NQUint32;
+
+#ifdef NQ_COMPILER_MSVC
+typedef __int64 NQInt64;
+#define NQ_INT64_C(c) c ## i64
+typedef unsigned __int64 NQUint64;
+#define NQ_UINT64_C(c) c ## ui64
+#else
+typedef int64_t NQInt64;
+#define NQ_INT64_C(c) c ## ll
+typedef uint64_t NQUint64;
+#define NQ_UINT64_C(c) c ## ull
+#endif
+
+typedef intptr_t NQIntPtr;
+typedef uintptr_t NQUintPtr;
+
+typedef size_t NQSize;
+typedef int32_t NQUChar;
+
+#ifdef NQ_OS_WINDOWS
+typedef wchar_t NQWChar;
+#else
+typedef uint16_t NQWChar;
+#endif
+
+/*
+  NQChar8
+  NQChar16
+  NQChar32
+*/
+
+typedef size_t NQIndex;
+typedef int NQOptionFlags;
+
+#ifdef __cplusplus
+namespace NQ {
+constexpr size_t notFound = static_cast<size_t>(-1);
+} // namespace NQ
+#define NQNotFound ::NQ::notFound
+#else
+#define NQNotFound ((size_t)-1)
+#endif
+
+#endif /* _LIBNETQ_TYPES_H */

@@ -1,0 +1,135 @@
+/* Network Queue Library */
+#define NQ_INTERNAL 1
+
+/* Library Version Code */
+#define NQ_VERSION_CODE @NQ_VERSION_CODE@
+
+/* Enable symbol export as a shared library */
+#cmakedefine NQ_USE_EXPORT 1
+
+/* Define if you have zlib */
+#cmakedefine01 WITH_ZLIB
+
+/* Define if you have ole32 */
+#cmakedefine01 WITH_OLE32
+
+/* Define to 1 if you have the <stddef.h> header file. */
+#cmakedefine HAVE_STDDEF_H 1
+
+/* Define to 1 if you have the <stdio.h> header file. */
+#cmakedefine HAVE_STDIO_H 1
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#cmakedefine HAVE_STDINT_H 1
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#cmakedefine HAVE_STDLIB_H 1
+
+/* Define to 1 if you have the <string.h> header file. */
+#cmakedefine HAVE_STRING_H 1
+
+/* Define to 1 if you have the <strings.h> header file. */
+#cmakedefine HAVE_STRINGS_H 1
+
+/* Define to 1 if you have the <memory.h> header file. */
+#cmakedefine HAVE_MEMORY_H 1
+
+/* Define to 1 if you have the <ifaddrs.h> header file. */
+#cmakedefine HAVE_IFADDRS_H 1
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#cmakedefine HAVE_INTTYPES_H 1
+
+/* Define to 1 if you have the <time.h> header file. */
+#cmakedefine HAVE_TIME_H 1
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#cmakedefine HAVE_UNISTD_H 1
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#cmakedefine HAVE_SYS_TYPES_H 1
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#cmakedefine HAVE_SYS_STAT_H 1
+
+/* Define to 1 if you have the <combaseapi.h> header file. */
+#cmakedefine HAVE_COMBASEAPI_H 1
+
+/* Define if struct tm has a tm_gmtoff member */
+#cmakedefine HAVE_TM_GMTOFF 1
+
+/* Define to 1 if you have the `AAsset_getLength64' function. */
+#cmakedefine HAVE_AASSET_GETLENGTH64 1
+
+/* Define to 1 if you have the `getlogin_r' function. */
+#cmakedefine HAVE_GETLOGIN_R 1
+
+/* Define to 1 if you have the `localtime_s' function. */
+#cmakedefine HAVE_LOCALTIME_S 1
+
+/* Define to 1 if you have the `localtime_r' function. */
+#cmakedefine HAVE_LOCALTIME_R 1
+
+/* Define to 1 if you have the `pthread_yield' function. */
+#cmakedefine HAVE_PTHREAD_YIELD 1
+
+/* Define to 1 if you have the `pthread_setname_np' function. */
+#cmakedefine HAVE_PTHREAD_SETNAME_NP 1
+
+/* Define to 1 if you have the `pthread_getschedparam' function. */
+#cmakedefine HAVE_PTHREAD_GETSCHEDPARAM 1
+
+/* Define to 1 if you have the `pthread_setschedparam' function. */
+#cmakedefine HAVE_PTHREAD_SETSCHEDPARAM 1
+
+/* Define to 1 if you have the `pthread_condattr_setclock' function. */
+#cmakedefine HAVE_PTHREAD_CONDATTR_SETCLOCK 1
+
+/* Define to 1 if you have the `pthread_attr_set_qos_class_np' function. */
+#cmakedefine HAVE_PTHREAD_ATTR_SET_QOS_CLASS_NP 1
+
+/* Define if pthread_setname_np() has 1 arg */
+#cmakedefine HAVE_PTHREAD_SETNAME_NP_1ARG 1
+
+/* Define if pthread_setname_np() has 2 args */
+#cmakedefine HAVE_PTHREAD_SETNAME_NP_2ARG 1
+
+/* Have Intel __sync_* atomic primitives */
+#cmakedefine HAVE_INTEL_ATOMIC_PRIMITIVES 1
+
+/* Define to 2 if the system does not provide POSIX.1 features except with
+this defined. */
+#cmakedefine _POSIX_1_SOURCE 1
+
+/* IEEE Std 1003.1. */
+#cmakedefine _POSIX_C_SOURCE @_POSIX_C_SOURCE@
+
+/* IEEE Std 1003.1. */
+#cmakedefine _POSIX_SOURCE 1
+
+/* Enable extensions on AIX 3, Interix.  */
+#ifndef _ALL_SOURCE
+# cmakedefine _ALL_SOURCE 1
+#endif
+/* Enable GNU extensions on systems that have them.  */
+#ifndef _GNU_SOURCE
+# cmakedefine _GNU_SOURCE 1
+#endif
+/* Enable threading extensions on Solaris.  */
+#ifndef _POSIX_PTHREAD_SEMANTICS
+# cmakedefine _POSIX_PTHREAD_SEMANTICS 1
+#endif
+/* Enable extensions on HP NonStop.  */
+#ifndef _TANDEM_SOURCE
+# cmakedefine _TANDEM_SOURCE 1
+#endif
+/* Enable general extensions on Solaris.  */
+#ifndef __EXTENSIONS__
+# cmakedefine __EXTENSIONS__ 1
+#endif
+
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
+@DEFINE_INLINE@
+#endif

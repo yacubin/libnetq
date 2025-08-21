@@ -1,0 +1,171 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ *
+ * Permission is granted to use, copy, modify, and distribute this software
+ * under the MIT License. See LICENSE file for details.
+ */
+
+#define NQ_CLASS_NAME "NQString"
+#define NQ_LOG_TAG NQ_CLASS_NAME
+
+#include "config.h"
+#include "libnetq/String.h"
+
+#include <stdarg.h>
+#include <stdio.h>
+
+#include <libnetq/Atomic.h>
+#include <libnetq/Compiler.h>
+#include <libnetq/Malloc.h>
+#include <libnetq/Limits.h>
+#include <libnetq/Assert.h>
+#include <libnetq/Log.h>
+
+char* nq_strfmt(const char* format, ...)
+{
+  NQ_ASSERT(format);
+
+  int result;
+  char* buffer;
+  size_t size;
+  va_list args;
+
+  va_start(args, format);
+
+#ifdef NQ_COMPILER_MSVC
+  result = _vscprintf(format, args);
+#else
+  char ch;
+  result = vsnprintf(&ch, 1, format, args);
+  va_end(args);
+  va_start(args, format);
+#endif
+
+  if (result == 0 || result < 0)
+    buffer = NQZeroMalloc(1);
+  else {
+    size = ((size_t)result + 1);
+    buffer = (char*)NQMalloc(size);
+    if (buffer != NULL)
+      vsnprintf(buffer, size, format, args);
+  }
+
+  va_end(args);
+
+  return buffer;
+}
+
+struct NQString {
+  NQAtomic32 refCount;
+  uint32_t length;
+  uint8_t flags;
+  uint8_t bytes[1];
+};
+
+#define NQ_STRING_REF_COUNT_STATIC 0x80000000
+
+static NQString s_emptyStringStatic = {
+  NQ_ATOMIC32_INIT(NQ_STRING_REF_COUNT_STATIC),
+  1,
+  0,
+  '\0'
+};
+
+static void NQString_init(NQString* s, size_t length)
+{
+  NQ_ASSERT(length < NQ_UINT32_MAX);
+  NQAtomic32_init(&s->refCount, 1);
+  s->length = (uint32_t)length;
+  s->flags = 0;
+}
+
+#define NQString_alloc(length) ((NQString*)NQMalloc(sizeof(NQString) + length))
+#define NQString_free(s) (NQFree((void*)s))
+
+NQString* NQString_create(const char* characters)
+{
+  size_t length = strlen(characters);
+  return NQString_createWithLength(characters, length);
+}
+
+NQString* NQString_createWithLength(const char* characters, size_t length)
+{
+  if (NQ_UINT32_MAX <= length) {
+    NQ_LOGE("Not support large string");
+    return NULL;
+  }
+
+  NQString* s = NQString_alloc(length);
+  if (s == NULL)
+    return NULL;
+
+  NQString_init(s, length);
+  memcpy(s->bytes, characters, length);
+  s->bytes[length] = '\0';
+
+  return s;
+}
+
+NQString* NQString_format(const char* format, ...)
+{
+  NQ_ASSERT(format);
+
+  int ret;
+  NQString* s;
+  uint32_t length;
+  va_list args;
+
+  va_start(args, format);
+
+#ifdef NQ_COMPILER_MSVC
+  ret = _vscprintf(format, args);
+#else
+  char ch;
+  ret = vsnprintf(&ch, 1, format, args);
+  va_end(args);
+  va_start(args, format);
+#endif
+  
+  if (ret == 0 || ret < 0)
+    s = &s_emptyStringStatic;
+  else {
+    length = (size_t)ret;
+    s = NQString_alloc(length);
+    if (s != NULL)
+      vsnprintf((char*)s->bytes, length + 1, format, args);
+  }
+
+  va_end(args);
+
+  return s;
+}
+
+NQString* NQString_retain(NQString* s)
+{
+  NQAtomic32_inc(&s->refCount);
+  return s;
+}
+
+void NQString_destroy(NQString* s)
+{
+  NQAtomic32_dec(&s->refCount);
+  if (s->refCount.counter == 0)
+    NQString_free(s);
+}
+
+const char* NQString_characters(const NQString* s)
+{
+  return (const char*)s->bytes;
+}
+
+size_t NQString_length(const NQString* s)
+{
+  return s->length;
+}
+
+bool NQString_isEmpty(const NQString* s)
+{
+  return s->length == 0;
+}

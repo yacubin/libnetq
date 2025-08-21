@@ -1,0 +1,64 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ *
+ * Permission is granted to use, copy, modify, and distribute this software
+ * under the MIT License. See LICENSE file for details.
+ */
+
+#ifndef _LIBNETQ_EVENT_H
+#define _LIBNETQ_EVENT_H
+
+#include <libnetq/Time.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+enum {
+  // Looper
+  NQ_EVENT_FD,
+  NQ_EVENT_AINPUT,
+  NQ_EVENT_HANDLE,
+
+  // Android
+  NQ_EVENT_ACTIVITY_CREATE,
+  NQ_EVENT_ACTIVITY_WINDOW_CREATED,
+  NQ_EVENT_ACTIVITY_WINDOW_RESIZED,
+  NQ_EVENT_ACTIVITY_WINDOW_REDRAW_NEEDED,
+  NQ_EVENT_ACTIVITY_WINDOW_DESTROYED,
+  NQ_EVENT_ACTIVITY_INPUT_QUEUE_CREATED,
+  NQ_EVENT_ACTIVITY_INPUT_QUEUE_DESTROYED,
+
+  // Platform
+  NQ_EVENT_WINDOW_CREATE,
+  NQ_EVENT_WINDOW_DESTROY,
+  NQ_EVENT_WINDOW_RESIZED,
+  NQ_EVENT_WINDOW_SHOW,
+  NQ_EVENT_WINDOW_HIDE,
+  NQ_EVENT_WINDOW_DRAW,
+  NQ_EVENT_MOUSE_MOVED,
+  NQ_EVENT_MOUSE_PRESSED,
+  NQ_EVENT_MOUSE_RELEASED,
+  NQ_EVENT_MOUSE_SCROLL,
+  NQ_EVENT_KEY_DOWN,
+  NQ_EVENT_KEY_UP,
+  NQ_EVENT_CHAR,
+  NQ_EVENT_MOTION_START,
+  NQ_EVENT_MOTION_MOVE,
+  NQ_EVENT_MOTION_END,
+  NQ_EVENT_MOTION_CANCEL,
+};
+
+typedef struct NQEvent {
+  int type;
+} NQEvent;
+
+typedef bool (NQEventCallback) (void*, const NQEvent*);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _LIBNETQ_EVENT_H */

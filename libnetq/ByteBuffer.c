@@ -1,0 +1,178 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2022-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ *
+ * Permission is granted to use, copy, modify, and distribute this software
+ * under the MIT License. See LICENSE file for details.
+ */
+
+#include "config.h"
+#include "libnetq/ByteBuffer.h"
+
+#include <string.h>
+
+#include <libnetq/Malloc.h>
+#include <libnetq/Math.h>
+#include <libnetq/Assert.h>
+
+void NQByteBuffer_init(NQByteBuffer* thiz)
+{
+  thiz->data = NULL;
+  thiz->size = 0;
+  thiz->capacity = 0;
+}
+
+void NQByteBuffer_finalize(NQByteBuffer* thiz)
+{
+  NQByteBuffer_clear(thiz);
+}
+
+static bool NQByteBuffer_reserveCapacity(NQByteBuffer* thiz, size_t newCapacity)
+{
+  if (newCapacity <= thiz->capacity)
+    return true;
+
+  uint8_t* oldData = thiz->data;
+  uint8_t* newData = (uint8_t*)NQMalloc(newCapacity);
+  if (newData == NULL)
+    return false;
+
+  if (oldData != NULL) {
+    memcpy(newData, oldData, thiz->size);
+    NQFree(oldData);
+  }
+
+  thiz->data = newData;
+  thiz->capacity = newCapacity;
+
+  return true;
+}
+
+static inline size_t NQByteBuffer_nextCapacity(NQByteBuffer* thiz, size_t newMinCapacity)
+{
+  return NQGetMax(newMinCapacity, thiz->capacity + thiz->capacity / 4 + 1);
+}
+
+static bool NQByteBuffer_expandCapacity(NQByteBuffer* thiz, size_t newMinCapacity)
+{
+  return NQByteBuffer_reserveCapacity(thiz, NQByteBuffer_nextCapacity(thiz, newMinCapacity));
+}
+
+void NQByteBuffer_clear(NQByteBuffer* thiz)
+{
+  if (thiz->data != NULL) {
+    NQFree(thiz->data);
+    thiz->data = NULL;
+  }
+  thiz->size = 0;
+  thiz->capacity = 0;
+}
+
+bool NQByteBuffer_resize(NQByteBuffer* thiz, size_t size)
+{
+  if (size < thiz->size)
+    return false;
+
+  if (size > thiz->capacity) {
+    if (!NQByteBuffer_expandCapacity(thiz, size))
+      return false;
+  }
+
+  thiz->size = size;
+  return true;
+}
+
+bool NQByteBuffer_insert(NQByteBuffer* thiz, size_t position, const uint8_t* data, size_t size)
+{
+  size_t newSize;
+
+  if (size == 0)
+    return true;
+
+  if (position > thiz->size) {
+    newSize = position + size;
+    if (newSize < thiz->size)
+      return false;
+    if (newSize > thiz->capacity) {
+      size_t capacity = NQByteBuffer_nextCapacity(thiz, newSize);
+      uint8_t* newData = (uint8_t*)NQMalloc(capacity);
+
+      memcpy(newData, thiz->data, thiz->size);
+
+      NQFree(thiz->data);
+
+      thiz->data = newData;
+      thiz->capacity = capacity;
+    }
+    memset(thiz->data + thiz->size, 0, position - thiz->size);
+  }
+  else {
+    newSize = thiz->size + size;
+    if (newSize < thiz->size)
+      return false;
+
+    if (newSize <= thiz->capacity) {
+      if (position != thiz->size)
+        memmove(thiz->data + position + size, thiz->data + position, thiz->size - position);
+    }
+    else {
+      size_t capacity = NQByteBuffer_nextCapacity(thiz, newSize);
+      uint8_t* newData = (uint8_t*)NQMalloc(capacity);
+
+      if (position != 0)
+        memcpy(newData, thiz->data, position);
+
+      size_t remainder = thiz->size - position;
+      if (remainder != 0)
+        memcpy(newData + position + size, thiz->data + position, remainder);
+
+      NQFree(thiz->data);
+
+      thiz->data = newData;
+      thiz->capacity = capacity;
+    }
+  }
+
+  memcpy(thiz->data + position, data, size);
+  thiz->size = newSize;
+
+  return true;
+}
+
+bool NQByteBuffer_append(NQByteBuffer* thiz, const uint8_t* data, size_t size)
+{
+  if (size == 0)
+    return true;
+
+  size_t newSize = thiz->size + size;
+  if (newSize < thiz->size)
+    return false;
+
+  if (newSize > thiz->capacity) {
+    if (!NQByteBuffer_expandCapacity(thiz, newSize))
+      return false;
+  }
+
+  memcpy(thiz->data + thiz->size, data, size);
+  thiz->size = newSize;
+  return true;
+}
+
+void NQByteBuffer_swap(NQByteBuffer* thiz, NQByteBuffer* other)
+{
+  uint8_t* tmpData;
+  uint32_t tmpSize;
+
+  tmpData = thiz->data;
+  thiz->data = other->data;
+  other->data = tmpData;
+
+  tmpSize = thiz->size;
+  thiz->size = other->size;
+  other->size = tmpSize;
+
+  tmpSize = thiz->capacity;
+  thiz->capacity = other->capacity;
+  other->capacity = tmpSize;
+}

@@ -24,7 +24,7 @@ extern "C" {
 #define NQ_APPLE_LIBRARY_EXT ".dylib"
 #define NQ_POSIX_LIBRARY_EXT ".so"
 
-#if defined(NQ_OS_WIN)
+#if defined(NQ_OS_WINDOWS)
 #define NQ_LIBRARY_PATH NQ_WIN32_LIBRARY_PATH
 #define NQ_LIBRARY_EXT NQ_WIN32_LIBRARY_EXT
 #elif defined(NQ_OS_DARWIN)

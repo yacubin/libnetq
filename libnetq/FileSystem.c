@@ -7,23 +7,25 @@
  * under the MIT License. See LICENSE file for details.
  */
 
+#define NQ_CLASS_NAME "NQFileSystem"
+#define NQ_LOG_TAG NQ_CLASS_NAME
+
 #include "config.h"
 #include "libnetq/FileSystem.h"
 
 #include <libnetq/FileHandle.h>
 #include <libnetq/Path.h>
+#include <libnetq/Limits.h>
+#include <libnetq/Log.h>
 
 #ifdef NQ_OS_WIN
 #include <windows.h>
 #include <shlobj.h>
 #endif
 
-#ifdef NQ_OS_DARWIN
 #include <limits.h> // for PATH_MAX
-#endif
-
-#ifdef NQ_OS_LINUX
-#include <linux/limits.h> // for PATH_MAX
+#if defined(NQ_OS_LINUX) && !defined(PATH_MAX)
+#include <linux/limits.h>
 #endif
 
 #ifdef NQ_OS_UNIX
@@ -135,4 +137,31 @@ bool NQFileSystem_exists(const char* path) {
 #endif
 
   return false;
+}
+
+NQUint8Array* NQFileSystem_loadUint8Array(const char* path)
+{
+  NQFileHandle handle = NQFileOpen(path, NQ_FOPEN_READ);
+  if (handle == NQ_INVALID_FILE) {
+    NQ_LOGE("Can't open file %s", path);
+    return NULL;
+  }
+
+  long long size = NQFileGetSize(handle);
+  if (size > NQ_UINT32_MAX) {
+    NQ_LOGE("File %s is too big", path);
+    return NULL;
+  }
+
+  NQUint8Array* result = NQUint8Array_alloc((uint32_t)size);
+  if (result != NULL) {
+    int64_t n = NQFileReadn(handle, NQUint8Array_data(result), (int64_t)size);
+    if (n != (int64_t)size){
+      NQUint8Array_destroy(result);
+      result = NULL;
+    }
+  }
+
+  NQFileClose(handle);
+  return result;
 }

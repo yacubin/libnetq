@@ -46,7 +46,7 @@ static void NQUint8Array_init(NQUint8Array* array, const uint8_t* data, uint32_t
   memcpy(array->data, data, size);
 }
 
-NQUint8Array* NQUint8Array_createWithSize(size_t size)
+NQUint8Array* NQUint8Array_alloc(size_t size)
 {
   if (NQ_UINT32_MAX < size)
     return NULL;
@@ -64,7 +64,7 @@ NQUint8Array* NQUint8Array_createWithSize(size_t size)
 
 NQUint8Array* NQUint8Array_create(const uint8_t* data, size_t size)
 {
-  NQUint8Array* array = NQUint8Array_createWithSize(size);
+  NQUint8Array* array = NQUint8Array_alloc(size);
   if (array == NULL)
     return NULL;
 

@@ -32,6 +32,7 @@ enum {
   NQ_LOOPER_POLL_ERROR = -1,
   NQ_LOOPER_POLL_TIMEOUT = 0,
   NQ_LOOPER_POLL_MESSAGE = 1,
+  NQ_LOOPER_POLL_SOURCE = 2,
 };
 
 typedef struct NQLooper NQLooper;
@@ -47,6 +48,7 @@ typedef void (*NQDDetachDestroyCallback) (void* userdata);
 
 #define NQ_MESSAGE_QUIT 1
 #define NQ_MESSAGE_WAKEUP 2
+#define NQ_MESSAGE_NORMAL 3
 
 typedef struct NQMessage {
   int type;

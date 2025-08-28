@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/RWLock.h"
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
 
 #include <libnetq/Assert.h>
 
@@ -75,4 +75,4 @@ int NQRWLock_unlock(NQRWLock* rwlock)
   return 0;
 }
 
-#endif /* NQ_OS_WIN */
+#endif /* NQ_OS_WINDOWS */

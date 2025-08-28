@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.0
+project(libnetq VERSION 1.0.1
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -304,6 +304,7 @@ set(libnetq_HEADERS
   libnetq/CoherentLooper.h
   libnetq/Compiler.h
   libnetq/Cond.h
+  libnetq/ConstExpr.h
   libnetq/CPU.h
   libnetq/CStrBase.h
   libnetq/CStrConverter.h
@@ -337,6 +338,7 @@ set(libnetq_HEADERS
   libnetq/KeyVal.h
   libnetq/Library.h
   libnetq/Limits.h
+  libnetq/Leb128.h
   libnetq/Log.h
   libnetq/LogCircular.h
   libnetq/Looper.h
@@ -353,7 +355,9 @@ set(libnetq_HEADERS
   libnetq/Once.h
   libnetq/OS.h
   libnetq/Path.h
+  libnetq/PlatformLooper.h
   libnetq/Poll.h
+  libnetq/PrimitiveStorage.h
   libnetq/PrimitiveType.h
   libnetq/Rect.h
   libnetq/RWLock.h
@@ -363,6 +367,7 @@ set(libnetq_HEADERS
   libnetq/SocketHandle.h
   libnetq/StreamCallbacks.h
   libnetq/String.h
+  libnetq/StringList.h
   libnetq/StringPrint.h
   libnetq/Tarball.h
   libnetq/Thread.h
@@ -377,6 +382,7 @@ set(libnetq_HEADERS
   libnetq/UUID.h
   libnetq/Version.h
   libnetq/WakeOnLan.h
+  libnetq/WebSocketTypes.h
   libnetq/Window.h
   libnetq/WindowEvent.h
   libnetq/WindowManager.h
@@ -428,6 +434,7 @@ set(libnetq_SOURCES
   libnetq/HttpMultiPartParser.c
   libnetq/JSONWriter.c
   libnetq/KeyVal.c
+  libnetq/Leb128.c
   libnetq/Library.c
   libnetq/Log.c
   libnetq/LogCircular.c
@@ -437,7 +444,6 @@ set(libnetq_SOURCES
   libnetq/LooperMain.c
   libnetq/LooperSelect.c
   libnetq/LooperSource.c
-  libnetq/LooperWin.c
   libnetq/Malloc.c
   libnetq/Math.c
   libnetq/MutexPosix.c
@@ -447,7 +453,11 @@ set(libnetq_SOURCES
   libnetq/OncePosix.c
   libnetq/OnceWin.c
   libnetq/Path.c
+  libnetq/PlatformLooperCF.c
+  libnetq/PlatformLooperStub.c
+  libnetq/PlatformLooperWin.c
   libnetq/Poll.c
+  libnetq/PrimitiveStorage.c
   libnetq/PrimitiveType.c
   libnetq/Rect.c
   libnetq/RWLockPosix.c
@@ -457,6 +467,7 @@ set(libnetq_SOURCES
   libnetq/Socket.c
   libnetq/SocketHandle.c
   libnetq/String.c
+  libnetq/StringList.c
   libnetq/StringPrint.c
   libnetq/Tarball.c
   libnetq/ThreadDataPosix.c
@@ -504,6 +515,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Android")
 endif ()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+  list(APPEND libnetq_LIBRARIES "-framework Foundation")
 endif ()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")

@@ -11,10 +11,7 @@
 #define _LIBNETQ_LIMITS_H
 
 #include <limits.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <libnetq/ConstExpr.h>
 
 /* CHAR */
 #define NQ_CHAR_BIT CHAR_BIT
@@ -46,7 +43,7 @@ extern "C" {
 #elif defined(SCHAR_MIN)
 #define NQ_INT8_MIN SCHAR_MIN
 #else
-#define NQ_INT8_MIN (-128)
+#define NQ_INT8_MIN (-127-1)
 #endif
 
 #if defined(_I8_MAX)
@@ -74,7 +71,7 @@ extern "C" {
 #elif defined(SHRT_MIN)
 #define NQ_INT16_MIN SHRT_MIN
 #else
-#define NQ_INT16_MIN (-32768)
+#define NQ_INT16_MIN (-32767-1)
 #endif
 
 #if defined(_I16_MAX)
@@ -102,7 +99,7 @@ extern "C" {
 #elif defined(INT_MIN)
 #define NQ_INT32_MIN INT_MIN
 #else
-#define NQ_INT32_MIN (-2147483648)
+#define NQ_INT32_MIN (-2147483647-1)
 #endif
 
 #if defined(_I32_MAX)
@@ -126,48 +123,24 @@ extern "C" {
 
 /* INT64 */
 #if defined(_I64_MIN)
-#define NQ_INT64_MIN _I64_MIN
-#elif defined(LONG_MIN) && __WORDSIZE == 64
-#define NQ_INT64_MIN LONG_MIN
-#elif defined(LONG_LONG_MIN) && __WORDSIZE == 32
-#define NQ_INT64_MIN LONG_LONG_MIN
-//#elif defined(LONG_LONG_MIN)
-//#define NQ_INT64_MIN LONG_LONG_MIN
-//#elif defined(LLONG_MIN)
-//#define NQ_INT64_MIN LLONG_MIN
+# define NQ_INT64_MIN _I64_MIN
 #else
-#error NQ_INT64_MIN
+# define NQ_INT64_MIN (-NQ_INT64_C(9223372036854775807)-1)
 #endif
 
 #if defined(_I64_MAX)
-#define NQ_INT64_MAX _I64_MAX
-#elif defined(LONG_MAX) && __WORDSIZE == 64
-#define NQ_INT64_MAX LONG_MAX
-#elif defined(LLONG_MAX) && __WORDSIZE == 32
-#define NQ_INT64_MAX LLONG_MAX
-//#elif defined(LONG_LONG_MAX)
-//#define NQ_INT64_MAX LONG_LONG_MAX
-//#elif defined(LLONG_MAX)
-//#define NQ_INT64_MAX LLONG_MAX
+# define NQ_INT64_MAX _I64_MAX
 #else
-#error NQ_INT64_MAX
+# define NQ_INT64_MAX (NQ_INT64_C(9223372036854775807)-1)
 #endif
 
 /* UINT64 */
 #define NQ_UINT64_MIN (0)
 
 #if defined(_UI64_MAX)
-#define NQ_UINT64_MAX _UI64_MAX
-#elif defined(ULONG_MAX) && __WORDSIZE == 64
-#define NQ_UINT64_MAX ULONG_MAX
-#elif defined(ULLONG_MAX) && __WORDSIZE == 32
-#define NQ_UINT64_MAX ULLONG_MAX
-//#elif defined(ULONG_LONG_MAX)
-//#define NQ_UINT64_MAX ULONG_LONG_MAX
-//#elif defined(ULLONG_MAX)
-//#define NQ_UINT64_MAX ULLONG_MAX
+# define NQ_UINT64_MAX _UI64_MAX
 #else
-#error NQ_UINT64_MAX
+# define NQ_UINT64_MAX (NQ_UINT64_C(18446744073709551615))
 #endif
 
 /* UINTPTR_MAX */
@@ -177,10 +150,6 @@ extern "C" {
 #define NQ_UINTPTR_MAX NQ_UINT64_MAX
 #else
 #define NQ_UINTPTR_MAX NQ_UINT32_MAX
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif /* _LIBNETQ_LIMITS_H */

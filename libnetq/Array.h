@@ -18,7 +18,7 @@ extern "C" {
 
 typedef struct NQUint8Array NQUint8Array;
 
-NQ_EXPORT NQUint8Array* NQUint8Array_createWithSize(size_t size);
+NQ_EXPORT NQUint8Array* NQUint8Array_alloc(size_t size);
 NQ_EXPORT NQUint8Array* NQUint8Array_create(const uint8_t* data, size_t size);
 NQ_EXPORT NQUint8Array* NQUint8Array_load(const char* filepath);
 NQ_EXPORT void NQUint8Array_destroy(NQUint8Array* array);

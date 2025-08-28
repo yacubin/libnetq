@@ -489,7 +489,8 @@ NQArguments* NQArguments_parseUTF16(const uint16_t* str)
 
 void NQArguments_destroy(NQArguments* thiz)
 {
-  NQFree(thiz);
+  if (thiz != &s_argumentsEmpty)
+    NQFree(thiz);
 }
 
 size_t NQArguments_count(NQArguments* thiz)
@@ -522,6 +523,16 @@ void NQMainArgumentsInit(int argc, const char* argv[])
   NQArguments* arguments = NQArguments_create(argc, argv);
   if (arguments != NULL)
     s_arguments = arguments;
+}
+
+size_t NQMainArgumentsCount()
+{
+  return NQArguments_count(s_arguments);
+}
+
+const char* NQMainArgumentsAt(size_t index)
+{
+  return NQArguments_at(s_arguments, index);
 }
 
 #ifdef NQ_OS_WINDOWS

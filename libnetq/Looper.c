@@ -91,6 +91,8 @@ static void NQLooper_poolAll(NQLooper* looper)
       while (looper->ops.getMessage(looper, &message)) {
         if (message.type == NQ_MESSAGE_WAKEUP)
           NQLooper_performWork(looper);
+        else if (message.type == NQ_MESSAGE_QUIT)
+          looper->stopLoop = true;
       }
     }
   }

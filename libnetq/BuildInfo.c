@@ -13,13 +13,14 @@
 #include <libnetq/CPU.h>
 #include <libnetq/Compiler.h>
 
+const char* NQGetBuildCPU()
+{
+  return NQ_CPU_NAME;
+}
+
 const char* NQGetBuildABI()
 {
-#ifdef NQ_CPU_ABI
   return NQ_CPU_ABI;
-#else
-  return "unknown";
-#endif
 }
 
 const char* NQGetBuildDateTime()

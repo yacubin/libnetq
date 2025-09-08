@@ -55,6 +55,8 @@ NQ_EXPORT bool NQArguments_has(NQArguments*, const char* value);
 NQ_EXPORT bool NQArguments_hasLKey(NQArguments*, const char* value);
 
 NQ_EXPORT void NQMainArgumentsInit(int argc, const char* argv[]);
+NQ_EXPORT size_t NQMainArgumentsCount();
+NQ_EXPORT const char* NQMainArgumentsAt(size_t index);
 
 #ifdef NQ_OS_WINDOWS
 

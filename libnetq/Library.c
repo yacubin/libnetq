@@ -13,13 +13,13 @@
 #include <libnetq/Path.h>
 #include <libnetq/Assert.h>
 
-#if defined(NQ_OS_WIN)
+#if defined(NQ_OS_WINDOWS)
 #include <windows.h>
 #else
 #include <dlfcn.h>
 #endif
 
-#if defined(NQ_OS_WIN)
+#if defined(NQ_OS_WINDOWS)
 static NQLibrary openWinLibraryA(const char* path)
 {
   NQLibrary handle = LoadLibraryExA(path, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
@@ -35,7 +35,7 @@ static NQLibrary openWinLibraryW(const WCHAR* path)
 
 NQLibrary NQLibraryOpen(const char* path)
 {
-#if defined(NQ_OS_WIN)
+#if defined(NQ_OS_WINDOWS)
   WCHAR winpath[MAX_PATH];
   NQWinPathFrom(winpath, MAX_PATH, path);
   NQLibrary handle = openWinLibraryW(winpath);
@@ -51,7 +51,7 @@ NQLibrary NQLibraryOpen(const char* path)
 
 void NQLibraryClose(NQLibrary handle)
 {
-#if defined(NQ_OS_WIN)
+#if defined(NQ_OS_WINDOWS)
   FreeLibrary(handle);
 #elif defined(NQ_OS_UNIX)
   dlclose(handle);
@@ -60,7 +60,7 @@ void NQLibraryClose(NQLibrary handle)
 
 NQSymbol NQLibraryGetSymbol(NQLibrary handle, const char* name)
 {
-#if defined(NQ_OS_WIN)
+#if defined(NQ_OS_WINDOWS)
   return GetProcAddress(handle, name);
 #elif defined(NQ_OS_UNIX)
   return dlsym(handle, name);

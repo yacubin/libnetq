@@ -27,6 +27,8 @@ typedef enum NQHTTPHeaderType {
   kNQHTTPHeaderCacheControl,
   kNQHTTPHeaderContentType,
   kNQHTTPHeaderContentDisposition,
+  kNQHTTPHeaderCrossOriginOpenerPolicy,
+  kNQHTTPHeaderCrossOriginEmbedderPolicy,
   kNQHTTPHeaderHost,
   kNQHTTPHeaderUpgrade,
   kNQHTTPHeaderConnection,
@@ -48,6 +50,8 @@ typedef enum NQHTTPHeaderType {
 #define NQHTTP_HEADER_CACHE_CONTROL            "Cache-Control"
 #define NQHTTP_HEADER_CONTENT_TYPE             "Content-Type"
 #define NQHTTP_HEADER_CONTENT_DISPOSITION      "Content-Disposition"
+#define NQHTTP_HEADER_CROSS_ORIGIN_OPENER_POLICY   "Cross-Origin-Opener-Policy"
+#define NQHTTP_HEADER_CROSS_ORIGIN_EMBEDDER_POLICY "Cross-Origin-Embedder-Policy"
 #define NQHTTP_HEADER_HOST                     "Host"
 #define NQHTTP_HEADER_UPGRADE                  "Upgrade"
 #define NQHTTP_HEADER_CONNECTION               "Connection"

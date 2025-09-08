@@ -17,6 +17,7 @@
 
 #include <libnetq/OS.h>
 #include <libnetq/Compiler.h>
+#include <libnetq/ConstExpr.h>
 
 #define NQ_FALSE false
 #define NQ_TRUE true
@@ -30,14 +31,10 @@ typedef uint32_t NQUint32;
 
 #ifdef NQ_COMPILER_MSVC
 typedef __int64 NQInt64;
-#define NQ_INT64_C(c) c ## i64
 typedef unsigned __int64 NQUint64;
-#define NQ_UINT64_C(c) c ## ui64
 #else
 typedef int64_t NQInt64;
-#define NQ_INT64_C(c) c ## ll
 typedef uint64_t NQUint64;
-#define NQ_UINT64_C(c) c ## ull
 #endif
 
 typedef intptr_t NQIntPtr;

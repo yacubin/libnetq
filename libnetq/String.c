@@ -68,7 +68,7 @@ struct NQString {
 
 static NQString s_emptyStringStatic = {
   NQ_ATOMIC32_INIT(NQ_STRING_REF_COUNT_STATIC),
-  1,
+  0,
   0,
   '\0'
 };

@@ -15,7 +15,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  
+
+NQ_EXPORT const char* NQGetBuildCPU();
 NQ_EXPORT const char* NQGetBuildABI();
 NQ_EXPORT const char* NQGetBuildDateTime();
 

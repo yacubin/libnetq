@@ -36,6 +36,7 @@ enum NQObjectType {
   kNQAssetBinaryObjectType = 1018,
   kNQAssetDirBinaryObjectType = 1019,
   kNQAssetFileBinaryObjectType = 1020,
+  kNQPrimitiveStorageType = 1021,
 };
 
 #ifdef __cplusplus

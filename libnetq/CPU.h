@@ -36,6 +36,26 @@
 #include <libnetq/cpu/x86.h>
 #include <libnetq/cpu/z.h>
 
+#ifndef NQ_CPU_NAME
+# define NQ_CPU_NAME "Unknown"
+#endif
+
+#ifndef NQ_CPU_ABI
+# define NQ_CPU_ABI "unknown"
+#endif
+
+#if !defined(NQ_CPU_LITTLE_ENDIAN) && !defined(NQ_CPU_BIG_ENDIAN)
+# define NQ_CPU_LITTLE_ENDIAN 1
+#endif
+
+#if !defined(NQ_CPU_32BIT) && !defined(NQ_CPU_64BIT)
+# ifdef __LP64__
+#  define NQ_CPU_64BIT 1
+# else
+#  define NQ_CPU_32BIT 1
+# endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

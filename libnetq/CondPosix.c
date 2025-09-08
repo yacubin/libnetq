@@ -12,7 +12,9 @@
 
 #ifdef NQ_OS_UNIX
 
+#include <time.h>
 #include <errno.h>
+
 #include <libnetq/Limits.h>
 #include <libnetq/Assert.h>
 

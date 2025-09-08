@@ -23,6 +23,10 @@
 #include <sys/prctl.h>
 #endif
 
+#ifndef HAVE_PTHREAD_YIELD
+#include <sched.h>
+#endif
+
 #include <libnetq/ObjectClass.h>
 #include <libnetq/Mutex.h>
 #include <libnetq/Malloc.h>

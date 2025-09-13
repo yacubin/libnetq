@@ -12,7 +12,9 @@
 
 #include <libnetq/Assert.h>
 
-#if defined(NQ_OS_WIN)
+#if defined(NQ_SYS_LINUX)
+# include <linux/random.h>
+#elif defined(NQ_OS_WINDOWS)
 # include <windows.h>
 # include <wincrypt.h>
 #elif defined(NQ_OS_DARWIN)
@@ -23,12 +25,15 @@
 # include <fcntl.h>
 # include <unistd.h>
 #else
-#error "This configuration doesn't have a strong source of randomness."
+# error "This configuration doesn't have a strong source of randomness."
 #endif
 
 void NQGetUnlimitedRandom(uint8_t* buffer, size_t size)
 {
-#if defined(NQ_OS_WIN)
+#if defined(NQ_SYS_LINUX)
+  get_random_bytes(buffer, size);
+
+#elif defined(NQ_OS_WINDOWS)
   HCRYPTPROV hCryptProv = 0;
   if (!CryptAcquireContextW(&hCryptProv, 0, MS_DEF_PROV_W, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
     NQ_ASSERT_NOT_REACHED();

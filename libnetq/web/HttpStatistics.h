@@ -1,0 +1,32 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2023-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ *
+ * Permission is granted to use, copy, modify, and distribute this software
+ * under the MIT License. See LICENSE file for details.
+ */
+
+#ifndef _LIBNETQ_WEB_HTTPSTATISTICS_H
+#define _LIBNETQ_WEB_HTTPSTATISTICS_H
+
+#include <libnetq/JSONWriter.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct NQHttpStatistics NQHttpStatistics;
+
+NQHttpStatistics* NQHttpStatistics_create(void);
+void NQHttpStatistics_destroy(NQHttpStatistics*);
+
+bool NQHttpStatistics_add(NQHttpStatistics*, const char* method, const char* url);
+bool NQHttpStatistics_inc(NQHttpStatistics*, const char* method, const char* url);
+bool NQHttpStatistics_writeTo(NQHttpStatistics*, NQJSONWriter* writer);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _LIBNETQ_WEB_HTTPSTATISTICS_H */

@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/Once.h"
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
 
 static BOOL CALLBACK InitHandleFunction(PINIT_ONCE initOnce, PVOID ptr, PVOID* result)
 {
@@ -26,4 +26,4 @@ int NQOnce_call(NQOnce* once, NQOnceCallback callback)
   return (int)GetLastError();
 }
 
-#endif /* NQ_OS_WIN */
+#endif /* NQ_OS_WINDOWS */

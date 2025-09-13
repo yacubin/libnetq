@@ -21,7 +21,7 @@ NQ_EXPORT int64_t NQFileSystem_read(const char* path, uint8_t* data, int64_t siz
 NQ_EXPORT int64_t NQFileSystem_write(const char* path, const uint8_t* data, int64_t size);
 NQ_EXPORT bool NQFileSystem_mkdir(const char* path, bool recursive);
 NQ_EXPORT bool NQFileSystem_exists(const char* path);
-NQ_EXPORT NQUint8Array* NQFileSystem_loadUint8Array(const char* path);
+NQ_EXPORT NQUint8Array* NQFileSystem_loadBytes(const char* path);
 
 #ifdef __cplusplus
 }

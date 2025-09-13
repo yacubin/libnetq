@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/HttpHeader.h"
 
-#include <string.h>
+#include <libnetq/CStrBase.h>
 
 static const char* s_strings[] = {
   NQHTTP_HEADER_ACCEPT_ENCODING,

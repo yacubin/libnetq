@@ -10,17 +10,19 @@
 #include "config.h"
 #include "libnetq/Looper.h"
 
+#if defined(NQ_OS_UNIX) || defined(NQ_OS_WINDOWS)
+
 #ifdef NQ_OS_UNIX
 #include <sys/select.h>
 #endif
 
-#include <string.h>
-
+#include <libnetq/CStrBase.h>
 #include <libnetq/Math.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/EventWakeup.h>
 #include <libnetq/TimeVal.h>
 #include <libnetq/Assert.h>
+#include <libnetq/LooperSource.h>
 
 struct Source {
   NQLooperSource* addr;
@@ -247,3 +249,21 @@ const struct NQLooperOperations SelectLooperOperations = {
   NULL, // stopTimer
   &Looper_getMessage,
 };
+
+#else
+const struct NQLooperOperations SelectLooperOperations = {
+  0,
+  NULL, // init,
+  NULL, // inalize,
+  NULL, // dispatch
+  NULL, // wake,
+  NULL, // stop,
+  NULL, // poll,
+  NULL, // attachSource,
+  NULL, // detachSource,
+  NULL, // startTimer
+  NULL, // stopTimer
+  NULL, // getMessage,
+};
+#endif
+

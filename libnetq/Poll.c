@@ -12,15 +12,18 @@
 
 #include <libnetq/Assert.h>
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winsock2.h>
-#else
+#endif
+
+#ifdef NQ_OS_UNIX
 #include <poll.h>
 #include <errno.h>
 #endif
 
+#if defined(NQ_OS_WINDOWS) || defined(NQ_OS_UNIX)
 uint16_t NQPollEventsToPlatform(uint16_t events)
 {
   uint16_t result = 0;
@@ -107,9 +110,11 @@ int NQPollWait(NQPollSocket* data, size_t size, int64_t timeout)
     NQ_ASSERT(data[i].revents == 0);
   }
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
   ret = WSAPoll((LPWSAPOLLFD)data, (ULONG)size,  (INT)timeout);
-#else
+#endif
+
+#ifdef NQ_OS_UNIX
   do {
     ret = poll((struct pollfd*)data, (nfds_t)size, (int)timeout);
   } while(ret == -1 && errno == EINTR);
@@ -122,3 +127,14 @@ int NQPollWait(NQPollSocket* data, size_t size, int64_t timeout)
 
   return ret;
 }
+
+#else
+int NQPollWait(NQPollSocket* data, size_t size, int64_t timeout)
+{
+  NQ_UNUSED_PARAM(data);
+  NQ_UNUSED_PARAM(size);
+  NQ_UNUSED_PARAM(timeout);
+  return -1;
+}
+#endif
+

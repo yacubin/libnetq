@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/Window.h"
 
-const char* NQWindowGetClassName()
+const char* NQWindowGetClassName(void)
 {
   return "NQWindow";
 }

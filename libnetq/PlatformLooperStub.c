@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/PlatformLooper.h"
 
-#ifndef NQ_OS_WIN
+#ifndef NQ_OS_WINDOWS
 
 void NQPlatformLooper_init(NQPlatformLooper* thiz)
 {

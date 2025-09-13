@@ -47,10 +47,10 @@ NQ_EXPORT void NQAssetSystem_destroy(NQAssetSystem* system);
 NQ_EXPORT NQAssetDir* NQAssetSystem_openDir(NQAssetSystem* system, const char* dirname);
 NQ_EXPORT NQAssetFile* NQAssetSystem_openFile(NQAssetSystem* system, const char* filename, int mode);
 
-NQ_EXPORT NQAssetSystem* NQAssetSystemGetMain();
+NQ_EXPORT NQAssetSystem* NQAssetSystemGetMain(void);
 
 NQ_EXPORT void NQAssetInitialize(const void* asset, NQAssetHandle handle);
-NQ_EXPORT void NQAssetShutdown();
+NQ_EXPORT void NQAssetShutdown(void);
 
 #ifdef __cplusplus
 }

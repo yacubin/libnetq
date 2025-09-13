@@ -20,7 +20,7 @@ typedef struct timeval NQTimeVal;
 
 NQ_EXPORT NQTimeVal* NQTimeToTimeVal(NQTime time, NQTimeVal* tv);
 NQ_EXPORT NQTime NQTimeValToTime(const NQTimeVal* tv);
-NQ_EXPORT double NQTimeValToSecond(const NQTimeVal* tv);
+NQ_EXPORT int64_t NQTimeValToMsecs(const NQTimeVal* tv);
 
 #ifdef __cplusplus
 }

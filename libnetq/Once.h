@@ -12,7 +12,15 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_SYS_LINUX
+#include <linux/atomic.h>
+typedef struct {
+  atomic_t flag;
+} NQOnce;
+#define NQ_ONCE_INIT { ATOMIC_INIT(0) }
+#endif
+
+#ifdef NQ_OS_WINDOWS
 #include <windows.h>
 typedef INIT_ONCE NQOnce;
 #define NQ_ONCE_INIT INIT_ONCE_STATIC_INIT

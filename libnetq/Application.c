@@ -10,8 +10,7 @@
 #include "config.h"
 #include "libnetq/Application.h"
 
-#include <string.h>
-
+#include <libnetq/CStrBase.h>
 #include <libnetq/Looper.h>
 
 enum {
@@ -159,7 +158,7 @@ void NQApplication_setUserPtr(NQApplication* app, void* userdata)
   app->priv = userdata;
 }
 
-NQApplication* NQGetMainApplication()
+NQApplication* NQGetMainApplication(void)
 {
   return &s_application;
 }
@@ -179,7 +178,7 @@ int NQApplicationRun(int flags)
   return NQApplication_run(&s_application, flags);
 }
 
-void NQApplicationShutdown()
+void NQApplicationShutdown(void)
 {
   NQApplication_finalize(&s_application);
 }

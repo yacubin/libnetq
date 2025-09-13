@@ -55,7 +55,7 @@ NQ_EXPORT bool NQArguments_has(NQArguments*, const char* value);
 NQ_EXPORT bool NQArguments_hasLKey(NQArguments*, const char* value);
 
 NQ_EXPORT void NQMainArgumentsInit(int argc, const char* argv[]);
-NQ_EXPORT size_t NQMainArgumentsCount();
+NQ_EXPORT size_t NQMainArgumentsCount(void);
 NQ_EXPORT const char* NQMainArgumentsAt(size_t index);
 
 #ifdef NQ_OS_WINDOWS
@@ -63,15 +63,15 @@ NQ_EXPORT const char* NQMainArgumentsAt(size_t index);
 NQ_EXPORT void NQMainArgumentsInitWin(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT iCmdShow);
 NQ_EXPORT void NQMainArgumentsInitWinW(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, INT iCmdShow);
 
-NQ_EXPORT HINSTANCE NQGetInstance();
-NQ_EXPORT HINSTANCE NQGetPrevInstance();
-NQ_EXPORT INT NQGetCmdShow();
+NQ_EXPORT HINSTANCE NQGetInstance(void);
+NQ_EXPORT HINSTANCE NQGetPrevInstance(void);
+NQ_EXPORT INT NQGetCmdShow(void);
 
 #endif /* NQ_OS_WINDOWS */
 
-NQ_EXPORT void NQMainArgumentsFinalize();
+NQ_EXPORT void NQMainArgumentsFinalize(void);
 
-NQArguments* NQGetMainArguments();
+NQArguments* NQArgumentsGetMain(void);
 
 NQ_EXPORT const char* NQArgGetStringOr(const char* arg, const char* key, const char* defval);
 NQ_EXPORT bool NQArgGetBoolOr(const char* arg, const char* key, bool defval);

@@ -13,17 +13,13 @@
 #include <libnetq/CPU.h>
 #include <libnetq/Compiler.h>
 
-const char* NQGetBuildCPU()
+const char* NQGetBuildCPU(void)
 {
   return NQ_CPU_NAME;
 }
 
-const char* NQGetBuildABI()
+const char* NQGetBuildABI(void)
 {
   return NQ_CPU_ABI;
 }
 
-const char* NQGetBuildDateTime()
-{
-  return NQ_DATETIME;
-}

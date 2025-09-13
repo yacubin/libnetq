@@ -10,15 +10,19 @@
 #include "config.h"
 #include "libnetq/Time.h"
 
-#include <libnetq/CPU.h>
-#include <libnetq/Compiler.h>
+#include <libnetq/CStrBase.h>
+#include <libnetq/Sprintf.h>
 #include <libnetq/TimeVal.h>
 #include <libnetq/Assert.h>
 
-#include <stdio.h>
-#include <string.h>
+#ifdef NQ_SYS_LINUX
+#include <linux/timekeeping.h>
+#include <linux/ktime.h>
+#endif
 
-#ifdef NQ_OS_WIN
+#if defined(NQ_SYS_LINUX)
+/* nothing */
+#elif defined(NQ_OS_WINDOWS)
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -41,13 +45,16 @@
 #define HAVE_GMTIME_R 1
 #endif
 
-#if !defined(HAVE_GMTIME_S) && defined(NQ_OS_WIN)
+#if !defined(HAVE_GMTIME_S) && defined(NQ_OS_WINDOWS)
 #define HAVE_GMTIME_S 1
 #endif
 
 NQTime NQGetTime()
 {
-#ifdef NQ_OS_WIN
+#if defined(NQ_SYS_LINUX)
+  ktime_t now = ktime_get_real();
+  return (NQTime)ktime_to_ms(now);
+#elif defined(NQ_OS_WINDOWS)
   FILETIME fileTime;
   ULARGE_INTEGER dateTime;
 
@@ -63,9 +70,12 @@ NQTime NQGetTime()
 
 NQTick NQGetCPUTick()
 {
-#if defined(NQ_COMPILER_MINGW64)
+#if defined(NQ_SYS_LINUX)
+  ktime_t now = ktime_get();
+  return (NQTick)ktime_to_ms(now);
+#elif defined(NQ_COMPILER_MINGW64)
   return (NQTick)GetTickCount();
-#elif defined(NQ_OS_WIN)
+#elif defined(NQ_OS_WINDOWS)
   return (NQTick)GetTickCount64();
 #else
   struct timespec ts;
@@ -80,13 +90,16 @@ void NQGetLocaltime(const time_t* t, struct tm* tm)
   localtime_r(t, tm);
 
 #elif defined(HAVE_LOCALTIME_S)
-# if defined(NQ_OS_WIN)
+# if defined(NQ_OS_WINDOWS)
   localtime_s(tm, t);
 # else
   localtime_s(t, tm);
 # endif
-  
-#elif defined(NQ_OS_WIN)
+
+#elif defined(NQ_SYS_LINUX)
+  time64_to_tm(*t, 0, tm);
+
+#elif defined(NQ_OS_WINDOWS)
   FILETIME uTm, lTm;
   SYSTEMTIME pTm;
   int64_t t64;
@@ -115,7 +128,7 @@ void NQGetLocaltime(const time_t* t, struct tm* tm)
 #endif
 
 #else
-# warning nq_localtime() not implemented!
+# warning NQGetLocaltime() not implemented!
   gmtime_r(t, tm);
 
 #endif
@@ -123,7 +136,14 @@ void NQGetLocaltime(const time_t* t, struct tm* tm)
 
 time_t nq_timegm(const struct tm* tm)
 {
-#if defined(NQ_OS_WIN)
+#if defined(NQ_SYS_LINUX)
+    return mktime64(tm->tm_year + NQ_TM_YEAR_BASE,
+                    tm->tm_mon + 1,
+                    tm->tm_mday,
+                    tm->tm_hour,
+                    tm->tm_min,
+                    tm->tm_sec);
+#elif defined(NQ_OS_WINDOWS)
   return _mkgmtime((struct tm* const)tm);
 #elif defined(NQ_OS_ANDROID) && defined(NQ_CPU_32BIT)
   time64_t result;
@@ -202,8 +222,12 @@ void nq_gmtimems(NQTime time, struct tm* ptm, int* pms)
   ptm->tm_min = (int)(ctimer / _MS_PER_MIN);
   ctimer -= (NQTime)ptm->tm_min * _MS_PER_MIN;
   ptm->tm_sec = (int)(ctimer / _MS_PER_SEC);
-   
+
+#ifdef NQ_SYS_LINUX
+  /* do nothing */
+#else
   ptm->tm_isdst = 0;
+#endif
 }
 
 void nq_gmtime(const time_t* timep, struct tm* result)
@@ -236,22 +260,39 @@ size_t NQTimeFormat(NQTime time, int format, char* buffer, size_t size)
 
   case NQ_DT_RFC2445TZ:
     nq_gmtimems(time, &tm, NULL);
-    n = snprintf(buffer, size, "%04i%02i%02iT%02i%02i%02iZ", tm.tm_year + NQ_TM_YEAR_BASE, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+    n = snprintf(buffer, size, "%04i%02i%02iT%02i%02i%02iZ",
+                 (int)(tm.tm_year + NQ_TM_YEAR_BASE),
+                 tm.tm_mon + 1,
+                 tm.tm_mday,
+                 tm.tm_hour,
+                 tm.tm_min,
+                 tm.tm_sec);
     break;
 
   case NQ_DT_RFC3339:
     nq_gmtimems(time, &tm, NULL);
-    n = snprintf(buffer, size, "%04i-%02i-%02i %02i:%02i:%02i", tm.tm_year + NQ_TM_YEAR_BASE, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+    n = snprintf(buffer, size, "%04i-%02i-%02i %02i:%02i:%02i",
+                 (int)(tm.tm_year + NQ_TM_YEAR_BASE),
+                 tm.tm_mon + 1,
+                 tm.tm_mday,
+                 tm.tm_hour,
+                 tm.tm_min,
+                 tm.tm_sec);
     break;
 
   case NQ_DT_RFC3339_TIME:
     nq_gmtimems(time, &tm, NULL);
-    n = snprintf(buffer, size, "%02i:%02i:%02i", tm.tm_hour, tm.tm_min, tm.tm_sec);
+    n = snprintf(buffer, size, "%02i:%02i:%02i",
+    tm.tm_hour, tm.tm_min, tm.tm_sec);
     break;
 
   case NQ_DT_RFC3339_TIMEMS:
     nq_gmtimems(time, &tm, &msec);
-    n = snprintf(buffer, size, "%02i:%02i:%02i.%03i", tm.tm_hour, tm.tm_min, tm.tm_sec, msec);
+    n = snprintf(buffer, size, "%02i:%02i:%02i.%03i",
+                 tm.tm_hour,
+                 tm.tm_min,
+                 tm.tm_sec,
+                 msec);
     break;
 
   default:
@@ -269,6 +310,5 @@ void NQDataTime_init(NQDataTime* datatime)
 
 void NQDataTime_initLocalTime(NQDataTime* datatime)
 {
-  // void GregorianDateTime::setToCurrentLocalTime()
   NQ_ASSERT_NOT_REACHED();
 }

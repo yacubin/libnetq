@@ -19,7 +19,7 @@ extern "C" {
 typedef struct NQKeyVal NQKeyVal;
 typedef struct NQKeyValIter NQKeyValIter;
 
-NQ_EXPORT NQKeyVal* NQKeyVal_create();
+NQ_EXPORT NQKeyVal* NQKeyVal_create(void);
 NQ_EXPORT void NQKeyVal_destroy(NQKeyVal*);
 
 NQ_EXPORT const char* NQKeyVal_get(NQKeyVal*, const char* key);

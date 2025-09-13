@@ -10,10 +10,12 @@
 #ifndef _LIBNETQ_PLATFORMLOOPER_H
 #define _LIBNETQ_PLATFORMLOOPER_H
 
-#include <libnetq/Looper.h>
+#include <libnetq/Basic.h>
+#include <libnetq/LooperTypes.h>
 
 #if defined(NQ_OS_WINDOWS)
 #include <windows.h>
+#include <libnetq/Thread.h>
 #elif defined(NQ_OS_DARWIN)
 #include <CoreFoundation/CoreFoundation.h>
 #endif

@@ -75,10 +75,9 @@ extern "C" {
 #ifdef __cplusplus
 #define NQ_STATIC_ASSERT static_assert
 #else
-#define _NQ_ASSERT_CONCAT2(a, b) a##b
-#define _NQ_ASSERT_CONCAT(a, b) _NQ_ASSERT_CONCAT2(a, b)
-#define NQ_STATIC_ASSERT(condition, message) \
-  typedef int _NQ_ASSERT_CONCAT(static_assert_, NQ_COUNTER)[(condition) ? 1 : -1];
+#define _NQ_STATIC_ASSERT(condition, message, prefix, suffix) \
+    typedef int prefix ## suffix[(condition) ? 1 : -1] NQ_ALLOW_UNUSED;
+#define NQ_STATIC_ASSERT(condition, message) _NQ_STATIC_ASSERT(condition, message, _static_assert_, NQ_COUNTER)
 #endif
 
 #ifdef __cplusplus

@@ -15,12 +15,12 @@
 #include <android/looper.h>
 #include <android/input.h>
 
-#include <string.h>
-
+#include <libnetq/CStrBase.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Assert.h>
 #include <libnetq/Log.h>
+#include <libnetq/LooperSource.h>
 
 struct Source {
   NQLooperSource* addr;

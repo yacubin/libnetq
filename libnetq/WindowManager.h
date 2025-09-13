@@ -42,7 +42,7 @@ struct NQWindowManagerOperations {
 };
 
 NQ_EXPORT void NQWindowManagerInitialize(const struct NQWindowManagerOperations* ops, void* argument);
-NQ_EXPORT void NQWindowManagerShutdown();
+NQ_EXPORT void NQWindowManagerShutdown(void);
 
 #ifdef __cplusplus
 }

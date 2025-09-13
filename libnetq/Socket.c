@@ -13,13 +13,13 @@
 #include "config.h"
 #include "libnetq/Socket.h"
 
-#include <string.h>
-
+#include <libnetq/CStrBase.h>
 #include <libnetq/ObjectClass.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/ErrorCode.h>
 #include <libnetq/SocketHandle.h>
 #include <libnetq/Looper.h>
+#include <libnetq/LooperSource.h>
 #include <libnetq/Assert.h>
 #include <libnetq/Log.h>
 
@@ -105,7 +105,9 @@ void NQSocket_destroy(NQSocket* thiz)
   NQFree(thiz);
 }
 
-static int NQSocket_notifyError(NQSocket* thiz, int code, const char* msg) {
+NQ_ALLOW_UNUSED
+static int NQSocket_notifyError(NQSocket* thiz, int code, const char* msg)
+{
   if (msg == NULL)
     msg = "";
   NQ_LOGE("code %i %s", code, msg);

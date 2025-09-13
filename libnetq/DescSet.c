@@ -13,9 +13,8 @@
 #include "config.h"
 #include "libnetq/DescSet.h"
 
-#include <string.h>
-
 #include <libnetq/ObjectClass.h>
+#include <libnetq/CStrBase.h>
 #include <libnetq/UnlimitedRandom.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
@@ -70,7 +69,7 @@ static bool NQIsFillMemory(const void* mem, int value, size_t size)
 
   return true;
 }
-void NQDescEntry_checkData(NQDescEntry* entry, size_t entrySize)
+static void NQDescEntry_checkData(NQDescEntry* entry, size_t entrySize)
 {
   void* data = NQDescEntry_data(entry);
   size_t size = entrySize - sizeof(NQDescEntry);

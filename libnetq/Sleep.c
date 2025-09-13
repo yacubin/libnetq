@@ -10,28 +10,29 @@
 #include "config.h"
 #include "libnetq/Sleep.h"
 
-#include <libnetq/TimeVal.h>
 #include <libnetq/Assert.h>
 
-#ifdef NQ_OS_WIN
-#include <windows.h>
-#define HAVE_SLEEP 1
-#endif
-
-#ifdef NQ_OS_UNIX
-#if _POSIX_C_SOURCE >= 199309L
-#include <time.h>
-#define HAVE_NANOSLEEP 1
+#if defined(NQ_SYS_LINUX)
+# include <linux/delay.h>
+#elif defined(NQ_OS_WINDOWS)
+# include <windows.h>
 #else
-#include <unistd.h>
-#define HAVE_USLEEP 1
-#endif
+# include <libnetq/TimeVal.h>
+# if _POSIX_C_SOURCE >= 199309L
+#  include <time.h>
+#  define HAVE_NANOSLEEP 1
+# else
+#  include <unistd.h>
+#  define HAVE_USLEEP 1
+# endif
 #endif
 
 void NQSleep(int64_t ms)
 {
   NQ_ASSERT(ms >= 0);
-#if defined(HAVE_SLEEP)
+#if defined(NQ_SYS_LINUX)
+  msleep_interruptible(ms);
+#elif defined(NQ_OS_WINDOWS)
   NQ_ASSERT(ms <= MAXDWORD);
   Sleep((DWORD)ms);
 #elif defined(HAVE_NANOSLEEP)

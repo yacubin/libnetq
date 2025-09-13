@@ -18,6 +18,8 @@ extern "C" {
 
 typedef struct NQURL NQURL;
 
+#define NQ_URL_MAX 2048
+
 #define NQ_URL_ABOUT_SCHEME      "about"
 #define NQ_URL_BLOB_SCHEME       "blob"
 #define NQ_URL_DATA_SCHEME       "data"

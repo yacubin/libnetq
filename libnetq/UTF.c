@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/UTF.h"
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
 #include <windows.h>
 #endif
 
@@ -46,7 +46,7 @@
 // U+0000E000  U+0000FFFF: xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx
 // U+00010000  U+0010FFFF: 110110xxxxxxxxxx 110111xxxxxxxxxx
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
 static bool UTF8ToUTF16Check(const uint8_t* utf8Start, const uint8_t* utf8End, uint16_t* utf16Start, uint16_t* utf16End)
 {
   int u8Size = (int)(utf8End - utf8Start);

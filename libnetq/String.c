@@ -13,49 +13,13 @@
 #include "config.h"
 #include "libnetq/String.h"
 
-#include <stdarg.h>
-#include <stdio.h>
-
 #include <libnetq/Atomic.h>
+#include <libnetq/Sprintf.h>
 #include <libnetq/Compiler.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Assert.h>
 #include <libnetq/Log.h>
-
-char* nq_strfmt(const char* format, ...)
-{
-  NQ_ASSERT(format);
-
-  int result;
-  char* buffer;
-  size_t size;
-  va_list args;
-
-  va_start(args, format);
-
-#ifdef NQ_COMPILER_MSVC
-  result = _vscprintf(format, args);
-#else
-  char ch;
-  result = vsnprintf(&ch, 1, format, args);
-  va_end(args);
-  va_start(args, format);
-#endif
-
-  if (result == 0 || result < 0)
-    buffer = NQZeroMalloc(1);
-  else {
-    size = ((size_t)result + 1);
-    buffer = (char*)NQMalloc(size);
-    if (buffer != NULL)
-      vsnprintf(buffer, size, format, args);
-  }
-
-  va_end(args);
-
-  return buffer;
-}
 
 struct NQString {
   NQAtomic32 refCount;
@@ -67,10 +31,7 @@ struct NQString {
 #define NQ_STRING_REF_COUNT_STATIC 0x80000000
 
 static NQString s_emptyStringStatic = {
-  NQ_ATOMIC32_INIT(NQ_STRING_REF_COUNT_STATIC),
-  0,
-  0,
-  '\0'
+  NQ_ATOMIC32_INIT(NQ_STRING_REF_COUNT_STATIC), 0, 0, { '\0' },
 };
 
 static void NQString_init(NQString* s, size_t length)

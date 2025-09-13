@@ -113,7 +113,7 @@ NQThread* NQThread_create(NQThreadCallback callback, void* data, const char* nam
 {
   if (callback == NULL)
     return NULL;
-  
+
   size_t len = name ? strlen(name) : 0;
   NQThread* thread = (NQThread*)NQZeroMalloc(sizeof(struct NQThread) + len);
   if (thread == NULL)
@@ -207,12 +207,12 @@ void NQThread_resume(NQThread* thread)
   NQMutex_unlock(&thread->mutex);
 }
 
-NQTID NQThreadId()
+NQTID NQThreadId(void)
 {
   return (NQTID)GetCurrentThreadId();
 }
 
-void NQThreadYield()
+void NQThreadYield(void)
 {
   // Sleep(0);
   // YieldProcessor();

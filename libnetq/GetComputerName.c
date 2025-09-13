@@ -10,6 +10,12 @@
 #include "config.h"
 #include "libnetq/GetComputerName.h"
 
+#ifdef NQ_SYS_LINUX
+#include <linux/utsname.h>
+#include <libnetq/Math.h>
+#define NQ_COMPUTER_NAME_MAX (__NEW_UTS_LEN + 1)
+#endif
+
 #ifdef NQ_OS_WINDOWS
 #include <windows.h>
 #include <libnetq/UTF.h>
@@ -24,6 +30,16 @@
 
 size_t NQGetComputerName(char* buffer, size_t n)
 {
+#ifdef NQ_SYS_LINUX
+  struct new_utsname* u = init_utsname();
+  size_t res = strlen(u->nodename);
+  memcpy(buffer, u->nodename, NQGetMin(res, n));
+
+  if (res < n)
+    buffer[res] = '\0';
+  return res;
+#endif
+
 #ifdef NQ_OS_WINDOWS
   DWORD size;
   WCHAR wbuf[NQ_COMPUTER_NAME_MAX];

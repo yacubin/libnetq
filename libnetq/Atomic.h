@@ -32,7 +32,7 @@ NQ_EXPORT void NQAtomic32_init(NQAtomic32* thiz, uint32_t counter);
 NQ_EXPORT void NQAtomic32_inc(NQAtomic32* thiz);
 NQ_EXPORT void NQAtomic32_dec(NQAtomic32* thiz);
 
-NQ_EXPORT void NQCompilerFence();
+NQ_EXPORT void NQCompilerFence(void);
 
 #ifdef __cplusplus
 }

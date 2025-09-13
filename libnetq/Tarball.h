@@ -11,13 +11,14 @@
 #define _LIBNETQ_TARBALL_H
 
 #include <libnetq/Basic.h>
+#include <libnetq/MediaType.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define NQ_TAR_MAGIC "ustar "
-#define NQ_TAR_MIME "application/x-tar"
+#define NQ_TAR_MIME NQ_MEDIATYPE_APPLICATION_XTAR
 
 #define NQ_TAR_BLOCK_LEN (512)
 #define NQ_TAR_FILENAME_LEN (100)

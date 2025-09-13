@@ -11,11 +11,44 @@
 #include "libnetq/SocketHandle.h"
 
 #include <libnetq/Malloc.h>
-#include <libnetq/String.h> // for memset
+#include <libnetq/CStrBase.h> // for memset
 #include <libnetq/Limits.h>
 #include <libnetq/Assert.h>
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_SYS_LINUX
+#include <linux/socket.h>
+#include <linux/net.h> // SOCK_STREAM
+#include <uapi/linux/tcp.h> // TCP_NODELAY
+#include <uapi/linux/in.h> // sockaddr_in
+#include <uapi/linux/in6.h> // sockaddr_in6
+
+typedef int socklen_t;
+
+#define NQSocketInit() ((void)0)
+#define NQSocketOpenImpl(domain, type, protocol) \
+  ({ (void)(domain); (void)(type); (void)(protocol); -1; })
+#define NQSocketConnectImpl(handle, addr, len) \
+  ({ (void)(handle); (void)(addr); (void)(len); -1; })
+#define NQSocketAcceptImpl(handle, addr, len) \
+  ({ (void)(handle); (void)(addr); (void)(len); -1; })
+#define NQSocketCloseImpl(handle) ((void)(handle))
+
+#define _SD_RECV    0
+#define _SD_SEND    0
+#define _SD_BOTH    0
+
+static int shutdown(int, int) { return -1; }
+static int getsockopt(int, int, int, void*, socklen_t*) { return -1; }
+static int setsockopt(int, int, int, const void*, socklen_t) { return -1; }
+static int fcntl(int, int, ...) { return -1; }
+static int bind(int, const struct sockaddr*, socklen_t) { return -1; }
+static int listen(int, int) { return -1; }
+
+#define FD_SETSIZE 1024
+
+#endif
+
+#ifdef NQ_OS_WINDOWS
 #define WIN32_LEAN_AND_MEAN
 #include <libnetq/Once.h>
 #include <windows.h>
@@ -204,7 +237,11 @@ int NQSocketSend(NQSocketHandle handle, const uint8_t* buf, size_t len, int flag
   if (NQ_INT32_MAX < len)
     len = NQ_INT32_MAX;
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_SYS_LINUX
+  return -1;
+#endif
+
+#ifdef NQ_OS_WINDOWS
   return send(handle, (const char*)buf, (int)len, flags);
 #endif
 
@@ -223,7 +260,11 @@ int NQSocketRecv(NQSocketHandle handle, uint8_t* buf, size_t len, int flags)
   if (NQ_INT32_MAX < len)
     len = NQ_INT32_MAX;
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_SYS_LINUX
+  return -1;
+#endif
+
+#ifdef NQ_OS_WINDOWS
   return recv(handle, (char*)buf, (int)len, flags);
 #endif
 
@@ -492,7 +533,11 @@ static inline int NQSocketSendToImpl(NQSocketHandle handle, const uint8_t* buf, 
 {
   NQ_ASSERT(NQ_INT32_MAX < len);
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_SYS_LINUX
+  return -1;
+#endif
+
+#ifdef NQ_OS_WINDOWS
   return sendto(handle, (const char*)buf, (int)len, flags, addr, addrlen);
 #endif
 
@@ -540,7 +585,11 @@ int NQSocketSendTo6(NQSocketHandle handle, const uint8_t* buf, size_t len, int f
 
 int NQSocketPair(int domain, int type, int protocol, NQSocketHandle sock[2])
 {
-#ifdef NQ_OS_WIN
+#ifdef NQ_SYS_LINUX
+  return -1;
+#endif
+
+#ifdef NQ_OS_WINDOWS
   struct sockaddr_in address;
   NQSocketHandle listener;
   socklen_t size = sizeof(address);

@@ -10,8 +10,7 @@
 #include "config.h"
 #include "libnetq/BufferBuilder.h"
 
-#include <string.h>
-
+#include <libnetq/CStrBase.h>
 #include <libnetq/Endian.h>
 #include <libnetq/Assert.h>
 

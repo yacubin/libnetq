@@ -270,7 +270,7 @@ unsigned nq_clz32(uint32_t number)
   if (number)
     return __builtin_ctz(number);
   return 32;
-#elif defined(NQ_COMPILER_MSVC) && !defined(NQ_CPU_X86)
+#elif defined(NQ_COMPILER_MSVC) && defined(NQ_CPU_64BIT)
   unsigned long ret = 0;
   if (_BitScanForward(&ret, number))
     return ret;
@@ -304,7 +304,7 @@ unsigned nq_clz64(uint64_t number)
   if (number)
     return __builtin_clzll(number);
   return 64;
-#elif defined(NQ_COMPILER_MSVC) && !defined(NQ_CPU_X86) && !(defined(NQ_CPU_32BIT) && defined(NQ_CPU_ARM))
+#elif defined(NQ_COMPILER_MSVC) && defined(NQ_CPU_64BIT) && !defined(NQ_CPU_ARM)
   unsigned long ret = 0;
   if (_BitScanReverse64(&ret, number))
     return 63 - ret;

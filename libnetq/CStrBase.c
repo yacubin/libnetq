@@ -10,10 +10,11 @@
 #include "config.h"
 #include "libnetq/CStrBase.h"
 
-#include <string.h>
 #include <libnetq/Malloc.h>
+#include <libnetq/Sprintf.h>
+#include <libnetq/Assert.h>
 
-const char* NQCStrEmpty()
+const char* NQCStrEmpty(void)
 {
   static const char s_cstrEmpty[] = "";
   return s_cstrEmpty;
@@ -86,3 +87,38 @@ bool NQCStrStartsWith(const char* str, const char* search)
 
   return true;
 }
+
+char* NQCStrFormat(const char* format, ...)
+{
+  NQ_ASSERT(format);
+
+  int result;
+  char* buffer;
+  size_t size;
+  va_list args;
+
+  va_start(args, format);
+
+#ifdef NQ_COMPILER_MSVC
+  result = _vscprintf(format, args);
+#else
+  char ch;
+  result = vsnprintf(&ch, 1, format, args);
+  va_end(args);
+  va_start(args, format);
+#endif
+
+  if (result == 0 || result < 0)
+    buffer = NQZeroMalloc(1);
+  else {
+    size = ((size_t)result + 1);
+    buffer = (char*)NQMalloc(size);
+    if (buffer != NULL)
+      vsnprintf(buffer, size, format, args);
+  }
+
+  va_end(args);
+
+  return buffer;
+}
+

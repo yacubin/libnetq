@@ -14,14 +14,14 @@
 #include "libnetq/Arguments.h"
 
 #include <libnetq/ObjectClass.h>
+#include <libnetq/CStrBase.h>
+#include <libnetq/Strtox.h>
 #include <libnetq/CType.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/UTF.h>
 #include <libnetq/Log.h>
 #include <libnetq/Assert.h>
-
-#include <string.h>
 
 #define NQ_ARG_MAX 4096
 
@@ -181,7 +181,7 @@ bool NQArgGetInt64(const char* arg, const char* key, int64_t* result)
     return false;
 
   char* end;
-  long long num = strtoll(val, &end, 10);
+  long long num = NQSimpleStrtoll(val, &end, 10);
   if (*end != '\0')
     return false;
 
@@ -197,7 +197,7 @@ bool NQArgGetUint32(const char* arg, const char* key, uint32_t* result)
   if (!NQArgGetUint64(arg, key, &num))
     return false;
 
-  if (UINT32_MAX < num)
+  if (NQ_UINT32_MAX < num)
     return false;
 
   if (result)
@@ -214,7 +214,7 @@ bool NQArgGetUint64(const char* arg, const char* key, uint64_t* result)
     return false;
 
   char* end;
-  unsigned long long num = strtoull(val, &end, 10);
+  unsigned long long num = NQSimpleStrtoull(val, &end, 10);
   if (*end != '\0')
     return false;
 
@@ -525,7 +525,7 @@ void NQMainArgumentsInit(int argc, const char* argv[])
     s_arguments = arguments;
 }
 
-size_t NQMainArgumentsCount()
+size_t NQMainArgumentsCount(void)
 {
   return NQArguments_count(s_arguments);
 }
@@ -563,26 +563,26 @@ void NQMainArgumentsInitWinW(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR
   s_arguments = (arguments != NULL) ? arguments : &s_argumentsEmpty;
 }
 
-HINSTANCE NQGetInstance()
+HINSTANCE NQGetInstance(void)
 {
   if (s_hInstance == NULL)
     s_hInstance = GetModuleHandleW(NULL);
   return s_hInstance;
 }
 
-HINSTANCE NQGetPrevInstance()
+HINSTANCE NQGetPrevInstance(void)
 {
   return s_hPrevInstance;
 }
 
-INT NQGetCmdShow()
+INT NQGetCmdShow(void)
 {
   return s_iCmdShow;
 }
 
 #endif
 
-void NQMainArgumentsFinalize()
+void NQMainArgumentsFinalize(void)
 {
   if (s_arguments != &s_argumentsEmpty) {
     NQFree(s_arguments);
@@ -590,7 +590,7 @@ void NQMainArgumentsFinalize()
   }
 }
 
-NQArguments* NQGetMainArguments()
+NQArguments* NQArgumentsGetMain(void)
 {
   return s_arguments;
 }

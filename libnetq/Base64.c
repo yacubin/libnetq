@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/Base64.h"
 
-#include <string.h>
+#include <libnetq/CStrBase.h>
 #include <libnetq/Assert.h>
 
 #define UNKN 0xFF
@@ -181,7 +181,7 @@ int NQBase64Encode(const uint8_t* inStart, const uint8_t* inEnd, char* outStart,
 
 int NQBase64Decode(const char* inStart, const char* inEnd, uint8_t* outStart, uint8_t* outEnd, int flags)
 {
-  char c;
+  uint8_t curr;
   uint8_t b1, b2, b3, b4;
   int result;
   const uint8_t* map;
@@ -210,8 +210,8 @@ int NQBase64Decode(const char* inStart, const char* inEnd, uint8_t* outStart, ui
 
   result = 0;
   for (;;) {
-    c = *inStart++;
-    b1 = map[c];
+    curr = (uint8_t)(*inStart++);
+    b1 = map[curr];
     if (b1 == UNKN) {
       result = -1;
       break;
@@ -224,8 +224,8 @@ int NQBase64Decode(const char* inStart, const char* inEnd, uint8_t* outStart, ui
       break;
     }
 
-    c = *inStart++;
-    b2 = map[c];
+    curr = (uint8_t)(*inStart++);
+    b2 = map[curr];
     if (b2 == UNKN) {
       result = -1;
       break;
@@ -242,10 +242,10 @@ int NQBase64Decode(const char* inStart, const char* inEnd, uint8_t* outStart, ui
       break;
     }
 
-    c = *inStart++;
-    b3 = map[c];
+    curr = (uint8_t)(*inStart++);
+    b3 = map[curr];
     if (b3 == UNKN) {
-      if (c == '=' && inStart < inEnd && *inStart == '=') {
+      if (curr == '=' && inStart < inEnd && *inStart == '=') {
         if (++inStart == inEnd)
           break;
       }
@@ -264,10 +264,10 @@ int NQBase64Decode(const char* inStart, const char* inEnd, uint8_t* outStart, ui
       break;
     }
 
-    c = *inStart++;
-    b4 = map[c];
+    curr = (uint8_t)(*inStart++);
+    b4 = map[curr];
     if (b4 == UNKN) {
-      if (c == '=' && inStart == inEnd)
+      if (curr == '=' && inStart == inEnd)
         break;
       result = -1;
       break;

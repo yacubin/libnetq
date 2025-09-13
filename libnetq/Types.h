@@ -10,14 +10,18 @@
 #ifndef _LIBNETQ_TYPES_H
 #define _LIBNETQ_TYPES_H
 
+#include <libnetq/OS.h>
+#include <libnetq/Compiler.h>
+#include <libnetq/ConstExpr.h>
+
+#ifdef NQ_SYS_LINUX
+#include <linux/types.h>
+#else
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-
-#include <libnetq/OS.h>
-#include <libnetq/Compiler.h>
-#include <libnetq/ConstExpr.h>
+#endif
 
 #define NQ_FALSE false
 #define NQ_TRUE true

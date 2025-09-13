@@ -865,3 +865,81 @@ size_t NQLeb128DecodeUint64(const void* data, size_t size, uint64_t* result)
 
   return 0;
 }
+
+void NQSLEB128Ctx_init(struct NQSLEB128Ctx* ctx)
+{
+  ctx->value = 0;
+  ctx->index = 0;
+  ctx->size = 0;
+}
+
+bool NQSLEB128Ctx_add(struct NQSLEB128Ctx* ctx, uint8_t byte)
+{
+  bool done;
+
+  int shift = ctx->index++ * 7;
+  int nbits = shift;
+
+  if (byte & 0x80) {
+    nbits += 7;
+    done = false;
+  }
+  else {
+    uint8_t b;
+    if (byte & 0x40)
+      b = ~(byte | 0x80);
+    else
+      b = byte;
+
+    if (b)
+      nbits += (32 - __builtin_clz(b));
+    else if (nbits == 0)
+      nbits = 1; // Zero has 0 size
+
+    if ((byte & 0x40) && (nbits < (sizeof(int64_t) * 8)))
+      ctx->value |= (int64_t)(~0LL) << nbits;
+
+    done = true;
+  }
+
+  ctx->size = (nbits + 7) / 8;
+  if (ctx->size <= sizeof(int64_t)) {
+    ctx->value |= (int64_t)(byte & 0x7f) << shift;
+  }
+
+  return done;
+}
+
+void NQULEB128Ctx_init(struct NQULEB128Ctx* ctx)
+{
+  ctx->value = 0;
+  ctx->index = 0;
+  ctx->size = 0;
+}
+
+bool NQULEB128Ctx_add(struct NQULEB128Ctx* ctx, uint8_t byte)
+{
+  bool done;
+
+  int shift = ctx->index++ * 7;
+  int nbits = shift;
+
+  if (byte & 0x80) {
+    nbits += 7;
+    done = false;
+  }
+  else {
+    if (byte)
+      nbits += (32 - __builtin_clz(byte));
+    else if (nbits == 0)
+      nbits = 1; // Zero has 0 size
+    done = true;
+  }
+
+  ctx->size = (nbits + 7) / 8;
+  if (ctx->size <= sizeof(uint64_t)) {
+    ctx->value |= (uint64_t)(byte & 0x7f) << shift;
+  }
+
+  return done;
+}

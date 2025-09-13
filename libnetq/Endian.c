@@ -12,12 +12,12 @@
 
 static const short s_littlendian = true;
 
-bool NQIsLittleEndian()
+bool NQIsLittleEndian(void)
 {
   return ((const uint8_t*)&s_littlendian)[0];
 }
 
-bool NQIsBigEndian()
+bool NQIsBigEndian(void)
 {
   return ((const uint8_t*)&s_littlendian)[1];
 }

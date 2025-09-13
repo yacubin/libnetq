@@ -92,9 +92,9 @@ void NQAtomic32_dec(NQAtomic32* thiz)
 #endif
 }
 
-void NQCompilerFence()
+void NQCompilerFence(void)
 {
-#if defined(NQ_OS_WIN) && !defined(NQ_COMPILER_GCC)
+#if defined(NQ_OS_WINDOWS) && !defined(NQ_COMPILER_GCC)
   _ReadWriteBarrier();
 #else
   asm volatile("" ::: "memory");

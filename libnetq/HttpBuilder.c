@@ -1,3 +1,12 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2023-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ *
+ * Permission is granted to use, copy, modify, and distribute this software
+ * under the MIT License. See LICENSE file for details.
+ */
+
 #include "config.h"
 #include "libnetq/HttpBuilder.h"
 
@@ -5,7 +14,7 @@
 #include <libnetq/HttpVersion.h>
 #include <libnetq/HttpHeader.h>
 #include <libnetq/HttpMethod.h>
-#include <libnetq/String.h>
+#include <libnetq/CStrBase.h>
 
 static bool NQHttpBuilder_write(NQHttpBuilder* thiz, const char* characters)
 {
@@ -23,23 +32,6 @@ static bool NQHttpBuilder_write(NQHttpBuilder* thiz, const char* characters)
     characters++;
   }
 
-  thiz->size = newSize;
-  return true;
-}
-
-static bool NQHttpBuilder_writen(NQHttpBuilder* thiz, const char* characters, size_t length)
-{
-  if (length == 0) {
-    return true;
-  }
-
-  size_t newSize = thiz->size + length;
-  if (sizeof(thiz->data) <= newSize) {
-    return false;
-  }
-
-  memcpy(thiz->data + thiz->size, characters, length);
-  thiz->data[newSize] = '\0';
   thiz->size = newSize;
   return true;
 }

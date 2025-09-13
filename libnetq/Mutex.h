@@ -12,11 +12,12 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
 #include <windows.h>
 #ifdef SRWLOCK_INIT
 typedef SRWLOCK NQMutex;
-#define NQ_MUTEX_INIT SRWLOCK_INIT 
+#define NQ_MUTEX_INIT SRWLOCK_INIT
+#define NQ_MUTEX_DEFINE(mutexname) NQMutex mutexname = NQ_MUTEX_INIT
 #define HAVE_SRWLOCK 1
 #else
 typedef struct NQMutex {
@@ -29,7 +30,14 @@ typedef struct NQMutex {
 #ifdef NQ_OS_UNIX
 #include <pthread.h>
 typedef pthread_mutex_t NQMutex;
-#define NQ_MUTEX_INIT PTHREAD_MUTEX_INITIALIZER 
+#define NQ_MUTEX_INIT PTHREAD_MUTEX_INITIALIZER
+#define NQ_MUTEX_DEFINE(mutexname) NQMutex mutexname = NQ_MUTEX_INIT
+#endif
+
+#ifdef NQ_SYS_LINUX
+#include <linux/mutex.h>
+typedef struct mutex NQMutex;
+#define NQ_MUTEX_DEFINE(mutexname) DEFINE_MUTEX(mutexname)
 #endif
 
 #ifdef __cplusplus

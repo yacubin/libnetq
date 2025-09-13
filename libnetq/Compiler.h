@@ -17,6 +17,18 @@ extern "C" {
 #define NQ_VERSION_DEC(major, minor, patch) (major * 10000 + minor * 100 + patch)
 #define NQ_VERSION_HEX(major, minor, patch) (major * 0x10000 + minor * 0x100 + patch)
 
+#if defined(__has_attribute)
+#define NQ_HAS_ATTRIBUTE(x) __has_attribute(x)
+#else
+#define NQ_HAS_ATTRIBUTE(x) 0
+#endif
+
+#if defined(__has_builtin)
+#define NQ_HAS_BUILTIN(x) __has_builtin(x)
+#else
+#define NQ_HAS_BUILTIN(x) 0
+#endif
+
 #if defined(__GNUC__)
 #define NQ_COMPILER_GCC 1
 #define NQ_GCC_VERSION NQ_VERSION_DEC(__GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__)
@@ -87,21 +99,9 @@ extern "C" {
 
 #define NQ_NOINLINE NQ_NEVER_INLINE
 #define NQ_INLINE __inline
-  
-#if !defined(NQ_NORETURN) && defined(NQ_COMPILER_GCC) && defined(NQ_COMPILER_CLANG)
-#define NQ_NORETURN __attribute((__noreturn__))
-#endif
-
-#if !defined(NQ_NORETURN) && defined(NQ_COMPILER_MSVC)
-#define NQ_NORETURN __declspec(noreturn)
-#endif
-
-#if !defined(NQ_NORETURN)
-#define NQ_NORETURN
-#endif
 
 #ifndef NQ_NORETURN
-#if defined(NQ_COMPILER_GCC)
+#if NQ_HAS_ATTRIBUTE(__noreturn__) || defined(NQ_COMPILER_GCC) || defined(NQ_COMPILER_CLANG)
 #define NQ_NORETURN __attribute((__noreturn__))
 #elif defined(NQ_COMPILER_MSVC)
 #define NQ_NORETURN __declspec(noreturn)

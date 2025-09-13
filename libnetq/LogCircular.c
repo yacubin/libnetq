@@ -13,13 +13,12 @@
 #include "config.h"
 #include "libnetq/LogCircular.h"
 
-#include <stdio.h>
-
 #include <libnetq/ObjectClass.h>
 #include <libnetq/OS.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Math.h>
+#include <libnetq/Sprintf.h>
 #include <libnetq/String.h>
 #include <libnetq/Time.h>
 #include <libnetq/Assert.h>
@@ -134,7 +133,7 @@ size_t NQLogCircular_vprint(NQLogCircular* log, NQLogLevel level, const char* fo
   char* characters;
   size_t size;
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
   length = vsnprintf(NULL, 0, format, args);
 #else
   va_list argsCopy;

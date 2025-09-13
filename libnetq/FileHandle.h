@@ -12,8 +12,18 @@
 
 #include <libnetq/Basic.h>
 
+#ifdef NQ_SYS_LINUX
+#include <linux/err.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifdef NQ_SYS_LINUX
+typedef struct file* NQFileHandle;
+#define NQFileIsValid(handle) (!IS_ERR(handle))
+#define NQFileIsInvalid(handle) IS_ERR(handle)
 #endif
 
 #ifdef NQ_OS_WINDOWS
@@ -27,9 +37,12 @@ typedef int NQFileHandle;
 #define NQ_INVALID_FILE (-1)
 #endif
 
-#define NQFileCheck(handle) ((handle) != NQ_INVALID_FILE)
+#if defined(NQ_OS_WINDOWS) || defined(NQ_OS_UNIX)
 #define NQFileIsValid(handle) ((handle) != NQ_INVALID_FILE)
 #define NQFileIsInvalid(handle) ((handle) == NQ_INVALID_FILE)
+#endif
+
+#define NQFileCheck(handle) NQFileIsValid(handle)
 
 typedef enum NQFileOpenMode {
   NQ_FOPEN_READ = 0,

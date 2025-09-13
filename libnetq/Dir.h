@@ -18,7 +18,7 @@ extern "C" {
     
 typedef struct NQDir NQDir;
 
-NQ_EXPORT NQDir* NQDir_open(const char* path);
+NQ_EXPORT NQDir* NQDir_open(const char* pathname);
 NQ_EXPORT bool NQDir_next(NQDir* dir);
 NQ_EXPORT void NQDir_close(NQDir* dir);
 

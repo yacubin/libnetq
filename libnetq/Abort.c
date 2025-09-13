@@ -10,27 +10,26 @@
 #include "config.h"
 #include "libnetq/Abort.h"
 
-#ifdef __has_builtin
-# if __has_builtin(__builtin_trap)
-#  define USE_BUILTIN_TRAP
-# endif
-#endif
-
 #ifdef NQ_COMPILER_MSVC
 # include <intrin.h>
-# define HAVE___DEBUGBREAK
 #endif
 
-void NQAbort()
+#ifdef NQ_SYS_LINUX
+# include <linux/bug.h>
+#endif
+
+void NQAbort(void)
 {
-#if defined(USE_BUILTIN_TRAP)
+#if NQ_HAS_BUILTIN(__builtin_trap)
   __builtin_trap();
-#elif defined(HAVE___DEBUGBREAK)
+#elif defined(NQ_COMPILER_MSVC)
   __debugbreak();
+#elif defined(NQ_SYS_LINUX)
+  BUG();
 #endif
-
-  *((int*)~((uintptr_t)0)) = *((int*)0) = 0xDEADBEEF;
-
-  ((int(*)(void))~((uintptr_t)0))();
-  ((int(*)(void))0)();
+  for (;;) {
+    *((int*)~((uintptr_t)0)) = *((int*)0) = 0xDEADBEEF;
+    ((int(*)(void))~((uintptr_t)0))();
+    ((int(*)(void))0)();
+  }
 }

@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/CPU.h"
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
 #include <windows.h>
 #endif
 
@@ -22,11 +22,15 @@
 #include <unistd.h>
 #endif
 
+#ifdef NQ_SYS_LINUX
+#include <linux/cpumask.h>
+#endif
+
 static unsigned s_numberOfProcessors = 0;
 
-static unsigned getOSNumberOfCores()
+static inline unsigned getOSNumberOfCores(void)
 {
-#if defined(NQ_OS_WIN)
+#if defined(NQ_OS_WINDOWS)
   SYSTEM_INFO sysInfo;
   GetSystemInfo(&sysInfo);
   return (unsigned)sysInfo.dwNumberOfProcessors;
@@ -42,13 +46,16 @@ static unsigned getOSNumberOfCores()
   long ret = sysconf(_SC_NPROCESSORS_ONLN);
   return (ret < 0) ? 0 : (unsigned)(ret);
 
+#elif defined(NQ_SYS_LINUX)
+  return num_online_cpus();
+
 #else
   return 0;
 
 #endif
 }
 
-unsigned NQGetNumberOfProcessors()
+unsigned NQGetNumberOfProcessors(void)
 {
   if (s_numberOfProcessors == 0) {
     unsigned num = getOSNumberOfCores();

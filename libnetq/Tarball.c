@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/Tarball.h"
 
-#include <string.h>
+#include <libnetq/CStrBase.h>
 #include <libnetq/Math.h>
 #include <libnetq/Assert.h>
 #include <libnetq/Time.h>

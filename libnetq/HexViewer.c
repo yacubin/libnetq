@@ -13,10 +13,9 @@
 #include "config.h"
 #include "libnetq/HexViewer.h"
 
-#include <stdio.h>
-#include <string.h>
-
 #include <libnetq/ObjectClass.h>
+#include <libnetq/CStrBase.h>
+#include <libnetq/Sprintf.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Assert.h>
 
@@ -36,6 +35,7 @@ struct NQHexViewer {
 // Offset       0  1  2  3  4  5  6  7   8  9  A  B  C  D  E  F  ASCII
 // 0x00000000: 00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  ................\n
 
+NQ_ALLOW_UNUSED
 static size_t sprintLine(char* start, char** end, uint32_t offset, const void* data, size_t size)
 {
   size_t i;

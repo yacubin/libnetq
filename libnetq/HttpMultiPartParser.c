@@ -10,8 +10,7 @@
 #include "config.h"
 #include "libnetq/HttpMultiPartParser.h"
 
-#include <string.h>
-
+#include <libnetq/CStrBase.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Assert.h>
 

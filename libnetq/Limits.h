@@ -10,11 +10,21 @@
 #ifndef _LIBNETQ_LIMITS_H
 #define _LIBNETQ_LIMITS_H
 
-#include <limits.h>
+#include <libnetq/OS.h>
 #include <libnetq/ConstExpr.h>
 
+#ifdef NQ_SYS_LINUX
+#include <linux/limits.h>
+#else
+#include <limits.h>
+#endif
+
 /* CHAR */
+#if defined(CHAR_BIT)
 #define NQ_CHAR_BIT CHAR_BIT
+#else
+#define NQ_CHAR_BIT (8)
+#endif
 
 /* INT */
 #define NQ_INT_MIN INT_MIN

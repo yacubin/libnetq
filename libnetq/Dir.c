@@ -19,6 +19,10 @@
 #include <libnetq/Path.h>
 #include <libnetq/Assert.h>
 
+#ifdef NQ_SYS_LINUX
+#include <linux/namei.h>
+#endif
+
 #ifdef NQ_OS_WINDOWS
 #include <windows.h>
 enum {
@@ -37,6 +41,11 @@ extern const NQObjectClass __NQDirClass;
 struct NQDir {
   const NQObjectClass* class;
 
+#ifdef NQ_SYS_LINUX
+  struct path path;
+  struct dentry* iter;
+#endif
+
 #ifdef NQ_OS_WINDOWS
   HANDLE handle;
   WIN32_FIND_DATAW data;
@@ -50,13 +59,55 @@ struct NQDir {
 #endif
 };
 
-NQDir* NQDir_open(const char* path)
+NQDir* NQDir_open(const char* pathname)
 {
   NQDir* dir;
 
+#ifdef NQ_SYS_LINUX
+  struct path path;
+  struct dentry* first;
+  struct dentry* iter;
+  int ret;
+
+  ret = kern_path(pathname, LOOKUP_FOLLOW, &path);
+  if (ret != 0)
+    return NULL;
+
+  if (!d_is_dir(path.dentry)) {
+    path_put(&path);
+    return NULL;
+  }
+
+  spin_lock(&path.dentry->d_lock);
+  iter = d_first_child(path.dentry);
+  hlist_for_each_entry_from(iter, d_sib) {
+    if (simple_positive(iter)) {
+      first = dget_dlock(iter);
+      if (NQ_LIKELY(first))
+        break;
+    }
+  }
+  spin_unlock(&path.dentry->d_lock);
+  
+  if (!first) {
+    path_put(&path);
+    return NULL;
+  }
+
+  dir = (NQDir*)NQMalloc(sizeof(NQDir));
+  if (dir != NULL) {
+    dir->class = &__NQDirClass;
+    dir->path = path;
+    dir->iter = first;
+    return dir;
+  }
+
+  path_put(&path);
+#endif
+
 #ifdef NQ_OS_WINDOWS
   WCHAR winpath[MAX_PATH];
-  size_t n = NQWinPathFrom(winpath, MAX_PATH, path);
+  size_t n = NQWinPathFrom(winpath, MAX_PATH, pathname);
   if (n == 0 || n > (MAX_PATH - 3))
     return NULL;
 
@@ -81,7 +132,7 @@ NQDir* NQDir_open(const char* path)
 #endif
 
 #ifdef NQ_OS_UNIX
-  DIR* handle = opendir(path);
+  DIR* handle = opendir(pathname);
   if (handle == NULL)
     return NULL;
 
@@ -104,6 +155,30 @@ NQDir* NQDir_open(const char* path)
 
 bool NQDir_next(NQDir* dir)
 {
+#ifdef NQ_SYS_LINUX
+  struct dentry* prev;
+  struct dentry* iter;
+
+  prev = dir->iter;
+  if (prev == NULL)
+    return false;
+
+  spin_lock(&dir->path.dentry->d_lock);
+  iter = d_next_sibling(dir->path.dentry);
+  hlist_for_each_entry_from(iter, d_sib) {
+    if (simple_positive(iter)) {
+      dir->iter = dget_dlock(iter);
+      if (NQ_LIKELY(dir->iter))
+        break;
+    }
+  }
+  spin_unlock(&dir->path.dentry->d_lock);
+  dput(prev);
+
+  if (dir->iter != NULL)
+    return true;
+#endif
+
 #ifdef NQ_OS_WINDOWS
   if (dir->mode == NQ_DIR_EOF_MODE)
     return false;
@@ -122,7 +197,7 @@ bool NQDir_next(NQDir* dir)
 
 #ifdef NQ_OS_UNIX
   if (dir->dp == NULL)
-    return NULL;
+    return false;
 
   dir->dp = readdir(dir->handle);
   if (dir->dp != NULL)
@@ -134,6 +209,11 @@ bool NQDir_next(NQDir* dir)
 
 void NQDir_close(NQDir* dir)
 {
+#ifdef NQ_SYS_LINUX
+  dput(dir->iter);
+  path_put(&dir->path);
+#endif
+
 #ifdef NQ_OS_WINDOWS
   FindClose(dir->handle);
 #endif
@@ -147,6 +227,11 @@ void NQDir_close(NQDir* dir)
 
 const char* NQDir_name(NQDir* dir)
 {
+#ifdef NQ_SYS_LINUX
+  if (dir->iter != NULL)
+    return dir->iter->d_name.name;
+#endif
+
 #ifdef NQ_OS_WINDOWS
   if (dir->mode == NQ_DIR_NEXT_MODE)
     return dir->path;
@@ -162,6 +247,11 @@ const char* NQDir_name(NQDir* dir)
 
 bool NQDir_isFile(NQDir* dir)
 {
+#ifdef NQ_SYS_LINUX
+  if (dir->iter != NULL)
+    return d_is_file(dir->iter);
+#endif
+
 #ifdef NQ_OS_WINDOWS
   if (dir->mode == NQ_DIR_NEXT_MODE)
     return dir->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? false : true;
@@ -177,6 +267,11 @@ bool NQDir_isFile(NQDir* dir)
 
 bool NQDir_isDirectory(NQDir* dir)
 {
+#ifdef NQ_SYS_LINUX
+  if (dir->iter != NULL)
+    return d_is_dir(dir->iter);
+#endif
+
 #ifdef NQ_OS_WINDOWS
   if (dir->mode == NQ_DIR_NEXT_MODE)
     return dir->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? true : false;

@@ -15,7 +15,7 @@
 
 #if defined(NQ_OS_WINDOWS)
 #include <windows.h>
-#else
+#elif defined(NQ_OS_UNIX)
 #include <dlfcn.h>
 #endif
 

@@ -18,12 +18,11 @@
 #include <libnetq/Limits.h>
 #include <libnetq/Log.h>
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
 #include <windows.h>
 #include <shlobj.h>
 #endif
 
-#include <limits.h> // for PATH_MAX
 #if defined(NQ_OS_LINUX) && !defined(PATH_MAX)
 #include <linux/limits.h>
 #endif
@@ -67,7 +66,7 @@ bool NQFileSystem_mkdir(const char* path, bool recursive)
 {
   (void)recursive; // TODO
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
   WCHAR winpath[MAX_PATH];
   if (NQGetAbsoluteWinPath(winpath, MAX_PATH, path) == 0)
     return false;
@@ -111,9 +110,9 @@ bool NQFileSystem_mkdir(const char* path, bool recursive)
   return false;
 }
 
-bool NQFileSystem_exists(const char* path) {
-
-#ifdef NQ_OS_WIN
+bool NQFileSystem_exists(const char* path)
+{
+#ifdef NQ_OS_WINDOWS
   WCHAR winpath[MAX_PATH];
   if (NQWinPathFrom(winpath, sizeof(winpath), path) < sizeof(winpath)) {
 #ifndef NQ_WIN_FS_EXISTS_V2
@@ -139,10 +138,10 @@ bool NQFileSystem_exists(const char* path) {
   return false;
 }
 
-NQUint8Array* NQFileSystem_loadUint8Array(const char* path)
+NQUint8Array* NQFileSystem_loadBytes(const char* path)
 {
   NQFileHandle handle = NQFileOpen(path, NQ_FOPEN_READ);
-  if (handle == NQ_INVALID_FILE) {
+  if (NQFileIsInvalid(handle)) {
     NQ_LOGE("Can't open file %s", path);
     return NULL;
   }

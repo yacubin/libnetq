@@ -13,10 +13,8 @@
 #include "config.h"
 #include "libnetq/TimerQueue.h"
 
-#include <time.h>
-#include <string.h>
-
 #include <libnetq/ObjectClass.h>
+#include <libnetq/CStrBase.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Assert.h>
 
@@ -102,6 +100,7 @@ static NQTimerEntry* NQTimerList_shift(NQTimerList* list)
   return entry;
 }
 
+NQ_ALLOW_UNUSED
 static NQTimerEntry* NQTimerList_pop(NQTimerList* list)
 {
   if (list->last == NULL)
@@ -119,6 +118,7 @@ static NQTimerEntry* NQTimerList_pop(NQTimerList* list)
   return entry;
 }
 
+NQ_ALLOW_UNUSED
 static void NQTimerList_unshift(NQTimerList* list, NQTimerEntry* entry)
 {
   entry->next = list->first;
@@ -169,6 +169,7 @@ static void NQTimerList_insertBefore(NQTimerList* list, NQTimerEntry* position, 
   list->size++;
 }
 
+NQ_ALLOW_UNUSED
 static void NQTimerList_insertAfter(NQTimerList* list, NQTimerEntry* position, NQTimerEntry* entry)
 {
   position->next = entry;

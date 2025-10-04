@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/PrimitiveType.h"
 
-#include <string.h>
+#include <libnetq/CStrBase.h>
 
 #define NQ_BOOL_CSTR "bool"
 #define NQ_CHAR_CSTR "char"

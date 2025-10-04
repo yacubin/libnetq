@@ -10,14 +10,14 @@
 #include "config.h"
 #include "libnetq/Network.h"
 
-#include <stdio.h>
-
-#include <libnetq/String.h>
+#include <libnetq/CStrBase.h>
+#include <libnetq/Sprintf.h>
+#include <libnetq/Strtox.h>
 #include <libnetq/Limits.h>
 
-static const NQIPv4Address s_ip4AddressAny = { 0, 0, 0, 0 };
-static const NQIPv4Address s_ip4AddressLoopback = { 127, 0, 0, 1 };
-static const NQIPv4Address s_ip4AddressBroadcast = { 255, 255, 255, 255 };
+static const NQIPv4Address s_ip4AddressAny = {{ 0, 0, 0, 0 }};
+static const NQIPv4Address s_ip4AddressLoopback = {{ 127, 0, 0, 1 }};
+static const NQIPv4Address s_ip4AddressBroadcast = {{ 255, 255, 255, 255 }};
 
 void NQIPv4Address_init(NQIPv4Address* ip4, uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4)
 {
@@ -53,7 +53,7 @@ static bool parseIPDigits(const char* start, const char* end, const char** token
 
     number = number * 10 + (c - '0');
 
-    if (number > UINT8_MAX)
+    if (number > NQ_UINT8_MAX)
       return false;
 
     start++;
@@ -120,17 +120,17 @@ bool NQIPv4Address_isUnicast(const NQIPv4Address* ip4)
   return ip4->data[3] == 255;
 }
 
-const NQIPv4Address* NQIPv4Address_any()
+const NQIPv4Address* NQIPv4Address_any(void)
 {
   return &s_ip4AddressAny;
 }
 
-const NQIPv4Address* NQIPv4Address_loopback()
+const NQIPv4Address* NQIPv4Address_loopback(void)
 {
   return &s_ip4AddressLoopback;
 }
 
-const NQIPv4Address* NQIPv4Address_broadcast()
+const NQIPv4Address* NQIPv4Address_broadcast(void)
 {
   return &s_ip4AddressBroadcast;
 }
@@ -163,8 +163,8 @@ bool NQIPv4EndPoint_parseWithLength(NQIPv4EndPoint* ep4, const char* s, size_t n
     return false;
 
   char* end;
-  unsigned long port = strtoul(s + pos + 1, &end, 10);
-  if (end != (s + n) || port < NQ_UINT16_MIN || port > NQ_UINT16_MAX)
+  unsigned long port = NQSimpleStrtoul(s + pos + 1, &end, 10);
+  if (end != (s + n) || port > NQ_UINT16_MAX)
     return false;
 
   if (!NQIPv4Address_parseWithLength(&ep4->address, s, pos))

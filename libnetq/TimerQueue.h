@@ -34,7 +34,7 @@ enum {
   NQ_TIMER_REMOVE,
 };
 
-NQ_EXPORT NQTimerQueue* NQTimerQueue_create();
+NQ_EXPORT NQTimerQueue* NQTimerQueue_create(void);
 NQ_EXPORT void NQTimerQueue_destroy(NQTimerQueue*);
 
 NQ_EXPORT int64_t NQTimerQueue_timeout(NQTimerQueue*, int64_t now);

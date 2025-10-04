@@ -18,7 +18,7 @@ extern "C" {
 
 typedef int (*NQMainEntryPoint) (int argc, const char* argv[]);
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
 #include <windows.h>
 #endif
 
@@ -28,7 +28,7 @@ typedef int (*NQMainEntryPoint) (int argc, const char* argv[]);
 
 extern int NQAppMain(int argc, const char* argv[]);
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
 extern INT NQAppMainWin32A(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, INT iCmdShow);
 extern INT NQAppMainWin32W(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR lpCmdLine, INT iCmdShow);
 #endif

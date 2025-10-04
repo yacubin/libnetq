@@ -28,9 +28,9 @@ NQ_EXPORT bool NQIPv4Address_isBroadcast(const NQIPv4Address* ip4);
 NQ_EXPORT bool NQIPv4Address_isAny(const NQIPv4Address* ip4);
 NQ_EXPORT bool NQIPv4Address_isUnicast(const NQIPv4Address* ip4);
 
-NQ_EXPORT const NQIPv4Address* NQIPv4Address_any();
-NQ_EXPORT const NQIPv4Address* NQIPv4Address_loopback();
-NQ_EXPORT const NQIPv4Address* NQIPv4Address_broadcast();
+NQ_EXPORT const NQIPv4Address* NQIPv4Address_any(void);
+NQ_EXPORT const NQIPv4Address* NQIPv4Address_loopback(void);
+NQ_EXPORT const NQIPv4Address* NQIPv4Address_broadcast(void);
 
 
 typedef struct NQIPv4EndPoint {

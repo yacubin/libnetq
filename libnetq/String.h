@@ -10,26 +10,10 @@
 #ifndef _LIBNETQ_STRING_H
 #define _LIBNETQ_STRING_H
 
-#include <string.h>
-
-#include <libnetq/Basic.h>
+#include <libnetq/CStrBase.h>
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#define NQ_NIL '\0'
-
-#ifdef NQ_COMPILER_MSVC
-#define nq_strncasecmp _strnicmp
-#define nq_strnicmp _strnicmp
-#define nq_stricmp _stricmp
-#endif
-
-#ifdef NQ_COMPILER_GCC
-#define nq_strncasecmp strncasecmp
-#define nq_strnicmp strncasecmp
-#define nq_stricmp strcasecmp
 #endif
 
 typedef struct NQString NQString;

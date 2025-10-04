@@ -27,7 +27,7 @@ typedef struct CoherentLooperData {
 
 typedef struct CoherentLooper CoherentLooper;
 
-CoherentLooper* CoherentLooper_create();
+CoherentLooper* CoherentLooper_create(void);
 void CoherentLooper_destroy(CoherentLooper*);
 void CoherentLooper_stop(CoherentLooper*);
 bool CoherentLooper_call(CoherentLooper*, void* userdata, NQExecuteCallback* execute, NQDestroyCallback* destroy);

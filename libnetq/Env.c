@@ -16,7 +16,7 @@
 #include <libnetq/Math.h>
 #include <libnetq/Assert.h>
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
 #include <windows.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/UTF.h>
@@ -28,7 +28,7 @@
 
 int NQEnvGet(const char* name, char* value, size_t n)
 {
-#if defined(NQ_OS_WIN)
+#if defined(NQ_OS_WINDOWS)
   DWORD size;
   NQUnicodeInfo info;
   uint16_t* wname;
@@ -98,7 +98,7 @@ int NQEnvSet(const char* name, const char* value)
   if (value == NULL)
     return NQEnvUnset(name);
 
-#if defined(NQ_OS_WIN)
+#if defined(NQ_OS_WINDOWS)
   BOOL success;
   NQUnicodeInfo nameInfo, valueInfo;
   uint16_t* wname;
@@ -140,7 +140,7 @@ int NQEnvSet(const char* name, const char* value)
 
 int NQEnvUnset(const char* name)
 {
-#if defined(NQ_OS_WIN)
+#if defined(NQ_OS_WINDOWS)
   BOOL success;
   NQUnicodeInfo info;
   uint16_t* wname;

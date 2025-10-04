@@ -20,7 +20,7 @@
 
 void NQStringList_finalize(NQStringList* thiz)
 {
-  struct NQStringEntry* iter;
+  struct NQStringEntry* iter = thiz->first;
   while (iter != NULL) {
     struct NQStringEntry* next = iter->next;
     NQFree(iter);

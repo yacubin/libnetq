@@ -16,26 +16,14 @@
 #include <libnetq/Time.h>
 #include <libnetq/DispatchQueue.h>
 #include <libnetq/TimerQueue.h>
-#include <libnetq/LooperSource.h>
+#include <libnetq/LooperTypes.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-enum {
-  NQ_LOOPER_NATIVE,
-  NQ_LOOPER_SELECTFD,
-  NQ_LOOPER_POLLFD,
-};
-
-enum {
-  NQ_LOOPER_POLL_ERROR = -1,
-  NQ_LOOPER_POLL_TIMEOUT = 0,
-  NQ_LOOPER_POLL_MESSAGE = 1,
-  NQ_LOOPER_POLL_SOURCE = 2,
-};
-
 typedef struct NQLooper NQLooper;
+typedef struct NQLooperSource NQLooperSource;
 
 #define NQ_TIMER_ONCE (1 << 0)
 #define NQ_TIMER_REPEAT (1 << 1)
@@ -45,14 +33,6 @@ typedef struct NQLooper NQLooper;
 typedef void (*NQTimerCallback) (void* userdata, NQTimerIdentifier id, int flags);
 typedef void (*NQDDetachHandleCallback) (void* userdata);
 typedef void (*NQDDetachDestroyCallback) (void* userdata);
-
-#define NQ_MESSAGE_QUIT 1
-#define NQ_MESSAGE_WAKEUP 2
-#define NQ_MESSAGE_NORMAL 3
-
-typedef struct NQMessage {
-  int type;
-} NQMessage;
 
 struct NQLooperOperations {
   int type;
@@ -110,9 +90,9 @@ NQ_EXPORT bool NQLooper_attachSource(NQLooper* looper, NQLooperSource* source);
 NQ_EXPORT bool NQLooper_detachSource(NQLooper* looper, NQLooperSource* source);
 
 NQ_EXPORT void NQMainLooperInitialize(const struct NQLooperOperations* ops);
-NQ_EXPORT void NQMainLooperShutdown();
+NQ_EXPORT void NQMainLooperShutdown(void);
 
-NQ_EXPORT NQLooper* NQLooperGetMain();
+NQ_EXPORT NQLooper* NQLooperGetMain(void);
 
 #ifdef __cplusplus
 }

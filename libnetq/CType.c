@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/CType.h"
 
-#include <libnetq/String.h>
+#include <libnetq/CStrBase.h>
 
 bool NQIsFalse(const char* s)
 {

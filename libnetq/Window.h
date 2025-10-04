@@ -49,7 +49,7 @@ NQ_EXPORT bool NQWindowClear(NQWindowHandle handle);
 NQ_EXPORT bool NQWindowSetToolTip(NQWindowHandle handle, const char* s);
 NQ_EXPORT bool NQWindowSetBorderWidth(NQWindowHandle handle, int width);
 
-NQ_EXPORT const char* NQWindowGetClassName();
+NQ_EXPORT const char* NQWindowGetClassName(void);
 
 #ifdef __cplusplus
 }

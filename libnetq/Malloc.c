@@ -10,40 +10,121 @@
 #include "config.h"
 #include "libnetq/Malloc.h"
 
-#include <string.h>
 #include <libnetq/OS.h>
 
-#ifdef NQ_OS_WINDOWS
-#include <windows.h>
+#if defined(NQ_SYS_LINUX)
+# include <linux/slab.h>
+#elif defined(NQ_OS_WINDOWS)
+# include <windows.h>
+#elif defined(NQ_OS_UNIX)
+# include <stdlib.h>
+# include <string.h>
 #endif
 
-#ifdef NQ_OS_UNIX
-#include <stdlib.h>
+void* NQMalloc(size_t size)
+{
+#if defined(NQ_SYS_LINUX)
+  return kmalloc(size, GFP_KERNEL);
+
+#elif defined(NQ_OS_WINDOWS)
+  HANDLE heap = GetProcessHeap();
+  if (NQ_LIKELY(heap))
+    return HeapAlloc(heap, 0, size);
+  return NULL;
+
+#elif defined(NQ_OS_UNIX)
+  return malloc(size);
+
+#else
+  return NULL;
+
 #endif
-
-void* NQMalloc(size_t n)
-{
-  return malloc(n);
 }
 
-void* NQZeroMalloc(size_t n)
+void* NQZeroMalloc(size_t size)
 {
-  void* result = malloc(n);
-  memset(result, 0, n);
-  return result;
+#if defined(NQ_SYS_LINUX)
+  return kzalloc(size, GFP_KERNEL);
+
+#elif defined(NQ_OS_WINDOWS)
+  HANDLE heap = GetProcessHeap();
+  if (NQ_LIKELY(heap))
+    return HeapAlloc(heap, HEAP_ZERO_MEMORY, size);
+  return NULL;
+
+#elif defined(NQ_OS_UNIX)
+  void* ptr = malloc(size);
+  if (NQ_LIKELY(ptr))
+    memset(ptr, 0, size);
+  return ptr;
+
+#else
+  return NULL;
+
+#endif
 }
 
-void* NQCalloc(size_t n_elements, size_t element_size)
+void* NQCalloc(size_t n, size_t size)
 {
-  return calloc(n_elements, element_size);
+#if defined(NQ_SYS_LINUX)
+  return kmalloc_array(n, size, GFP_KERNEL | __GFP_ZERO);
+
+#elif defined(NQ_OS_WINDOWS)
+  HANDLE heap = GetProcessHeap();
+  if (NQ_LIKELY(heap))
+    return HeapAlloc(heap, HEAP_ZERO_MEMORY, n * size);
+  return NULL;
+
+#elif defined(NQ_OS_UNIX)
+  return calloc(n, size);
+
+#else
+  return NULL;
+
+#endif
 }
 
-void* NQRealloc(void* p, size_t n)
+void* NQRealloc(void* ptr, size_t size)
 {
-  return realloc(p, n);
+#if defined(NQ_SYS_LINUX)
+  return krealloc(ptr, size, GFP_KERNEL);
+
+#elif defined(NQ_OS_WINDOWS)
+  HANDLE heap = GetProcessHeap();
+  if (NQ_UNLIKELY(heap))
+    return NULL;
+
+  if (NQ_UNLIKELY(!ptr))
+    return HeapAlloc(heap, 0, size);
+
+  if (NQ_UNLIKELY(!size)) {
+    HeapFree(heap, 0, ptr);
+    return NULL;
+  }
+
+  return HeapReAlloc(heap, 0, ptr, size);
+
+#elif defined(NQ_OS_UNIX)
+  return realloc(ptr, size);
+
+#else
+  return NULL;
+
+#endif
 }
 
-void NQFree(void* p)
+void NQFree(void* ptr)
 {
-  free(p);
+#if defined(NQ_SYS_LINUX)
+  kfree(ptr);
+
+#elif defined(NQ_OS_WINDOWS)
+  HANDLE heap = GetProcessHeap();
+  if (NQ_LIKELY(heap))
+    HeapFree(heap, 0, ptr);
+
+#elif defined(NQ_OS_UNIX)
+  free(ptr);
+
+#endif
 }

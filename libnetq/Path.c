@@ -10,13 +10,12 @@
 #include "config.h"
 #include "libnetq/Path.h"
 
-#include <libnetq/OS.h>
 #include <libnetq/UTF.h>
-#include <libnetq/String.h>
+#include <libnetq/CStrBase.h>
 #include <libnetq/Math.h>
 #include <libnetq/Assert.h>
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
 #include <windows.h>
 #endif
 
@@ -104,7 +103,7 @@ size_t NQWinPathFrom(NQWChar* buffer, size_t n, const char* path)
 
 size_t NQGetAbsoluteWinPath(NQWChar* buffer, size_t n, const char* path)
 {
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
   WCHAR winpath[MAX_PATH];
   size_t length = NQWinPathFrom(winpath, sizeof(winpath), path);
   if (length != 0 && length < NQ_ARRAY_LENGTH(winpath) && n <= MAXDWORD)

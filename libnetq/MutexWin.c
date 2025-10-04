@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/Mutex.h"
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
 
 #include <libnetq/Compiler.h>
 #include <libnetq/Assert.h>
@@ -87,4 +87,4 @@ void NQMutex_unlock(NQMutex* mutex)
 
 #endif
 
-#endif /* NQ_OS_WIN */
+#endif /* NQ_OS_WINDOWS */

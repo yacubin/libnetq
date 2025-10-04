@@ -16,7 +16,12 @@
 extern "C" {
 #endif
   
-#ifdef NQ_OS_WIN
+#ifdef NQ_SYS_LINUX
+typedef int NQSocketHandle;
+#define NQ_INVALID_SOCKET (-1)
+#endif
+  
+#ifdef NQ_OS_WINDOWS
 typedef uintptr_t NQSocketHandle;
 #define NQ_INVALID_SOCKET ((uintptr_t)~0)
 #endif

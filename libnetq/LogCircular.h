@@ -10,7 +10,7 @@
 #ifndef _LIBNETQ_LOGCIRCULAR_H
 #define _LIBNETQ_LOGCIRCULAR_H
 
-#include <stdarg.h>
+#include <libnetq/VA.h>
 #include <libnetq/Log.h>
 
 #ifdef __cplusplus

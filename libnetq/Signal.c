@@ -10,18 +10,18 @@
 #include "config.h"
 #include "libnetq/Signal.h"
 
+#ifndef NQ_SYS_LINUX
+
 #include <libnetq/Once.h>
 #include <libnetq/Mutex.h>
 #include <libnetq/Malloc.h>
-
-#include <string.h>
+#include <libnetq/CStrBase.h>
 
 #ifdef NQ_OS_WINDOWS
 #include <windows.h>
 typedef DWORD NQNativeSignalType;
 #define NQ_SIGNAL_MAX (CTRL_SHUTDOWN_EVENT + 1)
 typedef void* NQSignalNativeHandler;
-
 #else
 #include <signal.h>
 typedef int NQNativeSignalType;
@@ -198,3 +198,16 @@ bool NQSetSignalHandler(int type, NQSignalHandler handler, void* userdata)
 
   return true;
 }
+
+#else
+
+bool NQSetSignalHandler(int type, NQSignalHandler handler, void* userdata)
+{
+  NQ_UNUSED_PARAM(type);
+  NQ_UNUSED_PARAM(handler);
+  NQ_UNUSED_PARAM(userdata);
+
+  return false;
+}
+
+#endif

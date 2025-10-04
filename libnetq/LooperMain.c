@@ -21,7 +21,7 @@ static NQLooper s_looper;
 
 #if defined(NQ_OS_DARWIN)
 extern const struct NQLooperOperations CoreFoundationLooperOperations;
-#elif defined(NQ_OS_WIN)
+#elif defined(NQ_OS_WINDOWS)
 
 static int Looper_init(NQLooper* looper)
 {
@@ -98,7 +98,7 @@ void NQMainLooperInitialize(const struct NQLooperOperations* ops)
   if (ops == NULL) {
 #if defined(NQ_OS_DARWIN)
     ops = &CoreFoundationLooperOperations;
-#elif defined(NQ_OS_WIN)
+#elif defined(NQ_OS_WINDOWS)
     ops = &WindowsLooperOperations;
 #elif defined(NQ_OS_ANDROID)
     ops = &AndroidLooperOperations;
@@ -110,12 +110,12 @@ void NQMainLooperInitialize(const struct NQLooperOperations* ops)
   NQLooper_init(&s_looper, ops);
 }
 
-void NQMainLooperShutdown()
+void NQMainLooperShutdown(void)
 {
   NQLooper_finalize(&s_looper);
 }
 
-NQLooper* NQLooperGetMain()
+NQLooper* NQLooperGetMain(void)
 {
   return &s_looper;
 }

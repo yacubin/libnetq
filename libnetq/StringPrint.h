@@ -11,7 +11,7 @@
 #define _LIBNETQ_STRINGPRINT_H
 
 #include <libnetq/Basic.h>
-#include <stdarg.h>
+#include <libnetq/VA.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -76,8 +76,8 @@ extern "C" {
 #define NQBEToHost64(x) NQByteSwap64(x)
 #endif
 
-NQ_EXPORT bool NQIsLittleEndian();
-NQ_EXPORT bool NQIsBigEndian();
+NQ_EXPORT bool NQIsLittleEndian(void);
+NQ_EXPORT bool NQIsBigEndian(void);
 
 #define nq_bswap16(x) NQByteSwap16(x)
 #define nq_bswap32(x) NQByteSwap32(x)

@@ -10,11 +10,16 @@
 #ifndef _LIBNETQ_MATH_H
 #define _LIBNETQ_MATH_H
 
+#include <libnetq/Basic.h>
+
+#ifdef NQ_SYS_LINUX
+#include <linux/math.h>
+#include <linux/math64.h>
+#else
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <float.h>
-
-#include <libnetq/Basic.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {

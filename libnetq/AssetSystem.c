@@ -156,7 +156,7 @@ static NQAssetSystem s_asset = {
   NULL
 };
 
-NQAssetSystem* NQAssetSystemGetMain()
+NQAssetSystem* NQAssetSystemGetMain(void)
 {
   return &s_asset;
 }
@@ -300,7 +300,7 @@ void NQAssetInitialize(const void* asset, NQAssetHandle handle)
   NQAssetSystem_init(&s_asset, handle, data, size);
 }
 
-void NQAssetShutdown()
+void NQAssetShutdown(void)
 {
   NQAssetSystem_finalize(&s_asset);
 }

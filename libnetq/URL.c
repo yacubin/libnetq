@@ -13,8 +13,7 @@
 #include "config.h"
 #include "libnetq/URL.h"
 
-#include <string.h>
-
+#include <libnetq/CStrBase.h>
 #include <libnetq/ObjectClass.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>

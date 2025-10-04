@@ -60,7 +60,7 @@
 extern "C" {
 #endif
 
-NQ_EXPORT unsigned NQGetNumberOfProcessors();
+NQ_EXPORT unsigned NQGetNumberOfProcessors(void);
 
 #ifdef __cplusplus
 }

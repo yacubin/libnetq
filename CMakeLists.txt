@@ -1,19 +1,39 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.1
+project(libnetq VERSION 1.0.2
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
   )
 
+message(STATUS "Project ${PROJECT_NAME}/${PROJECT_VERSION} (${PROJECT_DESCRIPTION})")
+message(STATUS "URL: ${PROJECT_HOMEPAGE_URL}")
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(GNUInstallDirs)
+include(CheckIncludeFile)
+include(CheckFunctionExists)
 
-set(libnetq_LIBRARY_TYPE "STATIC" CACHE STRING "Choose the library type: OBJECT, STATIC, SHARED.")
-set_property(CACHE libnetq_LIBRARY_TYPE PROPERTY STRINGS "OBJECT;STATIC;SHARED")
+macro (LNQ_OPTION_DEFINE _name _description _value)
+  set(LNQ_${_name} "${_value}" CACHE STRING "${_description}")
+  if (NOT "${ARGN}" STREQUAL "")
+    set_property(CACHE LNQ_${_name} PROPERTY STRINGS "${_value};${ARGN}")
+  endif ()
+endmacro ()
 
-option(libnetq_PUBLIC_GENERATED_DIR "Allow config.h to be populate in include directories" OFF)
-set(libnetq_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
+macro (LNQ_FEATURE_DEFINE _name _description)
+  LNQ_OPTION_DEFINE(${_name} "${_description}" "Default" "Enable" "Disable")
+endmacro ()
+
+LNQ_OPTION_DEFINE(LIBRARY_TYPE "Choose the library type: SHARED, STATIC, OBJECT" SHARED STATIC OBJECT)
+LNQ_FEATURE_DEFINE(USE_EXPORT "Enable symbol export as a shared library")
+
+option(LNQ_PUBLIC_GENERATED_DIR "Allow config.h to be populate in include directories" OFF)
+set(LNQ_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
+
+if (LNQ_USE_EXPORT STREQUAL "Enable")
+  set(NQ_USE_EXPORT ON)
+endif ()
 
 math(EXPR NQ_VERSION_CODE "${PROJECT_VERSION_MAJOR} * 10000000 + ${PROJECT_VERSION_MINOR} * 100000 + ${PROJECT_VERSION_PATCH} * 1000")
 
@@ -28,32 +48,49 @@ if ((MINGW OR UNIX) AND NOT APPLE)
     )
 endif ()
 
-set(WITH_DEPENDENCY_DEFAULT OFF)
-if (libnetq_LIBRARY_TYPE STREQUAL "SHARED")
-  set(WITH_DEPENDENCY_DEFAULT ON)
-  option(libnetq_USE_EXPORT "Enable symbol export as a shared library" OFF)
-  if (libnetq_USE_EXPORT)
-    set(NQ_USE_EXPORT 1)
-  endif ()
-endif ()
-
 find_package(Threads)
 if (Threads_FOUND AND CMAKE_USE_PTHREADS_INIT AND NOT APPLE)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
 endif ()
 
+set(WITH_ZLIB OFF)
 find_package(ZLIB)
 if (ZLIB_FOUND)
-  set(HAVE_ZLIB 1)
-  option(libnetq_WITH_ZLIB "Allow compilation with ZLIB library" ${WITH_DEPENDENCY_DEFAULT})
-  if (libnetq_WITH_ZLIB)
-    set(WITH_ZLIB 1)
-    list(APPEND CMAKE_REQUIRED_INCLUDES "${ZLIB_INCLUDE_DIR}")
-    list(APPEND CMAKE_REQUIRED_LIBRARIES "${ZLIB_LIBRARY}")
+  LNQ_FEATURE_DEFINE(WITH_ZLIB "Allow compilation with ZLIB library")
+  set(HAVE_ZLIB ON)
+  if (LNQ_WITH_ZLIB STREQUAL "Enable")
+    set(WITH_ZLIB ON)
   endif ()
 endif ()
 
-include(CheckIncludeFile)
+set(WITH_OLE32 OFF)
+set(WITH_FOUND FALSE)
+set(CMAKE_REQUIRED_LIBRARIES_SAVE ${CMAKE_REQUIRED_LIBRARIES})
+list(APPEND CMAKE_REQUIRED_LIBRARIES ole32)
+check_include_file(combaseapi.h HAVE_COMBASEAPI_H)
+if (HAVE_COMBASEAPI_H)
+  LNQ_FEATURE_DEFINE(WITH_OLE32 "Allow compilation with OLE32 library")
+  set(OLE32_FOUND TRUE)
+  if (LNQ_WITH_OLE32 STREQUAL "Enable")
+    set(WITH_OLE32 ON)
+  endif ()
+endif ()
+set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_SAVE})
+
+if (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
+  if (LNQ_WITH_ZLIB STREQUAL "Default")
+    set(WITH_ZLIB ON)
+  endif ()
+  if (LNQ_WITH_OLE32 STREQUAL "Default")
+    set(WITH_OLE32 ON)
+  endif ()
+endif ()
+
+if (WITH_ZLIB)
+  list(APPEND CMAKE_REQUIRED_INCLUDES "${ZLIB_INCLUDE_DIR}")
+  list(APPEND CMAKE_REQUIRED_LIBRARIES "${ZLIB_LIBRARY}")
+endif ()
+
 check_include_file(stddef.h HAVE_STDDEF_H)
 check_include_file(stdio.h HAVE_STDIO_H)
 check_include_file(stdint.h HAVE_STDINT_H)
@@ -68,19 +105,6 @@ check_include_file(unistd.h HAVE_UNISTD_H)
 check_include_file(sys/types.h HAVE_SYS_TYPES_H)
 check_include_file(sys/stat.h HAVE_SYS_STAT_H)
 
-set(CMAKE_REQUIRED_LIBRARIES_SAVE ${CMAKE_REQUIRED_LIBRARIES})
-list(APPEND CMAKE_REQUIRED_LIBRARIES ole32)
-check_include_file(combaseapi.h HAVE_COMBASEAPI_H)
-if (HAVE_COMBASEAPI_H)
-  set(HAVE_OLE32 1)
-  option(libnetq_WITH_OLE32 "Allow compilation with OLE32 library" ${WITH_DEPENDENCY_DEFAULT})
-  if (libnetq_WITH_OLE32)
-    set(WITH_OLE32 1)
-  endif ()
-endif ()
-set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_SAVE})
-
-include(CheckFunctionExists)
 check_function_exists(pthread_yield HAVE_PTHREAD_YIELD)
 check_function_exists(pthread_setname_np HAVE_PTHREAD_SETNAME_NP)
 check_function_exists(pthread_getschedparam HAVE_PTHREAD_GETSCHEDPARAM)
@@ -278,6 +302,8 @@ set(libnetq_HEADERS
   libnetq/cpu/x86.h
   libnetq/cpu/z.h
 
+  libnetq/web/HttpStatistics.h
+
   libnetq/tls/CipherSuite.h
 
   libnetq/Abort.h
@@ -302,6 +328,7 @@ set(libnetq_HEADERS
   libnetq/ByteBuffer.h
   libnetq/ByteOrder.h
   libnetq/CoherentLooper.h
+  libnetq/ColorSpace.h
   libnetq/Compiler.h
   libnetq/Cond.h
   libnetq/ConstExpr.h
@@ -333,6 +360,8 @@ set(libnetq_HEADERS
   libnetq/HttpMultiPartBuilder.h
   libnetq/HttpMultiPartParser.h
   libnetq/HttpVersion.h
+  libnetq/Image.h
+  libnetq/ImageBuilder.h
   libnetq/JSONWriter.h
   libnetq/KeyboardEvent.h
   libnetq/KeyVal.h
@@ -343,8 +372,10 @@ set(libnetq_HEADERS
   libnetq/LogCircular.h
   libnetq/Looper.h
   libnetq/LooperSource.h
+  libnetq/LooperTypes.h
   libnetq/Malloc.h
   libnetq/Math.h
+  libnetq/MediaType.h
   libnetq/MotionEvent.h
   libnetq/MouseEvent.h
   libnetq/Mutex.h
@@ -365,10 +396,12 @@ set(libnetq_HEADERS
   libnetq/Sleep.h
   libnetq/Socket.h
   libnetq/SocketHandle.h
+  libnetq/Sprintf.h
   libnetq/StreamCallbacks.h
   libnetq/String.h
   libnetq/StringList.h
   libnetq/StringPrint.h
+  libnetq/Strtox.h
   libnetq/Tarball.h
   libnetq/Thread.h
   libnetq/ThreadData.h
@@ -380,6 +413,7 @@ set(libnetq_HEADERS
   libnetq/URL.h
   libnetq/UTF.h
   libnetq/UUID.h
+  libnetq/VA.h
   libnetq/Version.h
   libnetq/WakeOnLan.h
   libnetq/WebSocketTypes.h
@@ -390,6 +424,8 @@ set(libnetq_HEADERS
   )
 
 set(libnetq_SOURCES
+  libnetq/web/HttpStatistics.c
+
   libnetq/Abort.c
   libnetq/Application.c
   libnetq/ApplicationAndroid.c
@@ -405,6 +441,7 @@ set(libnetq_SOURCES
   libnetq/ByteBuffer.c
   libnetq/CoherentLooper.c
   libnetq/CondPosix.c
+  libnetq/CondSysLinux.c
   libnetq/CondWin.c
   libnetq/CPU.c
   libnetq/CStrBase.c
@@ -420,6 +457,7 @@ set(libnetq_SOURCES
   libnetq/Executable.c
   libnetq/FileHandle.c
   libnetq/FileHandlePosix.c
+  libnetq/FileHandleSysLinux.c
   libnetq/FileHandleWin.c
   libnetq/FileSystem.c
   libnetq/GetComputerName.c
@@ -432,6 +470,8 @@ set(libnetq_SOURCES
   libnetq/HttpMethod.c
   libnetq/HttpMultiPartBuilder.c
   libnetq/HttpMultiPartParser.c
+  libnetq/Image.c
+  libnetq/ImageBuilder.c
   libnetq/JSONWriter.c
   libnetq/KeyVal.c
   libnetq/Leb128.c
@@ -447,10 +487,12 @@ set(libnetq_SOURCES
   libnetq/Malloc.c
   libnetq/Math.c
   libnetq/MutexPosix.c
+  libnetq/MutexSysLinux.c
   libnetq/MutexWin.c
   libnetq/Network.c
   libnetq/Object.c
   libnetq/OncePosix.c
+  libnetq/OnceSysLinux.c
   libnetq/OnceWin.c
   libnetq/Path.c
   libnetq/PlatformLooperCF.c
@@ -461,6 +503,7 @@ set(libnetq_SOURCES
   libnetq/PrimitiveType.c
   libnetq/Rect.c
   libnetq/RWLockPosix.c
+  libnetq/RWLockSysLinux.c
   libnetq/RWLockWin.c
   libnetq/Signal.c
   libnetq/Sleep.c
@@ -473,6 +516,7 @@ set(libnetq_SOURCES
   libnetq/ThreadDataPosix.c
   libnetq/ThreadDataWin.c
   libnetq/ThreadPosix.c
+  libnetq/ThreadSysLinux.c
   libnetq/ThreadWin.c
   libnetq/TimerQueue.c
   libnetq/Time.c
@@ -489,7 +533,7 @@ set(libnetq_SOURCES
   )
 
 set(libnetq_DATAFILES
-  config.h.cmake
+  config.h.in
   LICENSE
   README.md
   )
@@ -500,14 +544,13 @@ set(libnetq_INCLUDES
 
 set(libnetq_LIBRARIES
   ${CMAKE_DL_LIBS}
-  Threads::Threads
   )
 
 set(libnetq_DEFINITIONS
   )
 
 set(libnetq_GENERATED
-  "${libnetq_GENERATED_DIR}/config.h"
+  "${LNQ_GENERATED_DIR}/config.h"
   )
 
 if (CMAKE_SYSTEM_NAME MATCHES "Android")
@@ -528,6 +571,10 @@ if (CMAKE_SYSTEM_NAME MATCHES "Windows")
   list(APPEND libnetq_LIBRARIES ws2_32 wsock32)
 endif ()
 
+if (Threads_FOUND)
+  list(APPEND libnetq_LIBRARIES Threads::Threads)
+endif ()
+
 if (WITH_ZLIB)
   list(APPEND libnetq_LIBRARIES ZLIB::ZLIB)
 endif ()
@@ -536,16 +583,16 @@ if (WITH_OLE32)
   list(APPEND libnetq_LIBRARIES ole32)
 endif ()
 
-configure_file(config.h.cmake "${libnetq_GENERATED_DIR}/config.h" @ONLY)
+configure_file(config.h.in "${LNQ_GENERATED_DIR}/config.h" @ONLY)
 
-if (libnetq_PUBLIC_GENERATED_DIR)
-  list(APPEND libnetq_INCLUDES "${libnetq_GENERATED_DIR}")
+if (LNQ_PUBLIC_GENERATED_DIR)
+  list(APPEND libnetq_INCLUDES "${LNQ_GENERATED_DIR}")
 endif ()
 
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DATAFILES})
-add_library(libnetq ${libnetq_LIBRARY_TYPE} ${libnetq_GENERATED} ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DATAFILES})
+add_library(libnetq ${LNQ_LIBRARY_TYPE} ${libnetq_GENERATED} ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DATAFILES})
 target_include_directories(libnetq PUBLIC "$<BUILD_INTERFACE:${libnetq_INCLUDES}>")
-target_include_directories(libnetq PRIVATE "${libnetq_GENERATED_DIR}")
+target_include_directories(libnetq PRIVATE "${LNQ_GENERATED_DIR}")
 target_compile_definitions(libnetq PUBLIC "${libnetq_DEFINITIONS}")
 target_link_libraries(libnetq PUBLIC ${libnetq_LIBRARIES})
 set_target_properties(libnetq PROPERTIES PREFIX "")
@@ -566,3 +613,16 @@ install(TARGETS libnetq
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
   )
+
+message(STATUS "Build type . . . . . . . . . . . . . . . . . ${LNQ_LIBRARY_TYPE}")
+message(STATUS "Pthread found . . . . . . . . . . . . . . .  ${Threads_FOUND}")
+
+message(STATUS "ZLib found . . . . . . . . . . . . . . . . . ${ZLIB_FOUND}")
+if (DEFINED LNQ_WITH_ZLIB)
+  message(STATUS "ZLib dependency . . . . . . . . . . . . . .  ${WITH_ZLIB} (${LNQ_WITH_ZLIB})")
+endif ()
+
+message(STATUS "Ole32 found . . . . . . . . . . . . . . . .  ${OLE32_FOUND}")
+if (DEFINED LNQ_WITH_OLE32)
+  message(STATUS "Ole32 dependency . . . . . . . . . . . . . . ${WITH_OLE32} (${LNQ_WITH_OLE32})")
+endif ()

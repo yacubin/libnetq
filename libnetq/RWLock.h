@@ -12,7 +12,12 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_SYS_LINUX
+#include <linux/rwsem.h>
+typedef struct rw_semaphore NQRWLock;
+#endif
+
+#ifdef NQ_OS_WINDOWS
 #include <windows.h>
 typedef struct NQRWLock {
   SRWLOCK native;

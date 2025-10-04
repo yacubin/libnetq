@@ -12,7 +12,7 @@
 
 #include <libnetq/OS.h>
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
 
 #include <windows.h>
 

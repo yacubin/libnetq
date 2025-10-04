@@ -67,11 +67,11 @@ NQ_EXPORT bool NQApplication_dispatchEvent(NQApplication*, const NQEvent* e);
 NQ_EXPORT void* NQApplication_getUserPtr(NQApplication* app);
 NQ_EXPORT void NQApplication_setUserPtr(NQApplication* app, void* userdata);
 
-NQ_EXPORT NQApplication* NQGetMainApplication();
+NQ_EXPORT NQApplication* NQGetMainApplication(void);
 NQ_EXPORT void NQApplicationInitialize(const NQApplicationOperations* ops, NQApplicationCallbacks* callbacks);
 NQ_EXPORT void NQApplicationSendEvent(const NQEvent* e);
 NQ_EXPORT int NQApplicationRun(int flags);
-NQ_EXPORT void NQApplicationShutdown();
+NQ_EXPORT void NQApplicationShutdown(void);
 
 NQ_EXPORT int NQMainApplicationRun(const NQApplicationOperations* ops, NQApplicationCallbacks* callbacks);
 

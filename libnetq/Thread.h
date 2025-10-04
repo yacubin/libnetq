@@ -43,8 +43,8 @@ NQ_EXPORT void NQThread_detach(NQThread* thread);
 NQ_EXPORT int NQThread_suspend(NQThread* thread);
 NQ_EXPORT void NQThread_resume(NQThread* thread);
 
-NQ_EXPORT NQTID NQThreadId();
-NQ_EXPORT void NQThreadYield();
+NQ_EXPORT NQTID NQThreadId(void);
+NQ_EXPORT void NQThreadYield(void);
 NQ_EXPORT void NQThreadSleep(int32_t ms);
 
 #ifdef __cplusplus

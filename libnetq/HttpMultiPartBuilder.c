@@ -10,8 +10,6 @@
 #include "config.h"
 #include "libnetq/HttpMultiPartBuilder.h"
 
-#include <string.h>
-
 #include <libnetq/Limits.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/CStrBase.h>

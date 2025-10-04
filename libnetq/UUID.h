@@ -52,11 +52,11 @@ NQ_EXPORT int NQUUID_sprintfURN(const NQUUID* uuid, char* buffer, size_t size);
 
 #define NQUUID_version(uuid) (((uuid)->data[6] & 0xF0) >> 4)
 
-NQ_EXPORT const NQUUID* NQGetNilUUID();
-NQ_EXPORT const NQUUID* NQGetOmniUUID();
-NQ_EXPORT const char* NQGetNilUUIDString();
-NQ_EXPORT const char* NQGetOmniUUIDString();
-NQ_EXPORT const char* NQGetURNNIDUUIDString();
+NQ_EXPORT const NQUUID* NQGetNilUUID(void);
+NQ_EXPORT const NQUUID* NQGetOmniUUID(void);
+NQ_EXPORT const char* NQGetNilUUIDString(void);
+NQ_EXPORT const char* NQGetOmniUUIDString(void);
+NQ_EXPORT const char* NQGetURNNIDUUIDString(void);
 
 NQ_EXPORT int NQGenerateUUIDStringLower(char* buffer, size_t size);
 NQ_EXPORT int NQGenerateUUIDStringUpper(char* buffer, size_t size);

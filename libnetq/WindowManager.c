@@ -268,7 +268,7 @@ void NQWindowManagerInitialize(const struct NQWindowManagerOperations* ops, void
   }
 }
 
-void NQWindowManagerShutdown()
+void NQWindowManagerShutdown(void)
 {
   if (!s_storage.vtabl->finalize(s_storage.impl))
     return;

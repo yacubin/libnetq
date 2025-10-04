@@ -20,7 +20,6 @@ typedef struct NQUint8Array NQUint8Array;
 
 NQ_EXPORT NQUint8Array* NQUint8Array_alloc(size_t size);
 NQ_EXPORT NQUint8Array* NQUint8Array_create(const uint8_t* data, size_t size);
-NQ_EXPORT NQUint8Array* NQUint8Array_load(const char* filepath);
 NQ_EXPORT void NQUint8Array_destroy(NQUint8Array* array);
 NQ_EXPORT NQUint8Array* NQUint8Array_copy(const NQUint8Array* array);
 NQ_EXPORT uint8_t* NQUint8Array_data(NQUint8Array* array);

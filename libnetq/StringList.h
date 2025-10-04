@@ -10,8 +10,6 @@
 #ifndef _LIBNETQ_STRINGLIST_H
 #define _LIBNETQ_STRINGLIST_H
 
-#include <string.h>
-
 #include <libnetq/Basic.h>
 
 #ifdef __cplusplus

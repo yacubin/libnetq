@@ -12,6 +12,10 @@
 
 #include <libnetq/Basic.h>
 
+#ifdef NQ_SYS_LINUX
+# include <linux/errno.h>
+#endif
+
 #ifdef NQ_OS_WINDOWS
 # include <windows.h>
 #endif
@@ -30,14 +34,19 @@ typedef int NQErrorCode;
 # define NQ_ERROR_WOULDBLOCK WSAEWOULDBLOCK
 #endif
 
-#if defined(NQ_OS_UNIX)
+#if defined(NQ_SYS_LINUX) || defined(NQ_OS_UNIX)
 # define NQ_ERROR_INPROGRESS EINPROGRESS
 # define NQ_ERROR_WOULDBLOCK EWOULDBLOCK
 #endif
 
-static inline NQErrorCode NQGetLastError()
+static inline NQErrorCode NQGetLastError(void)
 {
   int ec;
+
+#ifdef NQ_SYS_LINUX
+  ec = 0;
+#endif
+
 #ifdef NQ_OS_WINDOWS
   ec = WSAGetLastError();
 #endif
@@ -51,6 +60,10 @@ static inline NQErrorCode NQGetLastError()
 
 static inline void NQSetLastError(NQErrorCode ec)
 {
+#ifdef NQ_SYS_LINUX
+  NQ_UNUSED_PARAM(ec);
+#endif
+
 #ifdef NQ_OS_WINDOWS
   WSASetLastError(ec);
 #endif
@@ -60,7 +73,7 @@ static inline void NQSetLastError(NQErrorCode ec)
 #endif
 }
 
-static inline void NQClearLastError()
+static inline void NQClearLastError(void)
 {
 #ifdef NQ_OS_WINDOWS
   WSASetLastError(0);

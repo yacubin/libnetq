@@ -10,12 +10,17 @@
 #include "config.h"
 #include "libnetq/TimeVal.h"
 
-#include <libnetq/Math.h>
+#include <libnetq/Limits.h>
 
-#ifdef NQ_OS_WINDOWS
-#include <winsock.h>
+#if defined(NQ_OS_WINDOWS)
+# include <winsock2.h>
+#elif defined(NQ_OS_UNIX)
+# include <sys/time.h>
 #else
-#include <sys/time.h>
+struct timeval {
+  long tv_sec;
+  long tv_usec;
+};
 #endif
 
 NQTimeVal* NQTimeToTimeVal(NQTime time, NQTimeVal* tv)
@@ -43,10 +48,10 @@ NQTime NQTimeValToTime(const NQTimeVal* tv)
   return (NQTime)(tv->tv_sec * NQ_MSECS_PER_SEC + tv->tv_usec / NQ_MSECS_PER_SEC);
 }
 
-double NQTimeValToSecond(const NQTimeVal* tv)
+int64_t NQTimeValToMsecs(const NQTimeVal* tv)
 {
   if (tv == NULL)
-    return HUGE_VAL;
+    return NQ_INT64_MAX;
 
-  return tv->tv_sec + tv->tv_usec / 1000000.0;
+  return (tv->tv_sec * 1000) + (tv->tv_usec / 1000);
 }

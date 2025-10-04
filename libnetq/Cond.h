@@ -12,7 +12,11 @@
 
 #include <libnetq/Mutex.h>
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_SYS_LINUX
+#include <linux/wait.h>
+#endif
+
+#ifdef NQ_OS_WINDOWS
 #include <windows.h>
 #endif
 
@@ -24,7 +28,13 @@
 extern "C" {
 #endif
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_SYS_LINUX
+typedef struct NQCond {
+  wait_queue_head_t waitQueue;
+} NQCond;
+#endif
+
+#ifdef NQ_OS_WINDOWS
 #ifdef SRWLOCK_INIT
 typedef CONDITION_VARIABLE NQCond;
 #define HAVE_CONDITION_VARIABLE 1
@@ -47,7 +57,7 @@ typedef pthread_cond_t NQCond;
 NQ_EXPORT void NQCond_init(NQCond* cond);
 NQ_EXPORT void NQCond_destroy(NQCond* cond);
 NQ_EXPORT void NQCond_wait(NQCond* cond, NQMutex* mutex);
-NQ_EXPORT bool NQCond_waitfor(NQCond* cond, NQMutex* mutex, uint32_t ms);
+NQ_EXPORT bool NQCond_waitfor(NQCond* cond, NQMutex* mutex, uint32_t msecs);
 NQ_EXPORT void NQCond_signal(NQCond* cond);
 NQ_EXPORT void NQCond_broadcast(NQCond* cond);
 

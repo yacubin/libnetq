@@ -42,7 +42,7 @@ static inline char* iter2key(NQKeyValIter* iter)
   return (char*)(iter) + sizeof(*iter);
 }
 
-NQKeyVal* NQKeyVal_create()
+NQKeyVal* NQKeyVal_create(void)
 {
   NQKeyVal* thiz;
 

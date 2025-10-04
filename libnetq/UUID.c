@@ -12,32 +12,35 @@
 
 #include <libnetq/String.h>
 #include <libnetq/Math.h>
-#include <libnetq/UnlimitedRandom.h>
 #include <libnetq/Assert.h>
 
 #if WITH_OLE32
-#include <combaseapi.h>
+# include <combaseapi.h>
+#elif defined(NQ_SYS_LINUX)
+# include <linux/uuid.h>
+#else
+# include <libnetq/UnlimitedRandom.h>
 #endif
 
 static char kURNNIDUUIDString[] = "uuid";
 static char kNilUUIDString[] = "00000000-0000-0000-0000-000000000000";
 static char kOmniUUIDString[] = "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF";
 
-static NQUUID kNilUUID = {
+static NQUUID kNilUUID = {{
   0x00, 0x00, 0x00, 0x00,
   0x00, 0x00,
   0x00, 0x00,
   0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
+}};
 
-static NQUUID kOmniUUID = {
+static NQUUID kOmniUUID = {{
   0xff, 0xff, 0xff, 0xff,
   0xff, 0xff,
   0xff, 0xff,
   0xff, 0xff,
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-};
+}};
 
 void NQUUID_init(NQUUID* uuid, const uint8_t* data, size_t size)
 {
@@ -78,6 +81,9 @@ void NQUUID_initAsCanonical(NQUUID* uuid)
   data[13] = (uint8_t)(newId.Data4[5]);
   data[14] = (uint8_t)(newId.Data4[6]);
   data[15] = (uint8_t)(newId.Data4[7]);
+#elif defined(NQ_SYS_LINUX)
+  NQ_STATIC_ASSERT(NQ_UUID_SIZE == UUID_SIZE, "");
+  generate_random_uuid(uuid->data);
 #else
   NQGetUnlimitedRandom(uuid->data, sizeof(uuid->data));
 
@@ -269,27 +275,27 @@ int NQUUID_sprintfURN(const NQUUID* uuid, char* buffer, size_t size)
   return prefixLength + NQ_UUID_STRING_SIZE;
 }
 
-const NQUUID* NQGetNilUUID()
+const NQUUID* NQGetNilUUID(void)
 {
   return &kNilUUID;
 }
 
-const NQUUID* NQGetOmniUUID()
+const NQUUID* NQGetOmniUUID(void)
 {
   return &kOmniUUID;
 }
 
-const char* NQGetNilUUIDString()
+const char* NQGetNilUUIDString(void)
 {
   return kNilUUIDString;
 }
 
-const char* NQGetOmniUUIDString()
+const char* NQGetOmniUUIDString(void)
 {
   return kOmniUUIDString;
 }
 
-const char* NQGetURNNIDUUIDString()
+const char* NQGetURNNIDUUIDString(void)
 {
   return kURNNIDUUIDString;
 }

@@ -10,10 +10,9 @@
 #include "config.h"
 #include "libnetq/JSONWriter.h"
 
-#include <string.h>
-#include <stdio.h>
-
 #include <libnetq/CType.h>
+#include <libnetq/CStrBase.h>
+#include <libnetq/Sprintf.h>
 #include <libnetq/Assert.h>
 #include <libnetq/CStrBase.h>
 
@@ -193,12 +192,12 @@ static inline bool writeValDelimiter(NQJSONWriter* thiz)
   return true;
 }
 
-static bool inline isLastDepth(const NQJSONWriter* thiz)
+static inline bool isLastDepth(const NQJSONWriter* thiz)
 {
   return thiz->depthIndex >= (NQ_ARRAY_LENGTH(thiz->depth) - 1);
 }
 
-static bool inline writeKey(NQJSONWriter* thiz, const char* characters, size_t length)
+static inline bool writeKey(NQJSONWriter* thiz, const char* characters, size_t length)
 {
   if (!writeKeyDelimiter(thiz))
     return false;
@@ -215,7 +214,7 @@ static bool inline writeKey(NQJSONWriter* thiz, const char* characters, size_t l
   return true;
 }
 
-static bool inline writeString(NQJSONWriter* thiz, const char* characters, size_t length)
+static inline bool writeString(NQJSONWriter* thiz, const char* characters, size_t length)
 {
   if (!writeValDelimiter(thiz))
     return false;
@@ -233,7 +232,7 @@ static bool inline writeString(NQJSONWriter* thiz, const char* characters, size_
   return true;
 }
 
-static bool inline writeObjectBegin(NQJSONWriter* thiz)
+static inline bool writeObjectBegin(NQJSONWriter* thiz)
 {
   if (isLastDepth(thiz))
       return false;
@@ -264,7 +263,7 @@ static inline bool writeObjectEnd(NQJSONWriter* thiz)
   return true;
 }
 
-static bool inline writeArrayBegin(NQJSONWriter* thiz)
+static inline bool writeArrayBegin(NQJSONWriter* thiz)
 {
   if (isLastDepth(thiz))
       return false;
@@ -295,7 +294,7 @@ static inline bool writeArrayEnd(NQJSONWriter* thiz)
   return true;
 }
 
-static bool writeInt64(NQJSONWriter* thiz, int64_t val)
+static inline bool writeInt64(NQJSONWriter* thiz, int64_t val)
 {
   if (!writeValDelimiter(thiz))
     return false;
@@ -312,7 +311,7 @@ static bool writeInt64(NQJSONWriter* thiz, int64_t val)
   return true;
 }
 
-static bool writeUint64(NQJSONWriter* thiz, uint64_t val)
+static inline bool writeUint64(NQJSONWriter* thiz, uint64_t val)
 {
   if (!writeValDelimiter(thiz))
     return false;
@@ -329,8 +328,12 @@ static bool writeUint64(NQJSONWriter* thiz, uint64_t val)
   return true;
 }
 
-static bool writeDouble(NQJSONWriter* thiz, double val)
+static inline bool writeDouble(NQJSONWriter* thiz, double val)
 {
+#ifdef NQ_SYS_LINUX
+  NQ_ASSERT_NOT_REACHED();
+  return false;
+#else
   if (!writeValDelimiter(thiz))
     return false;
 
@@ -344,9 +347,10 @@ static bool writeDouble(NQJSONWriter* thiz, double val)
 
   thiz->count++;
   return true;
+#endif
 }
 
-static bool inline writeNull(NQJSONWriter* thiz)
+static inline bool writeNull(NQJSONWriter* thiz)
 {
   if (!writeValDelimiter(thiz))
     return false;
@@ -358,7 +362,7 @@ static bool inline writeNull(NQJSONWriter* thiz)
   return true;
 }
 
-static bool inline writeBool(NQJSONWriter* thiz, bool val)
+static inline bool writeBool(NQJSONWriter* thiz, bool val)
 {
   if (!writeValDelimiter(thiz))
     return false;

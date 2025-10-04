@@ -215,12 +215,12 @@ void NQThread_resume(NQThread* thread)
   NQ_ASSERT_NOT_REACHED();
 }
 
-NQTID NQThreadId()
+NQTID NQThreadId(void)
 {
   return (NQTID)pthread_self();
 }
 
-void NQThreadYield()
+void NQThreadYield(void)
 {
 #ifdef HAVE_PTHREAD_YIELD
   pthread_yield();

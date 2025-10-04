@@ -35,7 +35,7 @@ struct CoherentLooper {
   struct CoherentLooperEntry* free;
 };
 
-CoherentLooper* CoherentLooper_create()
+CoherentLooper* CoherentLooper_create(void)
 {
   CoherentLooper* thiz = (CoherentLooper*)NQMalloc(sizeof(CoherentLooper));
   if (thiz == NULL)

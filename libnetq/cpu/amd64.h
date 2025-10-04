@@ -27,7 +27,12 @@
 #define NQ_CPU_NAME "AMD64"
 #define NQ_CPU_ABI "x86_64"
 #define NQ_CPU_LITTLE_ENDIAN 1
+
+#ifdef __LP64__
 #define NQ_CPU_64BIT 1
+#else
+#define NQ_CPU_32BIT 1
+#endif
 
 #endif
 

@@ -10,10 +10,8 @@
 #include "config.h"
 #include "libnetq/Log.h"
 
-#include <stdio.h>
-
-#include <libnetq/Compiler.h>
-#include <libnetq/String.h>
+#include <libnetq/CStrBase.h>
+#include <libnetq/Sprintf.h>
 #include <libnetq/Math.h>
 #include <libnetq/Time.h>
 #include <libnetq/Abort.h>
@@ -23,7 +21,7 @@
 #include <android/log.h>
 #endif
 
-#ifdef NQ_OS_WIN
+#ifdef NQ_OS_WINDOWS
 #include <windows.h>
 #endif
 
@@ -55,9 +53,9 @@ char NQLogLevelToChar(NQLogLevel level)
   };
 }
 
-size_t NQLog_snprint(char* buffer, size_t size, NQLogLevel level, const char* tag, const char* format, ...)
+int NQLog_snprint(char* buffer, size_t size, NQLogLevel level, const char* tag, const char* format, ...)
 {
-  size_t result;
+  int result;
   va_list args;
   va_start(args, format);
   result = NQLog_vsnprint(buffer, size, level, tag, format, args);
@@ -65,7 +63,7 @@ size_t NQLog_snprint(char* buffer, size_t size, NQLogLevel level, const char* ta
   return result;
 }
 
-size_t NQLog_vsnprint(char* buffer, size_t size, NQLogLevel level, const char* tag, const char* format, va_list args)
+int NQLog_vsnprint(char* buffer, size_t size, NQLogLevel level, const char* tag, const char* format, va_list args)
 {
   int n;
   char* ptr;
@@ -107,9 +105,9 @@ size_t NQLog_vsnprint(char* buffer, size_t size, NQLogLevel level, const char* t
   return ptr - buffer;
 }
 
-size_t NQLog_print(NQLogLevel level, const char* tag, const char* format, ...)
+int NQLog_print(NQLogLevel level, const char* tag, const char* format, ...)
 {
-  size_t result;
+  int result;
   va_list args;
   va_start(args, format);
   result = NQLog_vprint(level, tag, format, args);
@@ -117,9 +115,12 @@ size_t NQLog_print(NQLogLevel level, const char* tag, const char* format, ...)
   return result;
 }
 
-size_t NQLog_vprint(NQLogLevel level, const char* tag, const char* format, va_list args)
+int NQLog_vprint(NQLogLevel level, const char* tag, const char* format, va_list args)
 {
-#ifdef NQ_OS_ANDROID
+#if defined(NQ_SYS_LINUX)
+  return vprintk(format, args);
+
+#elif defined(NQ_OS_ANDROID)
   // adb logcat -s "NQ"
   int result;
   int prio;
@@ -144,7 +145,7 @@ size_t NQLog_vprint(NQLogLevel level, const char* tag, const char* format, va_li
   }
 
   result = __android_log_vprint(prio, tag, format, args);
-  return (size_t)result;
+  return result;
 #else
   size_t result;
   char buffer[BUFFER_SIZE];

@@ -40,6 +40,24 @@ NQ_EXPORT size_t NQLeb128DecodeUint16(const void* data, size_t size, uint16_t* r
 NQ_EXPORT size_t NQLeb128DecodeUint32(const void* data, size_t size, uint32_t* result);
 NQ_EXPORT size_t NQLeb128DecodeUint64(const void* data, size_t size, uint64_t* result);
 
+struct NQSLEB128Ctx {
+  int64_t value;
+  uint32_t index;
+  uint32_t size;
+};
+
+void NQSLEB128Ctx_init(struct NQSLEB128Ctx*);
+bool NQSLEB128Ctx_add(struct NQSLEB128Ctx*, uint8_t byte);
+
+struct NQULEB128Ctx {
+  uint64_t value;
+  uint32_t index;
+  uint32_t size;
+};
+
+void NQULEB128Ctx_init(struct NQULEB128Ctx*);
+bool NQULEB128Ctx_add(struct NQULEB128Ctx*, uint8_t byte);
+
 #ifdef __cplusplus
 }
 #endif

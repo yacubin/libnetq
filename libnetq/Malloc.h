@@ -18,8 +18,8 @@ extern "C" {
 
 NQ_EXPORT void* NQMalloc(size_t size);
 NQ_EXPORT void* NQZeroMalloc(size_t size);
-NQ_EXPORT void* NQCalloc(size_t numElements, size_t elementSize);
-NQ_EXPORT void* NQRealloc(void*, size_t);
+NQ_EXPORT void* NQCalloc(size_t n, size_t size);
+NQ_EXPORT void* NQRealloc(void* ptr, size_t size);
 NQ_EXPORT void NQFree(void* ptr);
 
 #ifdef __cplusplus

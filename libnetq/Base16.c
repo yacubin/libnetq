@@ -11,8 +11,7 @@
 #include "libnetq/Base16.h"
 
 #include <libnetq/CType.h>
-
-#include <string.h>
+#include <libnetq/CStrBase.h>
 
 static const char lowerDigits[17] = "0123456789abcdef";
 static const char upperDigits[17] = "0123456789ABCDEF";

@@ -10,11 +10,11 @@
 #include "config.h"
 #include "libnetq/ByteBuffer.h"
 
-#include <string.h>
-
+#include <libnetq/CStrBase.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Math.h>
 #include <libnetq/Assert.h>
+#include <libnetq/Limits.h>
 
 void NQByteBuffer_init(NQByteBuffer* thiz)
 {
@@ -30,6 +30,9 @@ void NQByteBuffer_finalize(NQByteBuffer* thiz)
 
 static bool NQByteBuffer_reserveCapacity(NQByteBuffer* thiz, size_t newCapacity)
 {
+  if (NQ_UINT32_MAX < newCapacity)
+    return false;
+
   if (newCapacity <= thiz->capacity)
     return true;
 
@@ -44,7 +47,7 @@ static bool NQByteBuffer_reserveCapacity(NQByteBuffer* thiz, size_t newCapacity)
   }
 
   thiz->data = newData;
-  thiz->capacity = newCapacity;
+  thiz->capacity = (uint32_t)newCapacity;
 
   return true;
 }

@@ -10,10 +10,15 @@
 #ifndef _LIBNETQ_TIME_H
 #define _LIBNETQ_TIME_H
 
-#include <time.h>
-
 #include <libnetq/Basic.h>
 #include <libnetq/Limits.h>
+
+#ifdef NQ_SYS_LINUX
+#include <linux/time.h>
+typedef time64_t time_t;
+#else
+#include <time.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,10 +65,10 @@ typedef int64_t NQUnixTime; // in seconds
 // NQMonoTime
 
 typedef double NQSeconds;
-NQ_EXPORT NQTime NQGetTime();
-NQ_EXPORT NQTick NQGetCPUTick();
+NQ_EXPORT NQTime NQGetTime(void);
+NQ_EXPORT NQTick NQGetCPUTick(void);
 
-static NQ_ALWAYS_INLINE NQUnixTime NQGetUnixTime()
+static NQ_ALWAYS_INLINE NQUnixTime NQGetUnixTime(void)
 {
   return NQGetTime() / NQ_MSECS_PER_SEC;
 }

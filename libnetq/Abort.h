@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-NQ_EXPORT NQ_NORETURN void NQAbort();
+NQ_EXPORT NQ_NORETURN void NQAbort(void);
 
 #ifdef __cplusplus
 }

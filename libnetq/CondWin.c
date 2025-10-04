@@ -11,6 +11,7 @@
 #include "libnetq/Cond.h"
 
 #ifdef NQ_OS_WINDOWS
+
 #include <libnetq/Assert.h>
 
 #ifdef HAVE_CONDITION_VARIABLE
@@ -202,4 +203,4 @@ void NQCond_broadcast(NQCond* cond)
 
 #endif
 
-#endif /* NQ_OS_WIN */
+#endif /* NQ_OS_WINDOWS */

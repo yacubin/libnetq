@@ -25,19 +25,17 @@ extern "C" {
 
 #define NQ_NIL '\0'
 
-#ifdef NQ_COMPILER_MSVC
-#define nq_strncasecmp _strnicmp
-#define nq_strnicmp _strnicmp
-#define nq_stricmp _stricmp
-#endif
-
-#ifdef NQ_COMPILER_GCC
-#define nq_strncasecmp strncasecmp
-#define nq_strnicmp strncasecmp
-#define nq_stricmp strcasecmp
-#endif
-
 #define NQ_CSTR_LENGTH(s) (NQ_ARRAY_LENGTH(s)-1)
+
+#define NQCStrCompare strcmp
+
+#if defined(NQ_COMPILER_MSVC)
+#define NQCStrCaseCompare _stricmp
+#define NQCStrCaseCompareWithLength _strnicmp
+#else
+#define NQCStrCaseCompare strcasecmp
+#define NQCStrCaseCompareWithLength strncasecmp
+#endif
 
 NQ_EXPORT const char* NQCStrEmpty(void);
 NQ_EXPORT size_t NQCStrLen(const uint8_t* str);

@@ -14,29 +14,29 @@
 
 bool NQIsFalse(const char* s)
 {
-  return nq_stricmp(s, NQ_FALSE_STRING) == 0;
+  return NQCStrCaseCompare(s, NQ_FALSE_STRING) == 0;
 }
 
 bool NQIsTrue(const char* s)
 {
-  return nq_stricmp(s, NQ_TRUE_STRING) == 0;
+  return NQCStrCaseCompare(s, NQ_TRUE_STRING) == 0;
 }
 
 bool NQIsOff(const char* s)
 {
-  return nq_stricmp(s, NQ_OFF_STRING) == 0;
+  return NQCStrCaseCompare(s, NQ_OFF_STRING) == 0;
 }
 
 bool NQIsOn(const char* s)
 {
-  return nq_stricmp(s, NQ_ON_STRING) == 0;
+  return NQCStrCaseCompare(s, NQ_ON_STRING) == 0;
 }
 
 bool NQIsEnabled(const char* s)
 {
   if (NQIsTrue(s) || NQIsOn(s))
     return true;
-  if (!nq_stricmp(s, NQ_ONE_STRING))
+  if (!NQCStrCaseCompare(s, NQ_ONE_STRING))
     return true;
 
   return false;
@@ -46,7 +46,7 @@ bool NQIsDisabled(const char* s)
 {
   if (NQIsFalse(s) || NQIsOff(s))
     return true;
-  if (!nq_stricmp(s, NQ_ZERO_STRING))
+  if (!NQCStrCaseCompare(s, NQ_ZERO_STRING))
     return true;
 
   return false;

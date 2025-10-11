@@ -22,7 +22,10 @@ macro (LNQ_OPTION_DEFINE _name _description _value)
 endmacro ()
 
 macro (LNQ_FEATURE_DEFINE _name _description)
-  LNQ_OPTION_DEFINE(${_name} "${_description}" "Default" "Enable" "Disable")
+  LNQ_OPTION_DEFINE(${_name} "${_description}" "DEFAULT" "ON" "OFF")
+  if (NOT LNQ_${_name} MATCHES "DEFAULT|ON|OFF|FALSE|TRUE|0|1")
+    message(FATAL_ERROR "Wrong '${LNQ_${_name}}' value for LNQ_${_name}")
+  endif ()
 endmacro ()
 
 LNQ_OPTION_DEFINE(LIBRARY_TYPE "Choose the library type: SHARED, STATIC, OBJECT" SHARED STATIC OBJECT)
@@ -31,8 +34,10 @@ LNQ_FEATURE_DEFINE(USE_EXPORT "Enable symbol export as a shared library")
 option(LNQ_PUBLIC_GENERATED_DIR "Allow config.h to be populate in include directories" OFF)
 set(LNQ_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
 
-if (LNQ_USE_EXPORT STREQUAL "Enable")
+if (LNQ_USE_EXPORT STREQUAL DEFAULT)
   set(NQ_USE_EXPORT ON)
+else ()
+  set(NQ_USE_EXPORT ${LNQ_USE_EXPORT})
 endif ()
 
 math(EXPR NQ_VERSION_CODE "${PROJECT_VERSION_MAJOR} * 10000000 + ${PROJECT_VERSION_MINOR} * 100000 + ${PROJECT_VERSION_PATCH} * 1000")
@@ -48,39 +53,44 @@ if ((MINGW OR UNIX) AND NOT APPLE)
     )
 endif ()
 
+set(WITH_PTHREAD OFF)
 find_package(Threads)
-if (Threads_FOUND AND CMAKE_USE_PTHREADS_INIT AND NOT APPLE)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+if (Threads_FOUND)
+  set(WITH_PTHREAD ON)
+  if (CMAKE_USE_PTHREADS_INIT AND NOT APPLE)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+  endif ()
 endif ()
 
 set(WITH_ZLIB OFF)
 find_package(ZLIB)
 if (ZLIB_FOUND)
-  LNQ_FEATURE_DEFINE(WITH_ZLIB "Allow compilation with ZLIB library")
   set(HAVE_ZLIB ON)
-  if (LNQ_WITH_ZLIB STREQUAL "Enable")
+  LNQ_FEATURE_DEFINE(WITH_ZLIB "Allow compilation with ZLIB library")
+  if (NOT LNQ_WITH_ZLIB STREQUAL "DEFAULT")
+    set(WITH_ZLIB ${LNQ_WITH_ZLIB})
+  elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
     set(WITH_ZLIB ON)
   endif ()
 endif ()
 
 set(WITH_OLE32 OFF)
-set(WITH_FOUND FALSE)
+set(FOUND_FOUND FALSE)
 set(CMAKE_REQUIRED_LIBRARIES_SAVE ${CMAKE_REQUIRED_LIBRARIES})
 list(APPEND CMAKE_REQUIRED_LIBRARIES ole32)
 check_include_file(combaseapi.h HAVE_COMBASEAPI_H)
 if (HAVE_COMBASEAPI_H)
-  LNQ_FEATURE_DEFINE(WITH_OLE32 "Allow compilation with OLE32 library")
   set(OLE32_FOUND TRUE)
-  if (LNQ_WITH_OLE32 STREQUAL "Enable")
+  LNQ_FEATURE_DEFINE(WITH_OLE32 "Allow compilation with OLE32 library")
+  if (NOT LNQ_WITH_OLE32 STREQUAL "DEFAULT")
+    set(WITH_OLE32 ${LNQ_WITH_OLE32})
+  elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
     set(WITH_OLE32 ON)
   endif ()
 endif ()
 set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_SAVE})
 
 if (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
-  if (LNQ_WITH_ZLIB STREQUAL "Default")
-    set(WITH_ZLIB ON)
-  endif ()
   if (LNQ_WITH_OLE32 STREQUAL "Default")
     set(WITH_OLE32 ON)
   endif ()
@@ -314,6 +324,7 @@ set(libnetq_HEADERS
   libnetq/AppMain.h
   libnetq/Arguments.h
   libnetq/Array.h
+  libnetq/ASCII.h
   libnetq/Assert.h
   libnetq/Asset.h
   libnetq/AssetBinary.h
@@ -431,6 +442,7 @@ set(libnetq_SOURCES
   libnetq/ApplicationAndroid.c
   libnetq/Arguments.c
   libnetq/Array.c
+  libnetq/Asset.c
   libnetq/AssetBinary.c
   libnetq/AssetSystem.c
   libnetq/Atomic.c
@@ -571,7 +583,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Windows")
   list(APPEND libnetq_LIBRARIES ws2_32 wsock32)
 endif ()
 
-if (Threads_FOUND)
+if (WITH_PTHREAD)
   list(APPEND libnetq_LIBRARIES Threads::Threads)
 endif ()
 
@@ -615,14 +627,6 @@ install(TARGETS libnetq
   )
 
 message(STATUS "Build type . . . . . . . . . . . . . . . . . ${LNQ_LIBRARY_TYPE}")
-message(STATUS "Pthread found . . . . . . . . . . . . . . .  ${Threads_FOUND}")
-
-message(STATUS "ZLib found . . . . . . . . . . . . . . . . . ${ZLIB_FOUND}")
-if (DEFINED LNQ_WITH_ZLIB)
-  message(STATUS "ZLib dependency . . . . . . . . . . . . . .  ${WITH_ZLIB} (${LNQ_WITH_ZLIB})")
-endif ()
-
-message(STATUS "Ole32 found . . . . . . . . . . . . . . . .  ${OLE32_FOUND}")
-if (DEFINED LNQ_WITH_OLE32)
-  message(STATUS "Ole32 dependency . . . . . . . . . . . . . . ${WITH_OLE32} (${LNQ_WITH_OLE32})")
-endif ()
+message(STATUS "PThread  . . . . . . . . . . . . . . . . . . ${WITH_PTHREAD} (HAVE ${Threads_FOUND})")
+message(STATUS "ZLib . . . . . . . . . . . . . . . . . . . . ${WITH_ZLIB} (HAVE ${ZLIB_FOUND})")
+message(STATUS "Ole32  . . . . . . . . . . . . . . . . . . . ${WITH_OLE32} (HAVE ${OLE32_FOUND})")

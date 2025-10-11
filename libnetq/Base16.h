@@ -15,7 +15,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-   
+
 #define NQ_BASE16_UPPER (0)
 #define NQ_BASE16_LOWER (1)
 

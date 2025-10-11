@@ -892,7 +892,7 @@ bool NQSLEB128Ctx_add(struct NQSLEB128Ctx* ctx, uint8_t byte)
       b = byte;
 
     if (b)
-      nbits += (32 - __builtin_clz(b));
+      nbits += NQGetFls32(b);
     else if (nbits == 0)
       nbits = 1; // Zero has 0 size
 
@@ -930,7 +930,7 @@ bool NQULEB128Ctx_add(struct NQULEB128Ctx* ctx, uint8_t byte)
   }
   else {
     if (byte)
-      nbits += (32 - __builtin_clz(byte));
+      nbits += NQGetFls32(byte);
     else if (nbits == 0)
       nbits = 1; // Zero has 0 size
     done = true;

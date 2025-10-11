@@ -264,13 +264,10 @@ int64_t nq_gcd64(int64_t a, int64_t b)
 }
 #endif
 
-unsigned nq_clz32(uint32_t number)
+#if !NQ_HAS_BUILTIN(__builtin_ctz)
+unsigned NQGetCtz32(uint32_t number)
 {
-#if defined(NQ_COMPILER_GCC)
-  if (number)
-    return __builtin_ctz(number);
-  return 32;
-#elif defined(NQ_COMPILER_MSVC) && defined(NQ_CPU_64BIT)
+#if defined(NQ_COMPILER_MSVC) && defined(NQ_CPU_64BIT)
   unsigned long ret = 0;
   if (_BitScanForward(&ret, number))
     return ret;
@@ -285,34 +282,21 @@ unsigned nq_clz32(uint32_t number)
   }
   return zeroCount;
 #endif
-#if 0
-  unsigned zeroCount = 0;
-  for (unsigned i = 0; i < 32; i++) {
-    if (number & 1)
-      break;
-
-    zeroCount++;
-    number >>= 1;
-  }
-  return zeroCount;
-#endif
 }
+#endif
 
-unsigned nq_clz64(uint64_t number)
+#if !NQ_HAS_BUILTIN(__builtin_clzll)
+unsigned NQGetCtz64(uint64_t x)
 {
-#if defined(NQ_COMPILER_GCC)
-  if (number)
-    return __builtin_clzll(number);
-  return 64;
-#elif defined(NQ_COMPILER_MSVC) && defined(NQ_CPU_64BIT) && !defined(NQ_CPU_ARM)
+#if defined(NQ_COMPILER_MSVC) && defined(NQ_CPU_64BIT) && !defined(NQ_CPU_ARM)
   unsigned long ret = 0;
-  if (_BitScanReverse64(&ret, number))
+  if (_BitScanReverse64(&ret, x))
     return 63 - ret;
   return 64;
 #else
   unsigned zeroCount = 0;
   for (int i = 63; i >= 0; i--) {
-    if (!(number >> i))
+    if (!(x >> i))
       zeroCount++;
     else
       break;
@@ -320,3 +304,4 @@ unsigned nq_clz64(uint64_t number)
   return zeroCount;
 #endif
 }
+#endif

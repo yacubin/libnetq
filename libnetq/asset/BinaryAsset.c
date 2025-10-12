@@ -7,11 +7,11 @@
  * under the MIT License. See LICENSE file for details.
  */
 
-#define NQ_CLASS_NAME "NQAssetBinary"
+#define NQ_CLASS_NAME "NQBinaryAsset"
 #define NQ_LOG_TAG NQ_CLASS_NAME
 
 #include "config.h"
-#include "libnetq/AssetBinary.h"
+#include "libnetq/asset/BinaryAsset.h"
 
 #include <libnetq/String.h>
 #include <libnetq/Limits.h>
@@ -25,8 +25,6 @@
 #include <zlib.h>
 
 extern const NQObjectClass __NQAssetBinaryClass;
-extern const NQObjectClass __NQAssetDirBinaryClass;
-extern const NQObjectClass __NQAssetFileBinaryClass;
 
 typedef struct ZipEntry {
   const char* name;
@@ -35,7 +33,7 @@ typedef struct ZipEntry {
   uint64_t size;
 } ZipEntry;
 
-struct NQAssetSystemBinary {
+struct NQBinaryAsset {
   const NQObjectClass* class;
   const uint8_t* data;
   uint32_t size;
@@ -44,9 +42,9 @@ struct NQAssetSystemBinary {
   uint16_t totalFiles;
 };
 
-struct NQAssetDirBinary {
-  const NQObjectClass* class;
-  NQAssetSystemBinary* system;
+struct BinaryAssetDir {
+  NQAssetDir base;
+  NQBinaryAsset* system;
   uint16_t index;
   char dirname[1];
 };
@@ -58,9 +56,9 @@ enum {
   FILE_READ_ERROR,
 };
 
-struct NQAssetFileBinary {
-  const NQObjectClass* class;
-  NQAssetSystemBinary* system;
+struct BinaryAssetFile {
+  NQAssetFile base;
+  NQBinaryAsset* system;
   const uint8_t* data;
   uint64_t size;
   int status;
@@ -102,7 +100,7 @@ static void ZipEntry_finalize(struct ZipEntry* zfile)
   NQFree((void*)zfile->name);
 }
 
-NQAssetSystemBinary* NQAssetSystemBinary_create(const uint8_t* data, size_t size)
+NQBinaryAsset* NQBinaryAsset_create(const uint8_t* data, size_t size)
 {  
   if (size < 2 || memcmp(data, "PK", 2) != 0)
     return NULL;
@@ -115,7 +113,7 @@ NQAssetSystemBinary* NQAssetSystemBinary_create(const uint8_t* data, size_t size
   const uint8_t* end = data + size;
   uintptr_t ecdirOffset = ecdirData - data;
 
-  NQAssetSystemBinary* system = (NQAssetSystemBinary*)NQZeroMalloc(sizeof(NQAssetSystemBinary));
+  NQBinaryAsset* system = (NQBinaryAsset*)NQZeroMalloc(sizeof(NQBinaryAsset));
   if (system == NULL)
     return NULL;
 
@@ -141,7 +139,7 @@ NQAssetSystemBinary* NQAssetSystemBinary_create(const uint8_t* data, size_t size
   return system;
 }
 
-void NQAssetSystemBinary_destroy(NQAssetSystemBinary* system)
+void NQBinaryAsset_destroy(NQBinaryAsset* system)
 {
   uint16_t n;
 
@@ -154,30 +152,22 @@ void NQAssetSystemBinary_destroy(NQAssetSystemBinary* system)
   NQFree(system);
 }
 
-NQAssetDirBinary* NQAssetBinary_openDir(NQAssetSystemBinary* system, const char* dirname)
+static void dirClose(NQAssetDir* dir)
 {
-  size_t n = strlen(dirname);
-  NQAssetDirBinary* dir = (NQAssetDirBinary*)NQZeroMalloc(sizeof(NQAssetDirBinary) + n + 1);
-  if (dir == NULL)
-    return NULL;
-
-  dir->class = &__NQAssetDirBinaryClass;
-  dir->system = system;
-  dir->index = 0;
-  strcpy(dir->dirname, dirname);
-
-  return dir;
+  struct BinaryAssetDir* thiz = (struct BinaryAssetDir*)dir;
+  NQFree(thiz);
 }
 
-const char* NQAssetDirBinary_readFileName(NQAssetDirBinary* dir)
+static const char* dirReadFileName(NQAssetDir* dir)
 {
-  while (dir->index < dir->system->totalFiles) {
-    const char* fileName = dir->system->files[dir->index++].name;
+  struct BinaryAssetDir* thiz = (struct BinaryAssetDir*)dir;
+  while (thiz->index < thiz->system->totalFiles) {
+    const char* fileName = thiz->system->files[thiz->index++].name;
 
-    if (*dir->dirname == '\0')
+    if (*thiz->dirname == '\0')
       return fileName;
 
-    const char* s1 = dir->dirname;
+    const char* s1 = thiz->dirname;
     const char* s2 = fileName;
     for (;;) {
       if (*s1 != *s2) {
@@ -192,12 +182,28 @@ const char* NQAssetDirBinary_readFileName(NQAssetDirBinary* dir)
   return NULL;
 }
 
-void NQAssetDirBinary_close(NQAssetDirBinary* dir)
+static const struct NQAssetDirCallbacks s_assetDirCallbacks =
 {
-  NQFree(dir);
+  .close = dirClose,
+  .readFileName = dirReadFileName,
+};
+
+NQAssetDir* NQAssetBinary_openDir(NQBinaryAsset* system, const char* dirname)
+{
+  size_t n = strlen(dirname);
+  struct BinaryAssetDir* thiz = (struct BinaryAssetDir*)NQZeroMalloc(sizeof(*thiz) + n + 1);
+  if (thiz == NULL)
+    return NULL;
+
+  thiz->base.callbacks = &s_assetDirCallbacks;
+  thiz->system = system;
+  thiz->index = 0;
+  strcpy(thiz->dirname, dirname);
+
+  return &thiz->base;
 }
 
-static const ZipEntry* NQAssetFileBinary_findEntry(NQAssetSystemBinary* system, const char* filename)
+static const ZipEntry* NQAssetFileBinary_findEntry(NQBinaryAsset* system, const char* filename)
 {
   uint16_t i;
   for (i = 0; i < system->totalFiles; i++) {
@@ -208,7 +214,7 @@ static const ZipEntry* NQAssetFileBinary_findEntry(NQAssetSystemBinary* system, 
   return NULL;
 }
 
-static const uint8_t* ZipEntry_getData(NQAssetSystemBinary* system, const ZipEntry* zfile)
+static const uint8_t* ZipEntry_getData(NQBinaryAsset* system, const ZipEntry* zfile)
 {
   struct ZipDataDescriptor ddesc;
   struct ZipLocalFileHeader lfheader;
@@ -251,134 +257,106 @@ static void zFree(void* ctx, void* p)
   NQFree(p);
 }
 
-NQAssetFileBinary* NQAssetBinary_openFile(NQAssetSystemBinary* system, const char* filename, int mode)
+static void fileClose(NQAssetFile* file)
+{
+  struct BinaryAssetFile* thiz = (struct BinaryAssetFile*)file;
+  if (thiz->status != FILE_DATA_ERROR && thiz->status != FILE_INIT_ERROR)
+    deflateEnd(&thiz->zstream);
+  NQFree(thiz);
+}
+
+static int64_t fileGetSize(NQAssetFile* file)
+{
+  struct BinaryAssetFile* thiz = (struct BinaryAssetFile*)file;
+  return thiz->size;
+}
+
+static int fileRead(NQAssetFile* file, void* buffer, size_t size)
+{
+  struct BinaryAssetFile* thiz = (struct BinaryAssetFile*)file;
+  if (thiz->status != FILE_NO_ERROR)
+    return -1;
+
+  thiz->zstream.next_out = (Bytef*)buffer;
+  thiz->zstream.avail_out = (uInt)NQGetMin(size, NQ_INT_MAX);
+
+  uLong totalBefore = thiz->zstream.total_out;
+  int err = inflate(&thiz->zstream, Z_NO_FLUSH);
+  if (err != Z_OK && err != Z_STREAM_END) {
+    thiz->status = FILE_READ_ERROR;
+    return -1;
+  }
+
+  return (int)(thiz->zstream.total_out - totalBefore);
+}
+
+static const struct NQAssetFileCallbacks s_fileCallbacks =
+{
+  .close = fileClose,
+  .getSize = fileGetSize,
+  .read = fileRead,
+};
+
+NQAssetFile* NQAssetBinary_openFile(NQBinaryAsset* system, const char* filename, int mode)
 {
   const ZipEntry* entry = NQAssetFileBinary_findEntry(system, filename);
   if (entry == NULL)
     return NULL;
 
-  NQAssetFileBinary* file = (NQAssetFileBinary*)NQZeroMalloc(sizeof(NQAssetFileBinary));
-  if (file == NULL)
+  struct BinaryAssetFile* thiz = (struct BinaryAssetFile*)NQMalloc(sizeof(*thiz));
+  if (thiz == NULL)
     return NULL;
 
-  file->class = &__NQAssetFileBinaryClass;
-  file->system = system;
-  file->size = entry->size;
-  file->data = ZipEntry_getData(system, entry);
-  file->status = FILE_NO_ERROR;
+  thiz->base.callbacks = &s_fileCallbacks;
+  thiz->system = system;
+  thiz->size = entry->size;
+  thiz->data = ZipEntry_getData(system, entry);
+  thiz->status = FILE_NO_ERROR;
 
-  memset(&file->zstream, 0, sizeof(file->zstream));
-  if (file->data == NULL)
-    file->status = FILE_DATA_ERROR;
+  memset(&thiz->zstream, 0, sizeof(thiz->zstream));
+  if (thiz->data == NULL)
+    thiz->status = FILE_DATA_ERROR;
   else {
-    file->zstream.zalloc = zAlloc;
-    file->zstream.zfree = zFree;
-    file->zstream.data_type = Z_BINARY;
-    file->zstream.opaque = Z_NULL;
-    file->zstream.next_in = (Bytef*)file->data;
-    file->zstream.avail_in = (uInt)entry->dataSize;
+    thiz->zstream.zalloc = zAlloc;
+    thiz->zstream.zfree = zFree;
+    thiz->zstream.data_type = Z_BINARY;
+    thiz->zstream.opaque = Z_NULL;
+    thiz->zstream.next_in = (Bytef*)thiz->data;
+    thiz->zstream.avail_in = (uInt)entry->dataSize;
 
-    if (inflateInit2(&file->zstream, -MAX_WBITS) != Z_OK)
-      file->status = FILE_INIT_ERROR;
+    if (inflateInit2(&thiz->zstream, -MAX_WBITS) != Z_OK)
+      thiz->status = FILE_INIT_ERROR;
   }
 
-  return file;
-}
-
-int64_t NQAssetFileBinary_getSize(NQAssetFileBinary* file)
-{
-  return file->size;
-}
-
-int NQAssetFileBinary_read(NQAssetFileBinary* file, void* buffer, size_t size)
-{
-  if (file->status != FILE_NO_ERROR)
-    return -1;
-  
-  file->zstream.next_out = (Bytef*)buffer;
-  file->zstream.avail_out = (uInt)NQGetMin(size, NQ_INT_MAX);
-
-  uLong totalBefore = file->zstream.total_out;
-  int err = inflate(&file->zstream, Z_NO_FLUSH);
-  if (err != Z_OK && err != Z_STREAM_END) {
-    file->status = FILE_READ_ERROR;
-    return -1;
-  }
-
-  return (int)(file->zstream.total_out - totalBefore);
-}
-
-void NQAssetFileBinary_close(NQAssetFileBinary* file)
-{
-  if (file->status != FILE_DATA_ERROR && file->status != FILE_INIT_ERROR)
-    deflateEnd(&file->zstream);
-
-  NQFree(file);
+  return &thiz->base;
 }
 
 const NQObjectClass __NQAssetBinaryClass = {
   kNQAssetBinaryObjectType,
   NQ_CLASS_NAME,
   NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQAssetSystemBinary_destroy,
-};
-
-const NQObjectClass __NQAssetDirBinaryClass = {
-  kNQAssetDirBinaryObjectType,
-  "NQAssetDirBinary",
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQAssetDirBinary_close,
-};
-
-const NQObjectClass __NQAssetFileBinaryClass = {
-  kNQAssetFileBinaryObjectType,
-  "AssetFileBinary",
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQAssetFileBinary_close,
+  (NQObjectReleaseCallback)NQBinaryAsset_destroy,
 };
 
 #else
 
-NQAssetSystemBinary* NQAssetSystemBinary_create(const uint8_t* data, size_t size)
+NQBinaryAsset* NQBinaryAsset_create(const uint8_t* data, size_t size)
 {
   return NULL;
 }
 
-void NQAssetSystemBinary_destroy(NQAssetSystemBinary* system)
+void NQBinaryAsset_destroy(NQBinaryAsset* system)
 {
 }
 
-NQAssetDirBinary* NQAssetBinary_openDir(NQAssetSystemBinary* system, const char* dirname)
+NQAssetDir* NQAssetBinary_openDir(NQBinaryAsset* system, const char* dirname)
 {
   return NULL;
 }
 
-const char* NQAssetDirBinary_readFileName(NQAssetDirBinary* dir)
+NQAssetFile* NQAssetBinary_openFile(NQBinaryAsset* system, const char* filename, int mode)
 {
   return NULL;
-}
-
-void NQAssetDirBinary_close(NQAssetDirBinary* dir)
-{
-}
-
-NQAssetFileBinary* NQAssetBinary_openFile(NQAssetSystemBinary* system, const char* filename, int mode)
-{
-  return NULL;
-}
-
-int64_t NQAssetFileBinary_getSize(NQAssetFileBinary* file)
-{
-  return 0;
-}
-
-int NQAssetFileBinary_read(NQAssetFileBinary* file, void* buffer, size_t size)
-{
-  return -1;
-}
-
-void NQAssetFileBinary_close(NQAssetFileBinary* file)
-{
 }
 
 #endif

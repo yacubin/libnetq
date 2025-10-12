@@ -55,15 +55,15 @@ typedef enum NQFileSeekOrigin {
   NQ_FSEEK_END
 } NQFileSeekOrigin;
 
-NQFileHandle NQFileOpen(const char* path, NQFileOpenMode mode);
-void NQFileClose(NQFileHandle handle);
-int NQFileRead(NQFileHandle handle, uint8_t* data, size_t size);
-int NQFileWrite(NQFileHandle handle, const uint8_t* data, size_t size);
-long long NQFileSeek(NQFileHandle handle, long long offset, NQFileSeekOrigin origin);
-long long NQFileGetSize(NQFileHandle handle);
+NQ_EXPORT NQFileHandle NQFileOpen(const char* path, NQFileOpenMode mode);
+NQ_EXPORT void NQFileClose(NQFileHandle handle);
+NQ_EXPORT int NQFileRead(NQFileHandle handle, uint8_t* data, size_t size);
+NQ_EXPORT int NQFileWrite(NQFileHandle handle, const uint8_t* data, size_t size);
+NQ_EXPORT long long NQFileSeek(NQFileHandle handle, long long offset, NQFileSeekOrigin origin);
+NQ_EXPORT long long NQFileGetSize(NQFileHandle handle);
 
-int64_t NQFileReadn(NQFileHandle handle, uint8_t* data, int64_t size);
-int64_t NQFileWriten(NQFileHandle handle, const uint8_t* data, int64_t size);
+NQ_EXPORT int64_t NQFileReadn(NQFileHandle handle, uint8_t* data, int64_t size);
+NQ_EXPORT int64_t NQFileWriten(NQFileHandle handle, const uint8_t* data, int64_t size);
 
 #ifdef __cplusplus
 }

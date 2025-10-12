@@ -62,7 +62,7 @@ const unsigned char s_urlCharTypes[NQ_ASCII_TABLE_SIZE] =
 
 static inline int toURLCharType(char ch)
 {
-  return NQIsASCII(ch) ? s_urlCharTypes[ch] : kURLCharOther;
+  return NQIsASCII(ch) ? s_urlCharTypes[(unsigned)ch] : kURLCharOther;
 }
 
 static const char lowerDigits[17] = "0123456789abcdef";

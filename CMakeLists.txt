@@ -34,10 +34,12 @@ LNQ_FEATURE_DEFINE(USE_EXPORT "Enable symbol export as a shared library")
 option(LNQ_PUBLIC_GENERATED_DIR "Allow config.h to be populate in include directories" OFF)
 set(LNQ_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
 
-if (LNQ_USE_EXPORT STREQUAL DEFAULT)
+if (NOT LNQ_USE_EXPORT STREQUAL DEFAULT)
+  set(NQ_USE_EXPORT ${LNQ_USE_EXPORT})
+elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
   set(NQ_USE_EXPORT ON)
 else ()
-  set(NQ_USE_EXPORT ${LNQ_USE_EXPORT})
+  set(NQ_USE_EXPORT OFF)
 endif ()
 
 math(EXPR NQ_VERSION_CODE "${PROJECT_VERSION_MAJOR} * 10000000 + ${PROJECT_VERSION_MINOR} * 100000 + ${PROJECT_VERSION_PATCH} * 1000")
@@ -288,6 +290,10 @@ if (NOT DEFINE_INLINE)
 endif ()
 
 set(libnetq_HEADERS
+  libnetq/asset/BinaryAsset.h
+  libnetq/asset/FileSystemAsset.h
+  libnetq/asset/PlatformAsset.h
+
   libnetq/cpu/alpha.h
   libnetq/cpu/amd64.h
   libnetq/cpu/arm.h
@@ -327,8 +333,6 @@ set(libnetq_HEADERS
   libnetq/ASCII.h
   libnetq/Assert.h
   libnetq/Asset.h
-  libnetq/AssetBinary.h
-  libnetq/AssetSystem.h
   libnetq/Atomic.h
   libnetq/AutoReleaseCF.h
   libnetq/Base16.h
@@ -435,6 +439,10 @@ set(libnetq_HEADERS
   )
 
 set(libnetq_SOURCES
+  libnetq/asset/BinaryAsset.c
+  libnetq/asset/FileSystemAsset.c
+  libnetq/asset/PlatformAsset.c
+
   libnetq/web/HttpStatistics.c
 
   libnetq/Abort.c
@@ -443,8 +451,6 @@ set(libnetq_SOURCES
   libnetq/Arguments.c
   libnetq/Array.c
   libnetq/Asset.c
-  libnetq/AssetBinary.c
-  libnetq/AssetSystem.c
   libnetq/Atomic.c
   libnetq/Base16.c
   libnetq/Base64.c

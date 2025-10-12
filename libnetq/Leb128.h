@@ -46,8 +46,8 @@ struct NQSLEB128Ctx {
   uint32_t size;
 };
 
-void NQSLEB128Ctx_init(struct NQSLEB128Ctx*);
-bool NQSLEB128Ctx_add(struct NQSLEB128Ctx*, uint8_t byte);
+NQ_EXPORT void NQSLEB128Ctx_init(struct NQSLEB128Ctx*);
+NQ_EXPORT bool NQSLEB128Ctx_add(struct NQSLEB128Ctx*, uint8_t byte);
 
 struct NQULEB128Ctx {
   uint64_t value;
@@ -55,8 +55,8 @@ struct NQULEB128Ctx {
   uint32_t size;
 };
 
-void NQULEB128Ctx_init(struct NQULEB128Ctx*);
-bool NQULEB128Ctx_add(struct NQULEB128Ctx*, uint8_t byte);
+NQ_EXPORT void NQULEB128Ctx_init(struct NQULEB128Ctx*);
+NQ_EXPORT bool NQULEB128Ctx_add(struct NQULEB128Ctx*, uint8_t byte);
 
 #ifdef __cplusplus
 }

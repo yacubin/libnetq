@@ -22,8 +22,6 @@ enum NQObjectType {
   NQLogCircularObjectType = 1004,
   NQHexViewerObjectType = 1005,
   NQUint8ArrayObjectType = 1006,
-  NQAssetDirObjectType = 1007,
-  NQAssetFileObjectType = 1008,
   NQAssetSystemObjectType = 1009,
   NQSocketObjectType = 1010,
   NQTLSSocketObjectType = 1011,
@@ -34,8 +32,6 @@ enum NQObjectType {
   NQArgumentsObjectType = 1016,
   kNQKeyValObjectType = 1017,
   kNQAssetBinaryObjectType = 1018,
-  kNQAssetDirBinaryObjectType = 1019,
-  kNQAssetFileBinaryObjectType = 1020,
   kNQPrimitiveStorageType = 1021,
 };
 

@@ -15,7 +15,6 @@
 
 #include <libnetq/CStrBase.h>
 #include <libnetq/ObjectClass.h>
-#include <libnetq/ASCII.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Math.h>
@@ -53,12 +52,12 @@ enum {
   kURLCharOther,
 };
 
-#define ASCII_URL_TYPE(ch, type, ...) kURLChar##type,
-const unsigned char s_urlCharTypes[NQ_ASCII_TABLE_SIZE] =
+#define NQ_ASCII_DEF(ch, type, ...) kURLChar##type,
+const unsigned char s_urlCharTypes[] =
 {
-  NQ_FOR_EACH_ASCII_TABLE(ASCII_URL_TYPE)
+  #include "libnetq/ASCII.def"
 };
-#undef ASCII_URL_TYPE
+#undef NQ_ASCII_DEF
 
 static inline int toURLCharType(char ch)
 {

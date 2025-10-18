@@ -7,6 +7,9 @@
  * under the MIT License. See LICENSE file for details.
  */
 
+#define NQ_CLASS_NAME "NQJSONWriter"
+#define NQ_LOG_TAG NQ_CLASS_NAME
+
 #include "config.h"
 #include "libnetq/JSONWriter.h"
 
@@ -14,7 +17,7 @@
 #include <libnetq/CStrBase.h>
 #include <libnetq/Sprintf.h>
 #include <libnetq/Assert.h>
-#include <libnetq/CStrBase.h>
+#include <libnetq/Log.h>
 
 static const char kObjectBegin = '{';
 static const char kObjectEnd = '}';
@@ -199,6 +202,11 @@ static inline bool isLastDepth(const NQJSONWriter* thiz)
 
 static inline bool writeKey(NQJSONWriter* thiz, const char* characters, size_t length)
 {
+  if (!thiz->depth[thiz->depthIndex].isObject) {
+    NQ_LOGE("Key only support for Object only");
+    return false;
+  }
+
   if (!writeKeyDelimiter(thiz))
     return false;
 

@@ -330,7 +330,6 @@ set(libnetq_HEADERS
   libnetq/AppMain.h
   libnetq/Arguments.h
   libnetq/Array.h
-  libnetq/ASCII.h
   libnetq/Assert.h
   libnetq/Asset.h
   libnetq/Atomic.h
@@ -374,6 +373,7 @@ set(libnetq_HEADERS
   libnetq/HttpMethod.h
   libnetq/HttpMultiPartBuilder.h
   libnetq/HttpMultiPartParser.h
+  libnetq/HttpStatus.h
   libnetq/HttpVersion.h
   libnetq/Image.h
   libnetq/ImageBuilder.h
@@ -550,6 +550,11 @@ set(libnetq_SOURCES
   libnetq/Zip.c
   )
 
+set(libnetq_DEFFILES
+  libnetq/ASCII.def
+  libnetq/HttpStatus.def
+  )
+
 set(libnetq_DATAFILES
   config.h.in
   LICENSE
@@ -570,6 +575,8 @@ set(libnetq_DEFINITIONS
 set(libnetq_GENERATED
   "${LNQ_GENERATED_DIR}/config.h"
   )
+
+set_source_files_properties(${libnetq_DEFFILES} PROPERTIES HEADER_FILE_ONLY TRUE)
 
 if (CMAKE_SYSTEM_NAME MATCHES "Android")
   list(APPEND libnetq_LIBRARIES android log)
@@ -607,8 +614,8 @@ if (LNQ_PUBLIC_GENERATED_DIR)
   list(APPEND libnetq_INCLUDES "${LNQ_GENERATED_DIR}")
 endif ()
 
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DATAFILES})
-add_library(libnetq ${LNQ_LIBRARY_TYPE} ${libnetq_GENERATED} ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DATAFILES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DEFFILES} ${libnetq_DATAFILES})
+add_library(libnetq ${LNQ_LIBRARY_TYPE} ${libnetq_GENERATED} ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DEFFILES} ${libnetq_DATAFILES})
 target_include_directories(libnetq PUBLIC "$<BUILD_INTERFACE:${libnetq_INCLUDES}>")
 target_include_directories(libnetq PRIVATE "${LNQ_GENERATED_DIR}")
 target_compile_definitions(libnetq PUBLIC "${libnetq_DEFINITIONS}")

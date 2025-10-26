@@ -210,7 +210,7 @@ const NQEnvironIter* NQEnvironIter_next(const NQEnvironIter* iter)
   char** env = ((char**)iter);
   if (*env) {
     if (*(++env))
-        (NQEnvironIter*)env;
+        return (NQEnvironIter*)env;
   }
 
 #endif

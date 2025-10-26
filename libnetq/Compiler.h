@@ -73,15 +73,13 @@ extern "C" {
 #define NQ_UNLIKELY(x) (x)
 #endif
 
-#if !defined(NQ_ALWAYS_INLINE)    \
-    && defined(NQ_COMPILER_GCC)   \
-    && defined(NQ_COMPILER_CLANG) \
-    && defined(NDEBUG)            \
+#if !defined(NQ_ALWAYS_INLINE) \
+    && (defined(NQ_COMPILER_GCC) || defined(NQ_COMPILER_CLANG)) \
     && !defined(NQ_COMPILER_MINGW)
 #define NQ_ALWAYS_INLINE inline __attribute__((__always_inline__))
 #endif
 
-#if !defined(NQ_ALWAYS_INLINE) && defined(NQ_COMPILER_MSVC) && defined(NDEBUG)
+#if !defined(NQ_ALWAYS_INLINE) && defined(NQ_COMPILER_MSVC)
 #define NQ_ALWAYS_INLINE __forceinline
 #endif
 

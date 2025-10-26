@@ -56,10 +56,6 @@ struct PathInitInfo {
 static NQ_ALWAYS_INLINE
 size_t urlPathInit(NQUrlPath* thiz, const char* path, const char* pattern, struct PathInitInfo* pinfo, bool isInit)
 {
-#if NQ_HAS_BUILTIN(__builtin_constant_p)
-  NQ_ASSERT(__builtin_constant_p(isInit));
-#endif
-
   struct PathInitInfo info = {
     .isPatternMatch = true,
     .segmentCount = 0,

@@ -70,7 +70,6 @@ static NQ_ALWAYS_INLINE
 int urlEncodeImpl(const char* input, size_t inlen, char* output, size_t outlen, bool pluseAsSpace)
 {
 #if NQ_HAS_BUILTIN(__builtin_constant_p)
-  NQ_ASSERT(__builtin_constant_p(pluseAsSpace));
   if (__builtin_constant_p(output)) {
     NQ_ASSERT(!output && !outlen);
   }
@@ -113,7 +112,6 @@ static NQ_ALWAYS_INLINE
 int urlDecodeImpl(const char* input, size_t inlen, char* output, size_t outlen, bool pluseAsSpace)
 {
 #if NQ_HAS_BUILTIN(__builtin_constant_p)
-  NQ_ASSERT(__builtin_constant_p(pluseAsSpace));
   if (__builtin_constant_p(output)) {
     NQ_ASSERT(!output && !outlen);
   }

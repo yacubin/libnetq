@@ -53,10 +53,6 @@ struct QueryInitInfo {
 static NQ_ALWAYS_INLINE
 size_t urlQueryInit(NQUrlQuery* thiz, const char* query, struct QueryInitInfo* pinfo, bool isInit)
 {
-#if NQ_HAS_BUILTIN(__builtin_constant_p)
-  NQ_ASSERT(__builtin_constant_p(isInit));
-#endif
-
   struct QueryInitInfo info = {
     .paramCount = 0,
     .queryLength = 1, // For '?'

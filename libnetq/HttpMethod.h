@@ -41,8 +41,8 @@ typedef enum NQHttpMethod NQHttpMethod;
 #define NQ_HTTP_TRACE   "TRACE"
 #define NQ_HTTP_PATCH   "PATCH"
 
-NQHttpMethod NQHttpMethodParse(const char* str);
-const char* NQHttpMethodToCStr(NQHttpMethod);
+NQ_EXPORT NQHttpMethod NQHttpMethodParse(const char* str);
+NQ_EXPORT const char* NQHttpMethodToCStr(NQHttpMethod);
 
 #ifdef __cplusplus
 }

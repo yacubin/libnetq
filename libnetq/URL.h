@@ -52,6 +52,13 @@ typedef struct NQURL NQURL;
 
 #define NQ_URL_SCHEME_SEPARATOR  "://"
 
+#define NQ_URL_PLUS_AS_SPACE (1)
+
+NQ_EXPORT int NQURLEncode(const char* input, size_t inlen, char* output, size_t outlen);
+NQ_EXPORT int NQURLDecode(const char* input, size_t inlen, char* output, size_t outlen);
+NQ_EXPORT int NQFormURLEncode(const char* input, size_t inlen, char* output, size_t outlen);
+NQ_EXPORT int NQFormURLDecode(const char* input, size_t inlen, char* output, size_t outlen);
+
 NQ_EXPORT NQURL* NQURL_create(const char* characters);
 NQ_EXPORT void NQURL_destroy(NQURL*);
 

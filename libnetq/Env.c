@@ -20,10 +20,12 @@
 #include <windows.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/UTF.h>
+#include <libnetq/CStrBase.h>
 #endif
 
 #ifdef NQ_OS_UNIX
 #include <stdlib.h>
+#include <unistd.h> // for environ
 #endif
 
 int NQEnvGet(const char* name, char* value, size_t n)
@@ -81,10 +83,7 @@ int NQEnvGet(const char* name, char* value, size_t n)
     return -1;
   }
 
-  (void)memcmp(value, val, NQGetMin(n, len));
-  if (len < n)
-    value[len] = '\0';
-
+  (void)memcpy(value, val, (len < n) ? len + 1 : n);
   return (int)len;
 
 #else
@@ -163,6 +162,84 @@ int NQEnvUnset(const char* name)
 
 #else
   return -1;
+
+#endif
+}
+
+NQEnviron* NQEnviron_create(void)
+{
+#if defined(NQ_OS_WINDOWS)
+  return (NQEnviron*)GetEnvironmentStringsW();
+#elif defined(NQ_OS_UNIX)
+  return (NQEnviron*)environ;
+#else
+  return NULL;
+#endif
+}
+
+void NQEnviron_destroy(NQEnviron* thiz)
+{
+#if defined(NQ_OS_WINDOWS)
+  FreeEnvironmentStringsW((LPWCH)thiz);
+#endif
+}
+
+const NQEnvironIter* NQEnviron_begin(const NQEnviron* thiz)
+{
+#if defined(NQ_OS_WINDOWS)
+  return *((LPWCH)thiz) ? (NQEnvironIter*)thiz : NULL;
+#elif defined(NQ_OS_UNIX)
+  return *((char**)thiz) ? (NQEnvironIter*)thiz : NULL;
+#else
+  return NULL;
+#endif
+}
+
+const NQEnvironIter* NQEnvironIter_next(const NQEnvironIter* iter)
+{
+#if defined(NQ_OS_WINDOWS)
+  LPWCH lpvEnv = ((LPWCH)iter);
+  if (*lpvEnv) {
+    while(*(++lpvEnv))
+      /* */;
+    if (*(++lpvEnv))
+      return (NQEnvironIter*)lpvEnv;
+  }
+
+#elif defined(NQ_OS_UNIX)
+  char** env = ((char**)iter);
+  if (*env) {
+    if (*(++env))
+        return (NQEnvironIter*)env;
+  }
+
+#endif
+
+  return NULL;
+}
+
+size_t NQEnvironIter_read(const NQEnvironIter* iter, char* buf, size_t len)
+{
+#if defined(NQ_OS_WINDOWS)
+  NQUnicodeInfo info;
+  if (!NQCalculateUTF16Info((const uint16_t*)iter, NULL, &info))
+      return 0;
+  if (buf != NULL) {
+    if (!NQConvertUTF16ToUTF8((const uint16_t*)iter, NULL, (uint8_t*)buf, (uint8_t*)(buf + len), &info))
+      return 0;
+    if (info.utf8Size < len)
+      buf[info.utf8Size] = '\0';
+  }
+  return info.utf8Size;
+
+#elif defined(NQ_OS_UNIX)
+  char* env = *((char**)iter);
+  size_t sz = strlen(env);
+  (void)memcpy(buf, env, (sz < len) ? sz + 1 : len);
+  return sz;
+
+#else
+  return 0;
 
 #endif
 }

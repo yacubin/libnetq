@@ -18,12 +18,12 @@ extern "C" {
 
 typedef struct NQHttpStatistics NQHttpStatistics;
 
-NQHttpStatistics* NQHttpStatistics_create(void);
-void NQHttpStatistics_destroy(NQHttpStatistics*);
+NQ_EXPORT NQHttpStatistics* NQHttpStatistics_create(void);
+NQ_EXPORT void NQHttpStatistics_destroy(NQHttpStatistics*);
 
-bool NQHttpStatistics_add(NQHttpStatistics*, const char* method, const char* url);
-bool NQHttpStatistics_inc(NQHttpStatistics*, const char* method, const char* url);
-bool NQHttpStatistics_writeTo(NQHttpStatistics*, NQJSONWriter* writer);
+NQ_EXPORT bool NQHttpStatistics_add(NQHttpStatistics*, const char* method, const char* url);
+NQ_EXPORT bool NQHttpStatistics_inc(NQHttpStatistics*, const char* method, const char* url);
+NQ_EXPORT bool NQHttpStatistics_writeTo(NQHttpStatistics*, NQJSONWriter* writer);
 
 #ifdef __cplusplus
 }

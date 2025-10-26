@@ -50,11 +50,36 @@ extern "C" {
 #define NQGetClamp(_value, _min, _max) (_value > _min ? (_value < _max ? _value : _max) : _min)
 #define NQGetDiff(a, b) (NQGetMax(a, b) - NQGetMin(a, b))
 
+#if NQ_HAS_BUILTIN(__builtin_ctz)
+static NQ_ALWAYS_INLINE unsigned NQGetCtz32(uint32_t x)
+{
+  return x ? __builtin_ctz(x) : sizeof(x) * 8;
+}
+#else
+NQ_EXPORT unsigned NQGetCtz32(uint32_t number);
+#endif
+
+#if NQ_HAS_BUILTIN(__builtin_clzll)
+static NQ_ALWAYS_INLINE unsigned NQGetCtz64(uint64_t x)
+{
+  return x ? __builtin_clzll(x) : sizeof(x) * 8;
+}
+#else
+NQ_EXPORT unsigned NQGetCtz64(uint64_t x);
+#endif
+
+static NQ_ALWAYS_INLINE unsigned NQGetFls32(uint32_t x)
+{
+  return sizeof(x) * 8 - NQGetCtz32(x);
+}
+
+static NQ_ALWAYS_INLINE unsigned NQGetFls64(uint64_t x)
+{
+  return sizeof(x) * 8 - NQGetCtz64(x);
+}
+
 /* Greatest Common Divisor */
 NQ_EXPORT int64_t nq_gcd64(int64_t a, int64_t b);
-
-NQ_EXPORT unsigned nq_clz32(uint32_t number);
-NQ_EXPORT unsigned nq_clz64(uint64_t number);
 
 #ifdef __cplusplus
 }

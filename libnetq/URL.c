@@ -18,6 +18,8 @@
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Math.h>
+#include <libnetq/CType.h>
+#include <libnetq/Assert.h>
 #include <libnetq/Log.h>
 
 extern const NQObjectClass __NQURLClass;
@@ -43,6 +45,173 @@ struct NQURL {
   unsigned length;
   char characters[1];
 };
+
+enum {
+  kURLCharUnreserved,
+  kURLCharReserved,
+  kURLCharOther,
+};
+
+#define NQ_ASCII_DEF(ch, type, ...) kURLChar##type,
+const unsigned char s_urlCharTypes[] =
+{
+  #include "libnetq/ASCII.def"
+};
+#undef NQ_ASCII_DEF
+
+static inline int toURLCharType(char ch)
+{
+  return NQIsASCII(ch) ? s_urlCharTypes[(unsigned)ch] : kURLCharOther;
+}
+
+static const char lowerDigits[17] = "0123456789abcdef";
+
+static NQ_ALWAYS_INLINE
+int urlEncodeImpl(const char* input, size_t inlen, char* output, size_t outlen, bool pluseAsSpace)
+{
+#if NQ_HAS_BUILTIN(__builtin_constant_p)
+  if (__builtin_constant_p(output)) {
+    NQ_ASSERT(!output && !outlen);
+  }
+#endif
+
+  size_t result = 0;
+  for (size_t i = 0; i < inlen; i++) {
+    char ch = input[i];
+    if (pluseAsSpace && ch == ' ') {
+      if (output && result < outlen)
+        output[result] = '+';
+    }
+    else if (toURLCharType(ch) == kURLCharUnreserved) {
+      if (output && result < outlen)
+        output[result] = ch;
+    }
+    else {
+      if (output && result < outlen)
+        output[result] = '%';
+      result++;
+
+      if (output && result < outlen)
+        output[result] = lowerDigits[(ch >> 4) & 0x0f];
+      result++;
+
+      if (output && result < outlen)
+        output[result] = lowerDigits[ch & 0x0f];
+    }
+    result++;
+  }
+
+  if (output && result < outlen) {
+    output[result] = '\0';
+  }
+
+  return (int)result;
+}
+
+static NQ_ALWAYS_INLINE
+int urlDecodeImpl(const char* input, size_t inlen, char* output, size_t outlen, bool pluseAsSpace)
+{
+#if NQ_HAS_BUILTIN(__builtin_constant_p)
+  if (__builtin_constant_p(output)) {
+    NQ_ASSERT(!output && !outlen);
+  }
+#endif
+
+  size_t result = 0;
+  for (size_t i = 0; i < inlen; i++) {
+    char ch = input[i];
+    if (pluseAsSpace && ch == '+') {
+      if (output && result < outlen)
+        output[result] = ' ';
+    }
+    else if (ch != '%') {
+      if (toURLCharType(ch) == kURLCharOther)
+        return -1;
+      if (output && result < outlen)
+        output[result] = ch;
+    }
+    else if (inlen < (i + 3)) {
+      if (output && result < outlen)
+        output[result] = ch;
+    }
+    else {
+      char hi = input[i + 1];
+      if (!NQIsHexDigit(hi)) {
+        if (output && result < outlen)
+          output[result] = ch;
+      }
+      else {
+        char lo = input[i + 2];
+        if (!NQIsHexDigit(lo)) {
+          if (output && result < outlen)
+            output[result] = ch;
+        }
+        else {
+          if (output && result < outlen)
+            output[result] = NQToHexValue(hi) << 4 | NQToHexValue(lo);
+          i += 2;
+        }
+      }
+    }
+    result++;
+  }
+
+  if (output && result < outlen) {
+    output[result] = '\0';
+  }
+
+  return (int)result;
+}
+
+static NQ_ALWAYS_INLINE
+int urlEncode(const char* input, size_t inlen, char* output, size_t outlen, bool pluseAsSpace)
+{
+  if (NQ_INT32_MAX < inlen) {
+    NQ_LOGE("URL encode input length (%llu) too larged", (unsigned long long)inlen);
+    return -1;
+  }
+  else if (output) {
+    return urlEncodeImpl(input, inlen, output, outlen, pluseAsSpace);
+  }
+  else {
+    return urlEncodeImpl(input, inlen, NULL, 0, pluseAsSpace);
+  }
+}
+
+static NQ_ALWAYS_INLINE
+int urlDecode(const char* input, size_t inlen, char* output, size_t outlen, bool pluseAsSpace)
+{
+  if (NQ_INT32_MAX < inlen) {
+    NQ_LOGE("URL decode input length (%llu) too large", (unsigned long long)inlen);
+    return -1;
+  }
+  else if (output) {
+    return urlDecodeImpl(input, inlen, output, outlen, pluseAsSpace);
+  }
+  else {
+    return urlDecodeImpl(input, inlen, NULL, 0, pluseAsSpace);
+  }
+}
+
+int NQURLEncode(const char* input, size_t inlen, char* output, size_t outlen)
+{
+  return urlEncode(input, inlen, output, outlen, false);
+}
+
+int NQURLDecode(const char* input, size_t inlen, char* output, size_t outlen)
+{
+  return urlDecode(input, inlen, output, outlen, false);
+}
+
+int NQFormURLEncode(const char* input, size_t inlen, char* output, size_t outlen)
+{
+  return urlEncode(input, inlen, output, outlen, true);
+}
+
+int NQFormURLDecode(const char* input, size_t inlen, char* output, size_t outlen)
+{
+  return urlDecode(input, inlen, output, outlen, true);
+}
 
 #define SCHEME_INDEX 0
 #define HOST_INDEX 1

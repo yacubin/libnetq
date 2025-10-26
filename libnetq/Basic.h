@@ -29,10 +29,17 @@ template<typename T> char(&getArrayLength(T(&)[0]))[0];
 #define NQ_STRINGIZE(exp) #exp
 #define NQ_STRINGIZE_OF(exp) NQ_STRINGIZE(exp)
 
-#define NQ_OFFSETOF(st, m) ((size_t)&(((st *)0)->m))
+#if NQ_HAS_BUILTIN(__builtin_offsetof)
+#define NQ_OFFSETOF(type, field) __builtin_offsetof(type, field)
+#elif defined(__cplusplus)
+#define NQ_OFFSETOF(type, field) (reinterpret_cast<size_t>(&(reinterpret_cast<type*>(0x4000)->field)) - 0x4000)
+#else
+#define NQ_OFFSETOF(type, field) ((size_t)&(((type*)0)->field))
+#endif
+
+#define NQ_CONTAINER_OF(obj, type, field) ((type*)((char*)(obj) - NQ_OFFSETOF(type, field)))
 
 #ifdef __cplusplus
-#define NQ_OBJECT_OFFSETOF(class, field) (reinterpret_cast<ptrdiff_t>(&(reinterpret_cast<class*>(0x4000)->field)) - 0x4000)
 #define NQ_CAST_OFFSET(from, to) (reinterpret_cast<uintptr_t>(static_cast<to>((reinterpret_cast<from>(0x4000)))) - 0x4000)
 #endif
 

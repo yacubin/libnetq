@@ -19,13 +19,6 @@
 #include <libnetq/Math.h>
 #include <libnetq/Limits.h>
 
-static const NQObjectClass __NQPrimitiveStorageClass = {
-  kNQPrimitiveStorageType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQPrimitiveStorage_destroy,
-};
-
 enum {
   kNQPrimitiveStorageHandler = NQ_UINT32_MAX
 };
@@ -48,26 +41,13 @@ struct NQPrimitiveStorageEntry {
   };
 };
 
-struct NQPrimitiveStorage {
-  const NQObjectClass* class;
-  NQPrimitiveStorage* parent;
-  struct NQPrimitiveStorageEntry* first;
-};
-
-NQPrimitiveStorage* NQPrimitiveStorage_create(NQPrimitiveStorage* parent)
+void NQPrimitiveStorage_init(NQPrimitiveStorage* thiz, NQPrimitiveStorage* parent)
 {
-  NQPrimitiveStorage* thiz = (NQPrimitiveStorage*)NQMalloc(sizeof(NQPrimitiveStorage));
-  if (thiz == NULL)
-    return NULL;
-
-  thiz->class = &__NQPrimitiveStorageClass;
   thiz->parent = parent;
   thiz->first = NULL;
-
-  return thiz;
 }
 
-void NQPrimitiveStorage_destroy(NQPrimitiveStorage* thiz)
+void NQPrimitiveStorage_finalize(NQPrimitiveStorage* thiz)
 {
   struct NQPrimitiveStorageEntry* entry = thiz->first;
   while (entry != NULL) {
@@ -75,7 +55,6 @@ void NQPrimitiveStorage_destroy(NQPrimitiveStorage* thiz)
     entry = entry->next;
     NQFree(curr);
   }
-  NQFree(thiz);
 }
 
 static struct NQPrimitiveStorageEntry* NQPrimitiveStorage_getEntry(NQPrimitiveStorage* thiz, const char* name)
@@ -158,10 +137,11 @@ size_t NQPrimitiveStorage_getString(NQPrimitiveStorage* thiz, const char* name, 
 
 bool NQPrimitiveStorage_setString(NQPrimitiveStorage* thiz, const char* name, const char* value)
 {
+  struct NQPrimitiveStorageEntry* entry;
+
   size_t nlenz = strlen(name) + 1;
   size_t vlenz = strlen(value) + 1;
 
-  struct NQPrimitiveStorageEntry* entry;
   entry = (struct NQPrimitiveStorageEntry*)NQMalloc(sizeof(*entry) + nlenz + vlenz);
   if (entry == NULL)
     return false;
@@ -171,8 +151,8 @@ bool NQPrimitiveStorage_setString(NQPrimitiveStorage* thiz, const char* name, co
   char* ptr = (char*)thiz + sizeof(*entry);
   (void)memcpy(ptr, name, nlenz);
   entry->name = ptr;
-
   ptr += nlenz;
+
   (void)memcpy(ptr, value, vlenz);
   entry->dataString = ptr;
   entry->dataLength = vlenz - 1;

@@ -72,7 +72,7 @@ int NQFileRead(NQFileHandle handle, uint8_t* data, size_t size)
 
   if (NQ_INT_MAX < size)
     return -1;
-  
+
   if (!ReadFile(handle, data, (DWORD)size, &bytesRead, 0))
     return -1;
 

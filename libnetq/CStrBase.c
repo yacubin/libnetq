@@ -38,13 +38,13 @@ size_t NQCStrLen16(const uint16_t* s)
 
 char* NQCStrDuplicate(const char* str)
 {
-  size_t len = strlen(str) + 1;
+  size_t lenz = strlen(str) + 1;
 
-  char* dup = (char*)NQMalloc(len);
+  char* dup = (char*)NQMalloc(lenz);
   if (dup == NULL)
     return NULL;
 
-  memcpy(dup, str, len);
+  memcpy(dup, str, lenz);
   return dup;
 }
 

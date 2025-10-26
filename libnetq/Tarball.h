@@ -72,11 +72,11 @@ struct NQTarball {
   unsigned state;
 };
 
-void NQTarball_init(NQTarball*, NQTarWriteCallback* callback, void* userdata);
-void NQTarball_finalize(NQTarball*);
+NQ_EXPORT void NQTarball_init(NQTarball*, NQTarWriteCallback* callback, void* userdata);
+NQ_EXPORT void NQTarball_finalize(NQTarball*);
 
-bool NQTarball_append(NQTarball*, const NQTarFileInfo* info, const void* data, size_t size);
-bool NQTarball_finish(NQTarball*);
+NQ_EXPORT bool NQTarball_append(NQTarball*, const NQTarFileInfo* info, const void* data, size_t size);
+NQ_EXPORT bool NQTarball_finish(NQTarball*);
 
 #ifdef __cplusplus
 }

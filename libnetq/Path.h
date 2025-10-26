@@ -21,7 +21,7 @@ extern "C" {
 
 #define NQIsPathDelimiter(c) ((c) == NQ_PATH_DELIMITER)
 
-// NQPathAppendComponent
+// NQPathAppendComponent or NQPathJoin
 NQ_EXPORT size_t NQPathFrom(char* buffer, size_t n, const NQWChar* path);
 NQ_EXPORT size_t NQGetAbsolutePath(char* buffer, size_t n, const char* path);
 NQ_EXPORT size_t NQWinPathFrom(NQWChar* buffer, size_t n, const char* path);

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.2
+project(libnetq VERSION 1.0.3
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -22,7 +22,10 @@ macro (LNQ_OPTION_DEFINE _name _description _value)
 endmacro ()
 
 macro (LNQ_FEATURE_DEFINE _name _description)
-  LNQ_OPTION_DEFINE(${_name} "${_description}" "Default" "Enable" "Disable")
+  LNQ_OPTION_DEFINE(${_name} "${_description}" "DEFAULT" "ON" "OFF")
+  if (NOT LNQ_${_name} MATCHES "DEFAULT|ON|OFF|FALSE|TRUE|0|1")
+    message(FATAL_ERROR "Wrong '${LNQ_${_name}}' value for LNQ_${_name}")
+  endif ()
 endmacro ()
 
 LNQ_OPTION_DEFINE(LIBRARY_TYPE "Choose the library type: SHARED, STATIC, OBJECT" SHARED STATIC OBJECT)
@@ -31,8 +34,12 @@ LNQ_FEATURE_DEFINE(USE_EXPORT "Enable symbol export as a shared library")
 option(LNQ_PUBLIC_GENERATED_DIR "Allow config.h to be populate in include directories" OFF)
 set(LNQ_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
 
-if (LNQ_USE_EXPORT STREQUAL "Enable")
+if (NOT LNQ_USE_EXPORT STREQUAL DEFAULT)
+  set(NQ_USE_EXPORT ${LNQ_USE_EXPORT})
+elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
   set(NQ_USE_EXPORT ON)
+else ()
+  set(NQ_USE_EXPORT OFF)
 endif ()
 
 math(EXPR NQ_VERSION_CODE "${PROJECT_VERSION_MAJOR} * 10000000 + ${PROJECT_VERSION_MINOR} * 100000 + ${PROJECT_VERSION_PATCH} * 1000")
@@ -48,39 +55,44 @@ if ((MINGW OR UNIX) AND NOT APPLE)
     )
 endif ()
 
+set(WITH_PTHREAD OFF)
 find_package(Threads)
-if (Threads_FOUND AND CMAKE_USE_PTHREADS_INIT AND NOT APPLE)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+if (Threads_FOUND)
+  set(WITH_PTHREAD ON)
+  if (CMAKE_USE_PTHREADS_INIT AND NOT APPLE)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+  endif ()
 endif ()
 
 set(WITH_ZLIB OFF)
 find_package(ZLIB)
 if (ZLIB_FOUND)
-  LNQ_FEATURE_DEFINE(WITH_ZLIB "Allow compilation with ZLIB library")
   set(HAVE_ZLIB ON)
-  if (LNQ_WITH_ZLIB STREQUAL "Enable")
+  LNQ_FEATURE_DEFINE(WITH_ZLIB "Allow compilation with ZLIB library")
+  if (NOT LNQ_WITH_ZLIB STREQUAL "DEFAULT")
+    set(WITH_ZLIB ${LNQ_WITH_ZLIB})
+  elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
     set(WITH_ZLIB ON)
   endif ()
 endif ()
 
 set(WITH_OLE32 OFF)
-set(WITH_FOUND FALSE)
-set(CMAKE_REQUIRED_LIBRARIES_SAVE ${CMAKE_REQUIRED_LIBRARIES})
-list(APPEND CMAKE_REQUIRED_LIBRARIES ole32)
+set(OLE32_FOUND FALSE)
+#set(CMAKE_REQUIRED_LIBRARIES_SAVE ${CMAKE_REQUIRED_LIBRARIES})
+#list(APPEND CMAKE_REQUIRED_LIBRARIES ole32)
 check_include_file(combaseapi.h HAVE_COMBASEAPI_H)
+#set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_SAVE})
 if (HAVE_COMBASEAPI_H)
-  LNQ_FEATURE_DEFINE(WITH_OLE32 "Allow compilation with OLE32 library")
   set(OLE32_FOUND TRUE)
-  if (LNQ_WITH_OLE32 STREQUAL "Enable")
+  LNQ_FEATURE_DEFINE(WITH_OLE32 "Allow compilation with OLE32 library")
+  if (NOT LNQ_WITH_OLE32 STREQUAL "DEFAULT")
+    set(WITH_OLE32 ${LNQ_WITH_OLE32})
+  elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
     set(WITH_OLE32 ON)
   endif ()
 endif ()
-set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_SAVE})
 
 if (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
-  if (LNQ_WITH_ZLIB STREQUAL "Default")
-    set(WITH_ZLIB ON)
-  endif ()
   if (LNQ_WITH_OLE32 STREQUAL "Default")
     set(WITH_OLE32 ON)
   endif ()
@@ -278,6 +290,10 @@ if (NOT DEFINE_INLINE)
 endif ()
 
 set(libnetq_HEADERS
+  libnetq/asset/BinaryAsset.h
+  libnetq/asset/FileSystemAsset.h
+  libnetq/asset/PlatformAsset.h
+
   libnetq/cpu/alpha.h
   libnetq/cpu/amd64.h
   libnetq/cpu/arm.h
@@ -316,8 +332,6 @@ set(libnetq_HEADERS
   libnetq/Array.h
   libnetq/Assert.h
   libnetq/Asset.h
-  libnetq/AssetBinary.h
-  libnetq/AssetSystem.h
   libnetq/Atomic.h
   libnetq/AutoReleaseCF.h
   libnetq/Base16.h
@@ -359,6 +373,7 @@ set(libnetq_HEADERS
   libnetq/HttpMethod.h
   libnetq/HttpMultiPartBuilder.h
   libnetq/HttpMultiPartParser.h
+  libnetq/HttpStatus.h
   libnetq/HttpVersion.h
   libnetq/Image.h
   libnetq/ImageBuilder.h
@@ -411,6 +426,8 @@ set(libnetq_HEADERS
   libnetq/Types.h
   libnetq/UnlimitedRandom.h
   libnetq/URL.h
+  libnetq/UrlPath.h
+  libnetq/UrlQuery.h
   libnetq/UTF.h
   libnetq/UUID.h
   libnetq/VA.h
@@ -424,6 +441,10 @@ set(libnetq_HEADERS
   )
 
 set(libnetq_SOURCES
+  libnetq/asset/BinaryAsset.c
+  libnetq/asset/FileSystemAsset.c
+  libnetq/asset/PlatformAsset.c
+
   libnetq/web/HttpStatistics.c
 
   libnetq/Abort.c
@@ -431,8 +452,7 @@ set(libnetq_SOURCES
   libnetq/ApplicationAndroid.c
   libnetq/Arguments.c
   libnetq/Array.c
-  libnetq/AssetBinary.c
-  libnetq/AssetSystem.c
+  libnetq/Asset.c
   libnetq/Atomic.c
   libnetq/Base16.c
   libnetq/Base64.c
@@ -523,6 +543,8 @@ set(libnetq_SOURCES
   libnetq/TimeVal.c
   libnetq/UnlimitedRandom.c
   libnetq/URL.c
+  libnetq/UrlPath.c
+  libnetq/UrlQuery.c
   libnetq/UTF.c
   libnetq/UUID.c
   libnetq/Version.c
@@ -530,6 +552,11 @@ set(libnetq_SOURCES
   libnetq/Window.c
   libnetq/WindowManager.c
   libnetq/Zip.c
+  )
+
+set(libnetq_DEFFILES
+  libnetq/ASCII.def
+  libnetq/HttpStatus.def
   )
 
 set(libnetq_DATAFILES
@@ -553,6 +580,8 @@ set(libnetq_GENERATED
   "${LNQ_GENERATED_DIR}/config.h"
   )
 
+set_source_files_properties(${libnetq_DEFFILES} PROPERTIES HEADER_FILE_ONLY TRUE)
+
 if (CMAKE_SYSTEM_NAME MATCHES "Android")
   list(APPEND libnetq_LIBRARIES android log)
 endif ()
@@ -571,7 +600,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Windows")
   list(APPEND libnetq_LIBRARIES ws2_32 wsock32)
 endif ()
 
-if (Threads_FOUND)
+if (WITH_PTHREAD)
   list(APPEND libnetq_LIBRARIES Threads::Threads)
 endif ()
 
@@ -589,8 +618,8 @@ if (LNQ_PUBLIC_GENERATED_DIR)
   list(APPEND libnetq_INCLUDES "${LNQ_GENERATED_DIR}")
 endif ()
 
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DATAFILES})
-add_library(libnetq ${LNQ_LIBRARY_TYPE} ${libnetq_GENERATED} ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DATAFILES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DEFFILES} ${libnetq_DATAFILES})
+add_library(libnetq ${LNQ_LIBRARY_TYPE} ${libnetq_GENERATED} ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DEFFILES} ${libnetq_DATAFILES})
 target_include_directories(libnetq PUBLIC "$<BUILD_INTERFACE:${libnetq_INCLUDES}>")
 target_include_directories(libnetq PRIVATE "${LNQ_GENERATED_DIR}")
 target_compile_definitions(libnetq PUBLIC "${libnetq_DEFINITIONS}")
@@ -615,14 +644,6 @@ install(TARGETS libnetq
   )
 
 message(STATUS "Build type . . . . . . . . . . . . . . . . . ${LNQ_LIBRARY_TYPE}")
-message(STATUS "Pthread found . . . . . . . . . . . . . . .  ${Threads_FOUND}")
-
-message(STATUS "ZLib found . . . . . . . . . . . . . . . . . ${ZLIB_FOUND}")
-if (DEFINED LNQ_WITH_ZLIB)
-  message(STATUS "ZLib dependency . . . . . . . . . . . . . .  ${WITH_ZLIB} (${LNQ_WITH_ZLIB})")
-endif ()
-
-message(STATUS "Ole32 found . . . . . . . . . . . . . . . .  ${OLE32_FOUND}")
-if (DEFINED LNQ_WITH_OLE32)
-  message(STATUS "Ole32 dependency . . . . . . . . . . . . . . ${WITH_OLE32} (${LNQ_WITH_OLE32})")
-endif ()
+message(STATUS "PThread  . . . . . . . . . . . . . . . . . . ${WITH_PTHREAD} (HAVE ${Threads_FOUND})")
+message(STATUS "ZLib . . . . . . . . . . . . . . . . . . . . ${WITH_ZLIB} (HAVE ${ZLIB_FOUND})")
+message(STATUS "Ole32  . . . . . . . . . . . . . . . . . . . ${WITH_OLE32} (HAVE ${OLE32_FOUND})")

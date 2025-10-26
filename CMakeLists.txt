@@ -77,10 +77,11 @@ if (ZLIB_FOUND)
 endif ()
 
 set(WITH_OLE32 OFF)
-set(FOUND_FOUND FALSE)
-set(CMAKE_REQUIRED_LIBRARIES_SAVE ${CMAKE_REQUIRED_LIBRARIES})
-list(APPEND CMAKE_REQUIRED_LIBRARIES ole32)
+set(OLE32_FOUND FALSE)
+#set(CMAKE_REQUIRED_LIBRARIES_SAVE ${CMAKE_REQUIRED_LIBRARIES})
+#list(APPEND CMAKE_REQUIRED_LIBRARIES ole32)
 check_include_file(combaseapi.h HAVE_COMBASEAPI_H)
+#set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_SAVE})
 if (HAVE_COMBASEAPI_H)
   set(OLE32_FOUND TRUE)
   LNQ_FEATURE_DEFINE(WITH_OLE32 "Allow compilation with OLE32 library")
@@ -90,7 +91,6 @@ if (HAVE_COMBASEAPI_H)
     set(WITH_OLE32 ON)
   endif ()
 endif ()
-set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_SAVE})
 
 if (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
   if (LNQ_WITH_OLE32 STREQUAL "Default")
@@ -426,6 +426,8 @@ set(libnetq_HEADERS
   libnetq/Types.h
   libnetq/UnlimitedRandom.h
   libnetq/URL.h
+  libnetq/UrlPath.h
+  libnetq/UrlQuery.h
   libnetq/UTF.h
   libnetq/UUID.h
   libnetq/VA.h
@@ -541,6 +543,8 @@ set(libnetq_SOURCES
   libnetq/TimeVal.c
   libnetq/UnlimitedRandom.c
   libnetq/URL.c
+  libnetq/UrlPath.c
+  libnetq/UrlQuery.c
   libnetq/UTF.c
   libnetq/UUID.c
   libnetq/Version.c

@@ -105,7 +105,6 @@ NQAssetFile* NQFileSystemAsset_openFile(NQFileSystemAsset* asset, const char* fi
     return NULL;
   }
 
-  size_t fileLength = strlen(filename);
   struct FileSystemAssetFile* thiz = (struct FileSystemAssetFile*)NQMalloc(sizeof(*thiz));
   if (thiz == NULL) {
     NQFileClose(handle);

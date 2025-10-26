@@ -648,7 +648,7 @@ bool NQJSONWriter_writeKeyCStrWithLength(NQJSONWriter* thiz, const char* key, co
     return false;
 
   if (!thiz->hasError) {
-    if (writeKey(thiz, key, len) && writeString(thiz, val, len))
+    if (writeKey(thiz, key, kNoLength) && writeString(thiz, val, len))
       return true;
     thiz->hasError = true;
   }

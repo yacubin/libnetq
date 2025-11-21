@@ -10,7 +10,8 @@
 #ifndef _LIBNETQ_DISPATCHQUEUE_H
 #define _LIBNETQ_DISPATCHQUEUE_H
 
-#include <libnetq/Basic.h>
+#include <libnetq/List.h>
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,7 +26,16 @@ struct NQDispatchData {
   void (*destroy) (void* userdata);
 };
 
+struct NQDispatchQueue {
+  NQListHead workList;
+  NQListHead freeList;
+  uint32_t size;
+  uint32_t total;
+};
+
 NQ_EXPORT NQDispatchQueue* NQDispatchQueue_create(size_t capacity);
+NQ_EXPORT void NQDispatchQueue_init(NQDispatchQueue*);
+NQ_EXPORT void NQDispatchQueue_finalize(NQDispatchQueue*);
 NQ_EXPORT void NQDispatchQueue_destroy(NQDispatchQueue* queue);
 
 NQ_EXPORT size_t NQDispatchQueue_size(const NQDispatchQueue* queue);

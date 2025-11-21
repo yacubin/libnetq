@@ -46,22 +46,17 @@ struct NQURL {
   char characters[1];
 };
 
-enum {
-  kURLCharUnreserved,
-  kURLCharReserved,
-  kURLCharOther,
-};
 
-#define NQ_ASCII_DEF(ch, type, ...) kURLChar##type,
+#define NQ_ASCII_DEF(ch, type, ...) kNQURLChar##type,
 const unsigned char s_urlCharTypes[] =
 {
   #include "libnetq/ASCII.def"
 };
 #undef NQ_ASCII_DEF
 
-static inline int toURLCharType(char ch)
+enum NQURLCharType NQGetURLCharType(char ch)
 {
-  return NQIsASCII(ch) ? s_urlCharTypes[(unsigned)ch] : kURLCharOther;
+  return NQIsASCII(ch) ? s_urlCharTypes[(unsigned)ch] : kNQURLCharOther;
 }
 
 static const char lowerDigits[17] = "0123456789abcdef";
@@ -82,7 +77,7 @@ int urlEncodeImpl(const char* input, size_t inlen, char* output, size_t outlen, 
       if (output && result < outlen)
         output[result] = '+';
     }
-    else if (toURLCharType(ch) == kURLCharUnreserved) {
+    else if (NQIsURLCharUnreserved(ch)) {
       if (output && result < outlen)
         output[result] = ch;
     }
@@ -125,7 +120,7 @@ int urlDecodeImpl(const char* input, size_t inlen, char* output, size_t outlen, 
         output[result] = ' ';
     }
     else if (ch != '%') {
-      if (toURLCharType(ch) == kURLCharOther)
+      if (NQIsURLCharOther(ch))
         return -1;
       if (output && result < outlen)
         output[result] = ch;

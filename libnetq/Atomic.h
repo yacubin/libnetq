@@ -19,16 +19,21 @@ extern "C" {
 #define NQ_ATOMIC32_INIT(counter) { counter }
 
 typedef struct NQAtomic32 {
-  volatile uint32_t counter;
+  int32_t counter;
 } NQAtomic32;
 
 typedef struct NQAtomic64 {
-  volatile uint64_t counter;
+  int64_t counter;
 } NQAtomic64;
 
-NQ_EXPORT void NQAtomic32_init(NQAtomic32* thiz, uint32_t counter);
+static NQ_ALWAYS_INLINE void NQAtomic32_init(NQAtomic32* thiz, int32_t counter)
+{
+  thiz->counter = counter;
+}
+
 #define NQAtomic32_finalize(a) ((void)0)
 
+NQ_EXPORT int32_t NQAtomic32_addFetch(NQAtomic32* thiz, int32_t i);
 NQ_EXPORT void NQAtomic32_inc(NQAtomic32* thiz);
 NQ_EXPORT void NQAtomic32_dec(NQAtomic32* thiz);
 

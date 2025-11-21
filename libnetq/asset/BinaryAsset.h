@@ -16,12 +16,7 @@
 extern "C" {
 #endif
 
-typedef struct NQBinaryAsset NQBinaryAsset;
-
-NQ_EXPORT NQBinaryAsset* NQBinaryAsset_create(const uint8_t* data, size_t size);
-NQ_EXPORT void NQBinaryAsset_destroy(NQBinaryAsset*);
-NQ_EXPORT NQAssetDir* NQAssetBinary_openDir(NQBinaryAsset*, const char* dirname);
-NQ_EXPORT NQAssetFile* NQAssetBinary_openFile(NQBinaryAsset*, const char* filename, int mode);
+NQ_EXPORT NQAsset* NQBinaryAssetCreate(const uint8_t* data, size_t size);
 
 #ifdef __cplusplus
 }

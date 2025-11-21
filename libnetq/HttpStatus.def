@@ -7,20 +7,24 @@
  * under the MIT License. See LICENSE file for details.
  */
 
-#ifndef NQ_HTTP_STATUS_DEF
-# error The NQ_HTTP_STATUS_DEF macro is not defined
+#ifndef NQ_HTTP_STATUS
+# error The NQ_HTTP_STATUS macro is not defined
 #endif
 
 // <code> <message> <id> <name>
-NQ_HTTP_STATUS_DEF(100, "Continue",              CONTINUE,              Continue)
-NQ_HTTP_STATUS_DEF(101, "Switching Protocols",   SWITCHING_PROTOCOLS,   SwitchingProtocols)
-NQ_HTTP_STATUS_DEF(102, "Processing",            PROCESSING,            Processing)
-NQ_HTTP_STATUS_DEF(103, "Early Hints",           EARLY_HINTS,           EarlyHints)
-NQ_HTTP_STATUS_DEF(200, "OK",                    OK,                    Ok)
-NQ_HTTP_STATUS_DEF(201, "Created",               CREATED,               Created)
-NQ_HTTP_STATUS_DEF(301, "Moved Permanently",     MOVED_PERMANENTLY,     MovedPermanently)
-NQ_HTTP_STATUS_DEF(307, "Temporary Redirect",    TEMPORARY_REDIRECT,    TemporaryRedirect)
-NQ_HTTP_STATUS_DEF(404, "Not Found",             NOT_FOUND,             NotFound)
-NQ_HTTP_STATUS_DEF(412, "Precondition Failed",   PRECONDITION_FAILED,   PreconditionFailed)
-NQ_HTTP_STATUS_DEF(426, "Upgrade Required",      UPGRADE_REQUIRED,      UpgradeRequired)
-NQ_HTTP_STATUS_DEF(500, "Internal Server Error", INTERNAL_SERVER_ERROR, InternalServerError)
+NQ_HTTP_STATUS(100, "Continue",              CONTINUE,              Continue)
+NQ_HTTP_STATUS(101, "Switching Protocols",   SWITCHING_PROTOCOLS,   SwitchingProtocols)
+NQ_HTTP_STATUS(102, "Processing",            PROCESSING,            Processing)
+NQ_HTTP_STATUS(103, "Early Hints",           EARLY_HINTS,           EarlyHints)
+NQ_HTTP_STATUS(200, "OK",                    OK,                    Ok)
+NQ_HTTP_STATUS(201, "Created",               CREATED,               Created)
+NQ_HTTP_STATUS(202, "Accepted",              ACCEPTED,              Accepted)
+NQ_HTTP_STATUS(204, "No Content",            NO_CONTENT,            NoContent)
+NQ_HTTP_STATUS(205, "Reset Content",         RESET_CONTENT,         ResetContent)
+NQ_HTTP_STATUS(206, "Partial Content",       PARTIAL_CONTENT,       PartialContent)
+NQ_HTTP_STATUS(301, "Moved Permanently",     MOVED_PERMANENTLY,     MovedPermanently)
+NQ_HTTP_STATUS(307, "Temporary Redirect",    TEMPORARY_REDIRECT,    TemporaryRedirect)
+NQ_HTTP_STATUS(404, "Not Found",             NOT_FOUND,             NotFound)
+NQ_HTTP_STATUS(412, "Precondition Failed",   PRECONDITION_FAILED,   PreconditionFailed)
+NQ_HTTP_STATUS(426, "Upgrade Required",      UPGRADE_REQUIRED,      UpgradeRequired)
+NQ_HTTP_STATUS(500, "Internal Server Error", INTERNAL_SERVER_ERROR, InternalServerError)

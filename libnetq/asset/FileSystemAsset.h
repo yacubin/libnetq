@@ -16,12 +16,7 @@
 extern "C" {
 #endif
 
-typedef struct NQFileSystemAsset NQFileSystemAsset;
-
-NQ_EXPORT NQFileSystemAsset* NQFileSystemAsset_create(const char* dirname);
-NQ_EXPORT void NQFileSystemAsset_destroy(NQFileSystemAsset*);
-NQ_EXPORT NQAssetDir* NQFileSystemAsset_openDir(NQFileSystemAsset*, const char* dirname);
-NQ_EXPORT NQAssetFile* NQFileSystemAsset_openFile(NQFileSystemAsset*, const char* filename, int mode);
+NQ_EXPORT NQAsset* NQFileSystemAssetCreate(const char* dirname);
 
 #ifdef __cplusplus
 }

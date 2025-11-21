@@ -16,7 +16,7 @@
 #include <libnetq/ObjectClass.h>
 #include <libnetq/CStrBase.h>
 #include <libnetq/Strtox.h>
-#include <libnetq/CType.h>
+#include <libnetq/PrimitiveType.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/UTF.h>

@@ -25,13 +25,10 @@ enum NQObjectType {
   NQAssetSystemObjectType = 1009,
   NQSocketObjectType = 1010,
   NQTLSSocketObjectType = 1011,
-  NQTimerQueueObjectType = 1012,
-  NQDispatchQueueObjectType = 1013,
   NQLooperSourceObjectType = 1014,
   NQURLObjectType = 1015,
   NQArgumentsObjectType = 1016,
   kNQKeyValObjectType = 1017,
-  kNQAssetBinaryObjectType = 1018,
 };
 
 #ifdef __cplusplus

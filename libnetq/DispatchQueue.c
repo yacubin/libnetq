@@ -21,142 +21,126 @@
 
 #define NQ_DISPATCH_QUEUE_MAX (NQ_UINT32_MAX - 1)
 
-extern const NQObjectClass __NQDispatchQueueClass;
-
-typedef struct NQDispatchDataEntry {
-  struct NQDispatchDataEntry* next;
+struct DispatchDataEntry {
   NQDispatchData data;
-} NQDispatchDataEntry;
-
-struct NQDispatchQueue {
-  const NQObjectClass* class;
-  NQDispatchDataEntry* firstEntry;
-  NQDispatchDataEntry* lastEntry;
-  NQDispatchDataEntry* freeEntry;
-  uint32_t size;
-  uint32_t total;
+  NQListHead list;
 };
+
+static struct DispatchDataEntry* toDispatchDataEntry(NQListHead* list)
+{
+  return NQ_CONTAINER_OF(list, struct DispatchDataEntry, list);
+}
+
+void NQDispatchQueue_init(NQDispatchQueue* thiz)
+{
+
+  NQListHead_init(&thiz->workList);
+  NQListHead_init(&thiz->freeList);
+  thiz->size = 0;
+  thiz->total = 0;
+}
 
 NQDispatchQueue* NQDispatchQueue_create(size_t capacity)
 {
-  NQDispatchQueue* queue = (NQDispatchQueue*)NQMalloc(sizeof(NQDispatchQueue));
-  if (queue == NULL)
+  NQDispatchQueue* thiz = (NQDispatchQueue*)NQMalloc(sizeof(*thiz));
+  if (thiz == NULL)
     return NULL;
 
-  queue->class = &__NQDispatchQueueClass;
-  queue->firstEntry = NULL;
-  queue->lastEntry = NULL;
-  queue->freeEntry = NULL;
-  queue->size = 0;
-  queue->total = 0;
+  NQDispatchQueue_init(thiz);
 
   capacity = NQGetMin(capacity, NQ_DISPATCH_QUEUE_MAX);
-
-  size_t index;
-  for (index = 0; index < capacity; index++) {
-    NQDispatchDataEntry* entry = (NQDispatchDataEntry*)NQMalloc(sizeof(NQDispatchDataEntry));
+  for (size_t index = 0; index < capacity; index++) {
+    struct DispatchDataEntry* entry = (struct DispatchDataEntry*)NQMalloc(sizeof(*entry));
     if (entry == NULL)
       break;
-    entry->next = queue->freeEntry;
-    queue->freeEntry = entry;
-    queue->total++;
+    NQListHead_addBack(&thiz->freeList, &entry->list);
+    thiz->total++;
   }
 
-  return queue;
+  return thiz;
 }
 
-static void NQDispatchDataEntryDestroy(NQDispatchDataEntry* entry, bool withDestroy)
+void NQDispatchQueue_finalize(NQDispatchQueue* thiz)
 {
-  NQDispatchDataEntry* next;
-  while (entry != NULL) {
-    next = entry->next;
+  NQListHead* iter;
 
-    if (withDestroy && entry->data.destroy)
+  iter = thiz->workList.next;
+  while (iter != &thiz->workList) {
+    struct DispatchDataEntry* entry = toDispatchDataEntry(iter);
+    iter = iter->next;
+    if (entry->data.destroy)
       entry->data.destroy(entry->data.userdata);
-
     NQFree(entry);
-    entry = next;
+  }
+
+  iter = thiz->freeList.next;
+  while (iter != &thiz->freeList) {
+    struct DispatchDataEntry* entry = toDispatchDataEntry(iter);
+    iter = iter->next;
+    NQFree(entry);
   }
 }
 
-void NQDispatchQueue_destroy(NQDispatchQueue* queue)
+void NQDispatchQueue_destroy(NQDispatchQueue* thiz)
 {
-  NQ_ASSERT(queue->firstEntry == NULL);
-  NQDispatchDataEntryDestroy(queue->firstEntry, true);
-  NQDispatchDataEntryDestroy(queue->freeEntry, false);
-  NQFree(queue);
+  NQDispatchQueue_finalize(thiz);
+  NQFree(thiz);
 }
 
-size_t NQDispatchQueue_size(const NQDispatchQueue* queue)
+size_t NQDispatchQueue_size(const NQDispatchQueue* thiz)
 {
-  return queue->size;
+  return thiz->size;
 }
 
-bool NQDispatchQueue_isEmpty(const NQDispatchQueue* queue)
+bool NQDispatchQueue_isEmpty(const NQDispatchQueue* thiz)
 {
-  return queue->size == 0;
+  return thiz->size == 0;
 }
 
-bool NQDispatchQueue_push(NQDispatchQueue* queue, NQDispatchData* data)
+bool NQDispatchQueue_push(NQDispatchQueue* thiz, NQDispatchData* data)
 {
-  NQDispatchDataEntry* entry;
-  
-  if (queue->freeEntry) {
-    entry = queue->freeEntry;
-    queue->freeEntry = entry->next;
-  }
-  else {
-    if (NQ_DISPATCH_QUEUE_MAX <= queue->total + 1)
+  struct DispatchDataEntry* entry;
+
+  if (NQListHead_isEmpty(&thiz->freeList)) {
+    if (NQ_DISPATCH_QUEUE_MAX <= thiz->total + 1)
       return false;
 
-    entry = (NQDispatchDataEntry*)NQMalloc(sizeof(NQDispatchDataEntry));
+    entry = (struct DispatchDataEntry*)NQMalloc(sizeof(*entry));
     if (entry == NULL)
       return false;
 
-    queue->total++;
+    thiz->total++;
   }
-
-  entry->next = NULL;
-  entry->data = *data;
-
-  if (queue->lastEntry != NULL)
-    queue->lastEntry->next = entry;
   else {
-    NQ_ASSERT(queue->firstEntry == NULL);
-    queue->firstEntry = entry;
+    entry = toDispatchDataEntry(thiz->freeList.next);
+    NQListHead_remove(thiz->freeList.next);
   }
 
-  queue->lastEntry = entry;
-  queue->size++;
+  entry->data = *data;
+  NQListHead_addBack(&thiz->workList, &entry->list);
+  thiz->size++;
 
   return true;
 }
 
-static NQDispatchDataEntry* NQDispatchQueue_shiftEntry(NQDispatchQueue* queue)
+static struct DispatchDataEntry* NQDispatchQueue_shiftEntry(NQDispatchQueue* thiz)
 {
-  if (queue->size == 0)
+  if (NQListHead_isEmpty(&thiz->workList)) {
+    NQ_ASSERT(thiz->size == 0);
     return NULL;
-
-  NQDispatchDataEntry* entry = queue->firstEntry;
-  if (queue->size != 1)
-    queue->firstEntry = entry->next;
-  else {
-    NQ_ASSERT(queue->firstEntry == queue->lastEntry);
-    queue->firstEntry = NULL;
-    queue->lastEntry = NULL;
   }
-
-  queue->size--;
-  
-  entry->next = queue->freeEntry;
-  queue->freeEntry = entry;
-
-  return entry;
+  else {
+    NQ_ASSERT(thiz->size > 0);
+    struct DispatchDataEntry* entry = toDispatchDataEntry(thiz->workList.next);
+    NQListHead_remove(thiz->workList.next);
+    thiz->size--;
+    return entry;
+  }
 }
 
-bool NQDispatchQueue_shift(NQDispatchQueue* queue, NQDispatchData* data)
+bool NQDispatchQueue_shift(NQDispatchQueue* thiz, NQDispatchData* data)
 {
-  NQDispatchDataEntry* entry = NQDispatchQueue_shiftEntry(queue);
+  struct DispatchDataEntry* entry = NQDispatchQueue_shiftEntry(thiz);
   if (entry == NULL)
     return false;
 
@@ -166,9 +150,9 @@ bool NQDispatchQueue_shift(NQDispatchQueue* queue, NQDispatchData* data)
   return true;
 }
 
-bool NQDispatchQueue_performOnce(NQDispatchQueue* queue)
+bool NQDispatchQueue_performOnce(NQDispatchQueue* thiz)
 {
-  NQDispatchDataEntry* entry = NQDispatchQueue_shiftEntry(queue);
+  struct DispatchDataEntry* entry = NQDispatchQueue_shiftEntry(thiz);
   if (entry == NULL)
     return false;
 
@@ -181,17 +165,17 @@ bool NQDispatchQueue_performOnce(NQDispatchQueue* queue)
   return true;
 }
 
-size_t NQDispatchQueue_performAll(NQDispatchQueue* queue)
+size_t NQDispatchQueue_performAll(NQDispatchQueue* thiz)
 {
   size_t result = 0;
-  while (NQDispatchQueue_performOnce(queue))
+  while (NQDispatchQueue_performOnce(thiz))
     result++;
   return result;
 }
 
-bool NQDispatchQueue_cleanOnce(NQDispatchQueue* queue)
+bool NQDispatchQueue_cleanOnce(NQDispatchQueue* thiz)
 {
-  NQDispatchDataEntry* entry = NQDispatchQueue_shiftEntry(queue);
+  struct DispatchDataEntry* entry = NQDispatchQueue_shiftEntry(thiz);
   if (entry == NULL)
     return false;
 
@@ -208,10 +192,3 @@ size_t NQDispatchQueue_cleanAll(NQDispatchQueue* queue)
     result++;
   return result;
 }
-
-const NQObjectClass __NQDispatchQueueClass = {
-  NQDispatchQueueObjectType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQDispatchQueue_destroy,
-};

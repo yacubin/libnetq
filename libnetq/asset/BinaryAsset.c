@@ -18,13 +18,10 @@
 #include <libnetq/Math.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Zip.h>
-#include <libnetq/ObjectClass.h>
 #include <libnetq/Assert.h>
 
 #if WITH_ZLIB
 #include <zlib.h>
-
-extern const NQObjectClass __NQAssetBinaryClass;
 
 typedef struct ZipEntry {
   const char* name;
@@ -33,8 +30,8 @@ typedef struct ZipEntry {
   uint64_t size;
 } ZipEntry;
 
-struct NQBinaryAsset {
-  const NQObjectClass* class;
+struct BinaryAsset {
+  NQAsset base;
   const uint8_t* data;
   uint32_t size;
 
@@ -44,7 +41,7 @@ struct NQBinaryAsset {
 
 struct BinaryAssetDir {
   NQAssetDir base;
-  NQBinaryAsset* system;
+  struct BinaryAsset* system;
   uint16_t index;
   char dirname[1];
 };
@@ -58,7 +55,7 @@ enum {
 
 struct BinaryAssetFile {
   NQAssetFile base;
-  NQBinaryAsset* system;
+  struct BinaryAsset* system;
   const uint8_t* data;
   uint64_t size;
   int status;
@@ -100,58 +97,6 @@ static void ZipEntry_finalize(struct ZipEntry* zfile)
   NQFree((void*)zfile->name);
 }
 
-NQBinaryAsset* NQBinaryAsset_create(const uint8_t* data, size_t size)
-{  
-  if (size < 2 || memcmp(data, "PK", 2) != 0)
-    return NULL;
-  
-  struct ZipEndCentralDir ecdir;
-  const uint8_t* ecdirData = ZipEndCentralDir_find(&ecdir, data, size);
-  if (!ecdirData)
-    return NULL;
-
-  const uint8_t* end = data + size;
-  uintptr_t ecdirOffset = ecdirData - data;
-
-  NQBinaryAsset* system = (NQBinaryAsset*)NQZeroMalloc(sizeof(NQBinaryAsset));
-  if (system == NULL)
-    return NULL;
-
-  struct ZipEntry* files = (struct ZipEntry*)NQMalloc(sizeof(struct ZipEntry) * ecdir.totalEntries);
-
-  system->class = &__NQAssetBinaryClass;
-  system->data = data;
-  system->size = (uint32_t)size;
-  system->totalFiles = 0;
-  system->files = files;
-
-  if (files != NULL && ecdir.centralDirOffset < ecdirOffset) {
-    const uint8_t* fileStart = system->data + ecdir.centralDirOffset;
-    const uint8_t* fileEnd = fileStart + NQGetMin(ecdir.centralDirSize, ecdirOffset - ecdir.centralDirOffset);
-    while (system->totalFiles < ecdir.totalEntries) {
-      if (!ZipEntry_parse(files, fileStart, fileEnd, &fileStart))
-        break;
-      files++;
-      system->totalFiles++;
-    }
-  }
-
-  return system;
-}
-
-void NQBinaryAsset_destroy(NQBinaryAsset* system)
-{
-  uint16_t n;
-
-  if (system->files) {
-    for (n = 0; n < system->totalFiles; n++)
-      ZipEntry_finalize(&system->files[n]);
-    NQFree((void*)system->files);
-  }
-
-  NQFree(system);
-}
-
 static void dirClose(NQAssetDir* dir)
 {
   struct BinaryAssetDir* thiz = (struct BinaryAssetDir*)dir;
@@ -188,8 +133,10 @@ static const struct NQAssetDirCallbacks s_assetDirCallbacks =
   .readFileName = dirReadFileName,
 };
 
-NQAssetDir* NQAssetBinary_openDir(NQBinaryAsset* system, const char* dirname)
+static NQAssetDir* assetOpenDir(NQAsset* asset, const char* dirname)
 {
+  struct BinaryAsset* system = NQ_CONTAINER_OF(asset, struct BinaryAsset, base);
+
   size_t n = strlen(dirname);
   struct BinaryAssetDir* thiz = (struct BinaryAssetDir*)NQZeroMalloc(sizeof(*thiz) + n + 1);
   if (thiz == NULL)
@@ -203,7 +150,7 @@ NQAssetDir* NQAssetBinary_openDir(NQBinaryAsset* system, const char* dirname)
   return &thiz->base;
 }
 
-static const ZipEntry* NQAssetFileBinary_findEntry(NQBinaryAsset* system, const char* filename)
+static const ZipEntry* NQAssetFileBinary_findEntry(struct BinaryAsset* system, const char* filename)
 {
   uint16_t i;
   for (i = 0; i < system->totalFiles; i++) {
@@ -214,7 +161,7 @@ static const ZipEntry* NQAssetFileBinary_findEntry(NQBinaryAsset* system, const 
   return NULL;
 }
 
-static const uint8_t* ZipEntry_getData(NQBinaryAsset* system, const ZipEntry* zfile)
+static const uint8_t* ZipEntry_getData(struct BinaryAsset* system, const ZipEntry* zfile)
 {
   struct ZipDataDescriptor ddesc;
   struct ZipLocalFileHeader lfheader;
@@ -297,8 +244,10 @@ static const struct NQAssetFileCallbacks s_fileCallbacks =
   .read = fileRead,
 };
 
-NQAssetFile* NQAssetBinary_openFile(NQBinaryAsset* system, const char* filename, int mode)
+static NQAssetFile* assetOpenFile(NQAsset* asset, const char* filename, int mode)
 {
+  struct BinaryAsset* system = NQ_CONTAINER_OF(asset, struct BinaryAsset, base);
+
   const ZipEntry* entry = NQAssetFileBinary_findEntry(system, filename);
   if (entry == NULL)
     return NULL;
@@ -331,30 +280,70 @@ NQAssetFile* NQAssetBinary_openFile(NQBinaryAsset* system, const char* filename,
   return &thiz->base;
 }
 
-const NQObjectClass __NQAssetBinaryClass = {
-  kNQAssetBinaryObjectType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQBinaryAsset_destroy,
+static void assetDestroy(NQAsset* asset)
+{
+  uint16_t n;
+
+  struct BinaryAsset* system = NQ_CONTAINER_OF(asset, struct BinaryAsset, base);
+
+  if (system->files) {
+    for (n = 0; n < system->totalFiles; n++)
+      ZipEntry_finalize(&system->files[n]);
+    NQFree((void*)system->files);
+  }
+
+  NQFree(system);
+}
+
+static const struct NQAssetCallbacks s_assetCallbacks =
+{
+  .destroy = assetDestroy,
+  .openDir = assetOpenDir,
+  .openFile = assetOpenFile,
 };
+
+NQAsset* NQBinaryAssetCreate(const uint8_t* data, size_t size)
+{
+  if (size < 2 || memcmp(data, "PK", 2) != 0)
+    return NULL;
+
+  struct ZipEndCentralDir ecdir;
+  const uint8_t* ecdirData = ZipEndCentralDir_find(&ecdir, data, size);
+  if (!ecdirData)
+    return NULL;
+
+  const uint8_t* end = data + size;
+  uintptr_t ecdirOffset = ecdirData - data;
+
+  struct BinaryAsset* system = (struct BinaryAsset*)NQZeroMalloc(sizeof(*system));
+  if (system == NULL)
+    return NULL;
+
+  struct ZipEntry* files = (struct ZipEntry*)NQMalloc(sizeof(struct ZipEntry) * ecdir.totalEntries);
+
+  system->base.callbacks = &s_assetCallbacks;
+  system->data = data;
+  system->size = (uint32_t)size;
+  system->totalFiles = 0;
+  system->files = files;
+
+  if (files != NULL && ecdir.centralDirOffset < ecdirOffset) {
+    const uint8_t* fileStart = system->data + ecdir.centralDirOffset;
+    const uint8_t* fileEnd = fileStart + NQGetMin(ecdir.centralDirSize, ecdirOffset - ecdir.centralDirOffset);
+    while (system->totalFiles < ecdir.totalEntries) {
+      if (!ZipEntry_parse(files, fileStart, fileEnd, &fileStart))
+        break;
+      files++;
+      system->totalFiles++;
+    }
+  }
+
+  return &system->base;
+}
 
 #else
 
-NQBinaryAsset* NQBinaryAsset_create(const uint8_t* data, size_t size)
-{
-  return NULL;
-}
-
-void NQBinaryAsset_destroy(NQBinaryAsset* system)
-{
-}
-
-NQAssetDir* NQAssetBinary_openDir(NQBinaryAsset* system, const char* dirname)
-{
-  return NULL;
-}
-
-NQAssetFile* NQAssetBinary_openFile(NQBinaryAsset* system, const char* filename, int mode)
+NQAsset* NQBinaryAssetCreate(const uint8_t* data, size_t size)
 {
   return NULL;
 }

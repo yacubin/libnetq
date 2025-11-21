@@ -16,6 +16,35 @@
 extern "C" {
 #endif
 
+#define NQ_BOOL_STRING "bool"
+#define NQ_CHAR_STRING "char"
+#define NQ_INT8_STRING "int8"
+#define NQ_INT16_STRING "int16"
+#define NQ_INT32_STRING "int32"
+#define NQ_INT64_STRING "int64"
+#define NQ_UINT8_STRING "uint8"
+#define NQ_UINT16_STRING "uint16"
+#define NQ_UINT32_STRING "uint32"
+#define NQ_UINT64_STRING "uint64"
+#define NQ_FLOAT_STRING "float"
+#define NQ_DOUBLE_STRING "double"
+#define NQ_STRING_STRING "string"
+
+#define NQ_NULL_STRING "null"
+#define NQ_FALSE_STRING "false"
+#define NQ_TRUE_STRING "true"
+#define NQ_OFF_STRING "off"
+#define NQ_ON_STRING "on"
+#define NQ_ZERO_STRING "0"
+#define NQ_ONE_STRING "1"
+
+NQ_EXPORT bool NQIsFalse(const char* s);
+NQ_EXPORT bool NQIsTrue(const char* s);
+NQ_EXPORT bool NQIsOff(const char* s);
+NQ_EXPORT bool NQIsOn(const char* s);
+NQ_EXPORT bool NQIsEnabled(const char* s);
+NQ_EXPORT bool NQIsDisabled(const char* s);
+
 typedef enum NQPrimitiveType {
   kNQBoolType,
   kNQCharType,
@@ -32,7 +61,7 @@ typedef enum NQPrimitiveType {
   kNQStringType,
 } NQPrimitiveType;
 
-NQ_EXPORT const char* NQPrimitiveTypeToCString(NQPrimitiveType type);
+NQ_EXPORT const char* NQPrimitiveTypeToSTRINGing(NQPrimitiveType type);
 NQ_EXPORT bool NQParsePrimitiveType(const char* str, NQPrimitiveType* result);
 
 #ifdef __cplusplus

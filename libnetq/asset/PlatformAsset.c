@@ -13,6 +13,13 @@
 #include "config.h"
 #include "libnetq/asset/PlatformAsset.h"
 
+#include <libnetq/Assert.h>
+
+struct PlatformAsset {
+  NQAsset base;
+  NQAssetHandle handle;
+};
+
 #if defined(NQ_OS_ANDROID)
 
 #include <libnetq/Malloc.h>
@@ -46,14 +53,14 @@ static const struct NQAssetDirCallbacks s_assetDirCallbacks =
   .readFileName = dirReadFileName,
 };
 
-NQAssetDir* NQPlatformAsset_openDir(NQAssetHandle handle, const char* dirname)
+NQAssetDir* NQPlatformAssetOpenDir(NQAssetHandle handle, const char* dirname)
 {
   AAssetDir* impl = AAssetManager_openDir(handle, dirname);
   if (impl == NULL) {
     return NULL;
   }
 
-  struct PlatformAssetDir* thiz = (struct PlatformAssetDir*)NQMalloc(*thiz));
+  struct PlatformAssetDir* thiz = (struct PlatformAssetDir*)NQMalloc(sizeof(*thiz));
   if (thiz == NULL) {
     AAssetDir_close(impl);
     return NULL;
@@ -93,10 +100,10 @@ static const struct NQAssetFileCallbacks s_fileCallbacks =
 {
   .close = fileClose,
   .getSize = fileGetSize,
-  .read = dirReadFileName,
+  .read = fileRead,
 };
 
-NQAssetFile* NQPlatformAsset_openFile(NQAssetHandle handle, const char* filename, int mode)
+NQAssetFile* NQPlatformAssetOpenFile(NQAssetHandle handle, const char* filename, int mode)
 {
   AAsset* impl = AAssetManager_open(handle, filename, AASSET_MODE_STREAMING);
   if (impl == NULL) {
@@ -117,14 +124,73 @@ NQAssetFile* NQPlatformAsset_openFile(NQAssetHandle handle, const char* filename
 
 #else
 
-NQAssetDir* NQPlatformAsset_openDir(NQAssetHandle handle, const char* dirname)
+NQAssetDir* NQPlatformAssetOpenDir(NQAssetHandle handle, const char* dirname)
 {
   return NULL;
 }
 
-NQAssetFile* NQPlatformAsset_openFile(NQAssetHandle handle, const char* filename, int mode)
+NQAssetFile* NQPlatformAssetOpenFile(NQAssetHandle handle, const char* filename, int mode)
 {
   return NULL;
 }
 
 #endif
+
+
+static NQAssetDir* platformAssetOpenDir(NQAsset* asset, const char* dirname)
+{
+  struct PlatformAsset* thiz = NQ_CONTAINER_OF(asset, struct PlatformAsset, base);
+  return NQPlatformAssetOpenDir(thiz->handle, dirname);
+}
+
+static NQAssetFile* platformAssetOpenFile(NQAsset* asset, const char* filename, int mode)
+{
+  struct PlatformAsset* thiz = NQ_CONTAINER_OF(asset, struct PlatformAsset, base);
+  return NQPlatformAssetOpenFile(thiz->handle, filename, mode);
+}
+
+static void platformAssetDestroy(NQAsset* asset)
+{
+  struct PlatformAsset* thiz = NQ_CONTAINER_OF(asset, struct PlatformAsset, base);
+  if (thiz->handle) {
+#ifdef NQ_OS_MACOSX
+    CFRelease(thiz->handle);
+#endif
+    thiz->handle = NULL;
+  }
+}
+
+static const struct NQAssetCallbacks s_platformAssetCallbacks =
+{
+  .destroy = platformAssetDestroy,
+  .openDir = platformAssetOpenDir,
+  .openFile = platformAssetOpenFile,
+};
+
+static struct PlatformAsset s_platformAsset =
+{
+  .base = { &s_platformAssetCallbacks },
+  .handle = NULL,
+};
+
+NQAsset* NQPlatformAssetGetInstance(void)
+{
+  return &s_platformAsset.base;
+}
+
+void NQPlatformAssetInit(NQAssetHandle handle)
+{
+#ifdef NQ_OS_MACOSX
+    CFURLRef url = CFBundleCopyBundleURL(handle);
+    if (url != NULL) {
+      char path[1024];
+      if (CFURLGetFileSystemRepresentation(url, true, (UInt8*)path, sizeof(path))) {
+        strcat(path, "/Contents/MacOS/");
+      }
+      CFRelease(url);
+      s_platformAsset.handle = (CFBundleRef)CFRetain(handle);
+    }
+#else
+    s_platformAsset.handle = handle;
+#endif
+}

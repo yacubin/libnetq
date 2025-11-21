@@ -16,8 +16,11 @@
 extern "C" {
 #endif
 
-NQ_EXPORT NQAssetDir* NQPlatformAsset_openDir(NQAssetHandle, const char* dirname);
-NQ_EXPORT NQAssetFile* NQPlatformAsset_openFile(NQAssetHandle, const char* filename, int mode);
+NQ_EXPORT NQAssetDir* NQPlatformAssetOpenDir(NQAssetHandle, const char* dirname);
+NQ_EXPORT NQAssetFile* NQPlatformAssetOpenFile(NQAssetHandle, const char* filename, int mode);
+
+NQ_EXPORT NQAsset* NQPlatformAssetGetInstance(void);
+NQ_EXPORT void NQPlatformAssetInit(NQAssetHandle);
 
 #ifdef __cplusplus
 }

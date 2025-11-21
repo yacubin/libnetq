@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.3
+project(libnetq VERSION 1.0.4
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -22,8 +22,8 @@ macro (LNQ_OPTION_DEFINE _name _description _value)
 endmacro ()
 
 macro (LNQ_FEATURE_DEFINE _name _description)
-  LNQ_OPTION_DEFINE(${_name} "${_description}" "DEFAULT" "ON" "OFF")
-  if (NOT LNQ_${_name} MATCHES "DEFAULT|ON|OFF|FALSE|TRUE|0|1")
+  LNQ_OPTION_DEFINE(${_name} "${_description}" "AUTO" "ON" "OFF")
+  if (NOT LNQ_${_name} MATCHES "AUTO|ON|OFF|FALSE|TRUE|0|1")
     message(FATAL_ERROR "Wrong '${LNQ_${_name}}' value for LNQ_${_name}")
   endif ()
 endmacro ()
@@ -34,7 +34,7 @@ LNQ_FEATURE_DEFINE(USE_EXPORT "Enable symbol export as a shared library")
 option(LNQ_PUBLIC_GENERATED_DIR "Allow config.h to be populate in include directories" OFF)
 set(LNQ_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
 
-if (NOT LNQ_USE_EXPORT STREQUAL DEFAULT)
+if (NOT LNQ_USE_EXPORT STREQUAL AUTO)
   set(NQ_USE_EXPORT ${LNQ_USE_EXPORT})
 elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
   set(NQ_USE_EXPORT ON)
@@ -69,7 +69,7 @@ find_package(ZLIB)
 if (ZLIB_FOUND)
   set(HAVE_ZLIB ON)
   LNQ_FEATURE_DEFINE(WITH_ZLIB "Allow compilation with ZLIB library")
-  if (NOT LNQ_WITH_ZLIB STREQUAL "DEFAULT")
+  if (NOT LNQ_WITH_ZLIB STREQUAL "AUTO")
     set(WITH_ZLIB ${LNQ_WITH_ZLIB})
   elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
     set(WITH_ZLIB ON)
@@ -78,14 +78,11 @@ endif ()
 
 set(WITH_OLE32 OFF)
 set(OLE32_FOUND FALSE)
-#set(CMAKE_REQUIRED_LIBRARIES_SAVE ${CMAKE_REQUIRED_LIBRARIES})
-#list(APPEND CMAKE_REQUIRED_LIBRARIES ole32)
 check_include_file(combaseapi.h HAVE_COMBASEAPI_H)
-#set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES_SAVE})
 if (HAVE_COMBASEAPI_H)
   set(OLE32_FOUND TRUE)
   LNQ_FEATURE_DEFINE(WITH_OLE32 "Allow compilation with OLE32 library")
-  if (NOT LNQ_WITH_OLE32 STREQUAL "DEFAULT")
+  if (NOT LNQ_WITH_OLE32 STREQUAL "AUTO")
     set(WITH_OLE32 ${LNQ_WITH_OLE32})
   elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
     set(WITH_OLE32 ON)
@@ -93,7 +90,7 @@ if (HAVE_COMBASEAPI_H)
 endif ()
 
 if (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
-  if (LNQ_WITH_OLE32 STREQUAL "Default")
+  if (LNQ_WITH_OLE32 STREQUAL "AUTO")
     set(WITH_OLE32 ON)
   endif ()
 endif ()
@@ -245,12 +242,18 @@ int main ()
 " HAVE_TM_GMTOFF)
 
 check_c_source_compiles("
-void memory_barrier (void) { __sync_synchronize (); }
-int atomic_add (int* i) { return __sync_fetch_and_add (i, 1); }
-int mutex_trylock (int* m) { return __sync_lock_test_and_set (m, 1); }
-void mutex_unlock (int* m) { __sync_lock_release (m); }
+void memory_barrier(void) { __sync_synchronize(); }
+int atomic_add(int* i) { return __sync_fetch_and_add(i, 1); }
+int mutex_trylock(int* m) { return __sync_lock_test_and_set(m, 1); }
+void mutex_unlock(int* m) { __sync_lock_release (m); }
 int main() { return 0; }
-" HAVE_INTEL_ATOMIC_PRIMITIVES)
+" HAVE_SYNC_BUILTINS)
+
+check_c_source_compiles ("
+int atomic_add(int i) { return __atomic_fetch_add(&i, 1, __ATOMIC_SEQ_CST); }
+int atomic_cmpxchg(int i, int j, int k) { return __atomic_compare_exchange_n(&i, &j, k, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST); }
+int main(void) { return 0; }
+" HAVE_ATOMIC_BUILTINS)
 
 check_c_source_compiles("
 #define _GNU_SOURCE 1
@@ -318,6 +321,7 @@ set(libnetq_HEADERS
   libnetq/cpu/x86.h
   libnetq/cpu/z.h
 
+  libnetq/net/NetBufferQueue.h
   libnetq/web/HttpStatistics.h
 
   libnetq/tls/CipherSuite.h
@@ -382,6 +386,7 @@ set(libnetq_HEADERS
   libnetq/KeyVal.h
   libnetq/Library.h
   libnetq/Limits.h
+  libnetq/List.h
   libnetq/Leb128.h
   libnetq/Log.h
   libnetq/LogCircular.h
@@ -402,7 +407,9 @@ set(libnetq_HEADERS
   libnetq/OS.h
   libnetq/Path.h
   libnetq/PlatformLooper.h
+  libnetq/PlatformPoll.h
   libnetq/Poll.h
+  libnetq/PollVector.h
   libnetq/PrimitiveStorage.h
   libnetq/PrimitiveType.h
   libnetq/Rect.h
@@ -433,6 +440,7 @@ set(libnetq_HEADERS
   libnetq/VA.h
   libnetq/Version.h
   libnetq/WakeOnLan.h
+  libnetq/WebSocketFrame.h
   libnetq/WebSocketTypes.h
   libnetq/Window.h
   libnetq/WindowEvent.h
@@ -445,6 +453,7 @@ set(libnetq_SOURCES
   libnetq/asset/FileSystemAsset.c
   libnetq/asset/PlatformAsset.c
 
+  libnetq/net/NetBufferQueue.c
   libnetq/web/HttpStatistics.c
 
   libnetq/Abort.c
@@ -466,7 +475,6 @@ set(libnetq_SOURCES
   libnetq/CPU.c
   libnetq/CStrBase.c
   libnetq/CStrConverter.c
-  libnetq/CType.c
   libnetq/DescSet.c
   libnetq/Dir.c
   libnetq/DispatchQueue.c
@@ -519,6 +527,7 @@ set(libnetq_SOURCES
   libnetq/PlatformLooperStub.c
   libnetq/PlatformLooperWin.c
   libnetq/Poll.c
+  libnetq/PollVector.c
   libnetq/PrimitiveStorage.c
   libnetq/PrimitiveType.c
   libnetq/Rect.c
@@ -549,6 +558,7 @@ set(libnetq_SOURCES
   libnetq/UUID.c
   libnetq/Version.c
   libnetq/WakeOnLan.c
+  libnetq/WebSocketFrame.c
   libnetq/Window.c
   libnetq/WindowManager.c
   libnetq/Zip.c
@@ -557,6 +567,7 @@ set(libnetq_SOURCES
 set(libnetq_DEFFILES
   libnetq/ASCII.def
   libnetq/HttpStatus.def
+  libnetq/MimeTypes.def
   )
 
 set(libnetq_DATAFILES
@@ -632,7 +643,7 @@ set_target_properties(libnetq PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 add_library(LibNetQ::LibNetQ ALIAS libnetq)
 
-foreach (_header ${libnetq_HEADERS})
+foreach (_header ${libnetq_HEADERS} ${libnetq_DEFFILES})
   get_filename_component(_directory "${_header}" DIRECTORY)
   install(FILES "${_header}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${_directory}")
 endforeach ()

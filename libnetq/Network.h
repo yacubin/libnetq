@@ -68,15 +68,32 @@ typedef struct NQEndPoint {
   };
 } NQEndPoint;
 
-typedef struct NQMACAddress {
-  uint8_t data[6];
-} NQMACAddress;
-
 NQ_EXPORT void NQEndPoint_init4(NQEndPoint* ep, const uint8_t data[4], uint16_t port);
 NQ_EXPORT void NQEndPoint_init6(NQEndPoint* ep, const uint8_t data[16], uint16_t port);
 NQ_EXPORT int NQEndPoint_sprintf(const NQEndPoint* ep, char* s, size_t n);
 NQ_EXPORT bool NQEndPoint_parse(NQEndPoint* ep, const char* s);
 NQ_EXPORT bool NQEndPoint_parseWithLength(NQEndPoint* ep, const char* s, size_t len);
+
+#define NQ_MACADDRESS_SIZE (6)
+
+typedef struct NQMACAddress {
+  uint8_t data[NQ_MACADDRESS_SIZE];
+} NQMACAddress;
+
+static inline void NQMACAddress_init(NQMACAddress* thiz, uint8_t a0, uint8_t a1, uint8_t a2, uint8_t a3, uint8_t a4, uint8_t a5)
+{
+  thiz->data[0] = a0;
+  thiz->data[1] = a1;
+  thiz->data[2] = a2;
+  thiz->data[3] = a3;
+  thiz->data[4] = a4;
+  thiz->data[5] = a5;
+}
+
+static inline bool NQMACAddress_isZero(const NQMACAddress* thiz)
+{
+  return !(thiz->data[0] || thiz->data[1] || thiz->data[2] || thiz->data[3] || thiz->data[4] || thiz->data[5]);
+}
 
 NQ_EXPORT void NQMACAddress_reset(NQMACAddress* mac);
 NQ_EXPORT bool NQMACAddress_parse(NQMACAddress* mac, const char* s, size_t n);

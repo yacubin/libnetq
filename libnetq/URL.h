@@ -54,6 +54,29 @@ typedef struct NQURL NQURL;
 
 #define NQ_URL_PLUS_AS_SPACE (1)
 
+enum NQURLCharType {
+  kNQURLCharUnreserved,
+  kNQURLCharReserved,
+  kNQURLCharOther,
+};
+
+NQ_EXPORT enum NQURLCharType NQGetURLCharType(char ch);
+
+static inline bool NQIsURLCharUnreserved(char ch)
+{
+  return NQGetURLCharType(ch) == kNQURLCharUnreserved;
+}
+
+static inline bool NQIsURLCharReserved(char ch)
+{
+  return NQGetURLCharType(ch) == kNQURLCharReserved;
+}
+
+static inline bool NQIsURLCharOther(char ch)
+{
+  return NQGetURLCharType(ch) == kNQURLCharOther;
+}
+
 NQ_EXPORT int NQURLEncode(const char* input, size_t inlen, char* output, size_t outlen);
 NQ_EXPORT int NQURLDecode(const char* input, size_t inlen, char* output, size_t outlen);
 NQ_EXPORT int NQFormURLEncode(const char* input, size_t inlen, char* output, size_t outlen);

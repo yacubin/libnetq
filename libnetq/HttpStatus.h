@@ -19,6 +19,10 @@
 /* 2xx – Success */
 #define NQ_HTTP_STATUS_OK                     200
 #define NQ_HTTP_STATUS_CREATED                201
+#define NQ_HTTP_STATUS_ACCEPTED               202
+#define NQ_HTTP_STATUS_NO_CONTENT             204
+#define NQ_HTTP_STATUS_RESET_CONTENT          205
+#define NQ_HTTP_STATUS_PARTIAL_CONTENT        206
 
 /* 3xx – Redirection */
 #define NQ_HTTP_STATUS_MOVED_PERMANENTLY      301

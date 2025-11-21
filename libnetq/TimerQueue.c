@@ -13,12 +13,10 @@
 #include "config.h"
 #include "libnetq/TimerQueue.h"
 
-#include <libnetq/ObjectClass.h>
 #include <libnetq/CStrBase.h>
+#include <libnetq/List.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Assert.h>
-
-extern const NQObjectClass __NQTimerQueueClass;
 
 #define NQ_TIMER_MAX (1 << 10)
 #define NQ_TIMER_ACTIVE   (1 << 0)
@@ -28,8 +26,7 @@ typedef struct NQTimerEntry NQTimerEntry;
 typedef struct NQTimerList NQTimerList;
 
 struct NQTimerEntry {
-  NQTimerEntry* prev;
-  NQTimerEntry* next;
+  NQListHead list;
 
   uint32_t flags;
   NQTimerIdentifier id;
@@ -40,158 +37,31 @@ struct NQTimerEntry {
   NQTimerData data;
 };
 
-struct NQTimerList {
-  NQTimerEntry* first;
-  NQTimerEntry* last;
-  size_t size;
-};
-
 struct NQTimerQueue {
-  const NQObjectClass* class;
-  NQTimerList activeList;
-  NQTimerList freeList;
+  NQListHead activeList;
+  NQListHead freeList;
   NQTimerEntry allocTimer[NQ_TIMER_MAX];
 };
 
-static void NQTimerList_init(NQTimerList* list)
+static inline NQTimerEntry* toTimerEntry(NQListHead* list)
 {
-  list->first = NULL;
-  list->last = NULL;
-  list->size = 0;
+  return NQ_CONTAINER_OF(list, NQTimerEntry, list);
 }
 
-static NQTimerEntry* NQTimerList_remove(NQTimerList* list, NQTimerEntry* entry)
+static void NQTimerList_insert(NQListHead* list, NQTimerEntry* entry)
 {
-  if (entry->next != NULL)
-    entry->next->prev = entry->prev;
+  if (NQListHead_isEmpty(list))
+    NQListHead_addBack(list, &entry->list);
   else {
-    NQ_ASSERT(list->last == entry);
-    list->last = entry->prev;
-  }
-
-  if (entry->prev != NULL)
-    entry->prev->next = entry->next;
-  else {
-    NQ_ASSERT(list->first == entry);
-    list->first = entry->next;
-  }
-
-  list->size--;
-
-  return entry;
-}
-
-static NQTimerEntry* NQTimerList_shift(NQTimerList* list)
-{
-  if (list->first == NULL)
-    return NULL;
-
-  NQTimerEntry* entry = list->first;
-
-  list->first = entry->next;
-
-  if (list->first != NULL)
-    list->first->prev = NULL;
-  else
-    list->last = NULL;
-
-  list->size--;
-
-  return entry;
-}
-
-NQ_ALLOW_UNUSED
-static NQTimerEntry* NQTimerList_pop(NQTimerList* list)
-{
-  if (list->last == NULL)
-    return NULL;
-
-  NQTimerEntry* entry = list->last;
-
-  list->last = entry->prev;
-
-  if (list->last != NULL)
-    list->last->next = NULL;
-
-  list->size--;
-
-  return entry;
-}
-
-NQ_ALLOW_UNUSED
-static void NQTimerList_unshift(NQTimerList* list, NQTimerEntry* entry)
-{
-  entry->next = list->first;
-
-  if (list->first != NULL) {
-    NQ_ASSERT(list->first->prev == NULL);
-    list->first->prev = entry;
-  }
-  else {
-    NQ_ASSERT(list->last == NULL);
-    list->last = entry;
-  }
-
-  entry->prev = NULL;
-  list->first = entry;
-  list->size++;
-}
-
-static void NQTimerList_push(NQTimerList* list, NQTimerEntry* entry)
-{
-  entry->prev = list->last;
-
-  if (list->last != NULL)
-    list->last->next = entry;
-  else {
-    NQ_ASSERT(list->size == 0);
-    NQ_ASSERT(list->first == NULL);
-    list->first = entry;
-  }
-
-  entry->next = NULL;
-  list->last = entry;
-  list->size++;
-}
-
-static void NQTimerList_insertBefore(NQTimerList* list, NQTimerEntry* position, NQTimerEntry* entry)
-{
-  if (list->first == position) {
-    list->first = entry;
-  }
-  else {
-    position->prev->next = entry;
-  }
-
-  entry->prev = position->prev;
-  entry->next = position;
-  position->prev = entry;
-  list->size++;
-}
-
-NQ_ALLOW_UNUSED
-static void NQTimerList_insertAfter(NQTimerList* list, NQTimerEntry* position, NQTimerEntry* entry)
-{
-  position->next = entry;
-  entry->prev = position;
-  if (list->last == position)
-    list->last = entry;
-  list->size++;
-}
-
-static void NQTimerList_insert(NQTimerList* list, NQTimerEntry* entry)
-{
-  NQTimerEntry* iter = list->first;
-  if (iter == NULL)
-    NQTimerList_push(list, entry);
-  else {
+    NQListHead* iter = list->next;
     for (;;) {
-      if (entry->timePoint < iter->timePoint) {
-        NQTimerList_insertBefore(list, iter, entry);
+      NQTimerEntry* curr = toTimerEntry(iter);
+      if (entry->timePoint < curr->timePoint) {
+        NQListHead_addBack(&curr->list, &entry->list);;
         break;
       }
-      if (iter->next == NULL) {
-        NQTimerList_push(list, entry);
+      if (iter == list) {
+        NQListHead_addBack(list, &entry->list);
         break;
       }
       iter = iter->next;
@@ -205,15 +75,13 @@ static void NQTimerQueue_init(NQTimerQueue* thiz)
 
   memset(thiz, 0, sizeof(*thiz));
 
-  thiz->class = &__NQTimerQueueClass;
-
-  NQTimerList_init(&thiz->activeList);
-  NQTimerList_init(&thiz->freeList);
+  NQListHead_init(&thiz->activeList);
+  NQListHead_init(&thiz->freeList);
 
   for (index = 0; index < NQ_ARRAY_LENGTH(thiz->allocTimer); index++) {
     NQTimerEntry* entry = &thiz->allocTimer[index];
     entry->id = index + 1;
-    NQTimerList_push(&thiz->freeList, entry);
+    NQListHead_addBack(&thiz->freeList, &entry->list);
   }
 }
 
@@ -233,10 +101,11 @@ void NQTimerQueue_destroy(NQTimerQueue* thiz)
 
 int64_t NQTimerQueue_timeout(NQTimerQueue* thiz, int64_t now)
 {
-  if (thiz->activeList.size == 0)
+  if (NQListHead_isEmpty(&thiz->activeList))
     return -1;
 
-  int64_t t = thiz->activeList.first->timePoint;
+  NQTimerEntry* entry = toTimerEntry(thiz->activeList.next);
+  int64_t t = entry->timePoint;
   if (now < t)
     return t - now;
 
@@ -245,18 +114,18 @@ int64_t NQTimerQueue_timeout(NQTimerQueue* thiz, int64_t now)
 
 static int NQTimerQueue_stopNearTimer(NQTimerQueue* thiz, NQTimerData* data)
 {
-  NQTimerEntry* entry = NQTimerList_shift(&thiz->activeList);
-  if (entry == NULL)
+  if (NQListHead_isEmpty(&thiz->activeList))
     return NQ_TIMER_WAIT;
-  
+
+  NQTimerEntry* entry = toTimerEntry(thiz->activeList.next);
   NQ_ASSERT(entry->flags & NQ_TIMER_ACTIVE);
   if (data != NULL)
     *data = entry->data;
   
-  NQTimerList_remove(&thiz->activeList, entry);
+  NQListHead_remove(&entry->list);
   entry->id += NQ_TIMER_MAX;
   entry->flags &= ~NQ_TIMER_ACTIVE;
-  NQTimerList_push(&thiz->freeList, entry);
+  NQListHead_addBack(&thiz->freeList, &entry->list);
   
   return NQ_TIMER_REMOVE;
 }
@@ -270,8 +139,10 @@ int NQTimerQueue_nextFired(NQTimerQueue* thiz, int64_t now, NQTimerData* data)
   if (timeout != 0)
     return NQ_TIMER_WAIT;
 
-  NQTimerEntry* entry = NQTimerList_shift(&thiz->activeList);
+  NQ_ASSERT(NQListHead_isEmpty(&thiz->activeList) == false);
+  NQTimerEntry* entry = toTimerEntry(thiz->activeList.next);
   NQ_ASSERT(entry->flags & NQ_TIMER_ACTIVE);
+  NQListHead_remove(&entry->list);
 
   if (data != NULL)
     *data = entry->data;
@@ -285,7 +156,7 @@ int NQTimerQueue_nextFired(NQTimerQueue* thiz, int64_t now, NQTimerData* data)
   else {
     entry->id += NQ_TIMER_MAX;
     entry->flags &= ~NQ_TIMER_ACTIVE;
-    NQTimerList_push(&thiz->freeList, entry);
+    NQListHead_addBack(&thiz->freeList, &entry->list);
     status = NQ_TIMER_REMOVE;
   }
   
@@ -297,10 +168,11 @@ NQTimerIdentifier NQTimerQueue_startTimer(NQTimerQueue* thiz, bool isInterval, i
   if (data == NULL || timeout <= 0)
     return NQ_TIMER_INVALID;
 
-  NQTimerEntry* entry = NQTimerList_shift(&thiz->freeList);
-  if (entry == NULL)
+  if (NQListHead_isEmpty(&thiz->freeList))
     return NQ_TIMER_INVALID;
 
+  NQTimerEntry* entry = toTimerEntry(thiz->freeList.next);
+  NQListHead_remove(&entry->list);
   entry->flags = NQ_TIMER_ACTIVE;
   if (isInterval)
     entry->flags |= NQ_TIMER_INTERVAL;
@@ -337,10 +209,10 @@ bool NQTimerQueue_stopTimer(NQTimerQueue* thiz, NQTimerIdentifier identifier, NQ
   if (data != NULL)
     *data = entry->data;
 
-  NQTimerList_remove(&thiz->activeList, entry);
+  NQListHead_remove(&entry->list);
   entry->id += NQ_TIMER_MAX;
   entry->flags &= ~NQ_TIMER_ACTIVE;
-  NQTimerList_push(&thiz->freeList, entry);
+  NQListHead_addBack(&thiz->freeList, &entry->list);
   
   return true;
 }
@@ -349,10 +221,3 @@ bool NQTimerQueue_isValid(NQTimerQueue* thiz, NQTimerIdentifier identifier)
 {
   return NQTimerQueue_findEntryById(thiz, identifier) != NULL;
 }
-
-const NQObjectClass __NQTimerQueueClass = {
-  NQTimerQueueObjectType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQTimerQueue_destroy,
-};

@@ -18,14 +18,24 @@
 #include <windows.h>
 #endif
 
-void NQAtomic32_init(NQAtomic32* thiz, uint32_t counter)
+int32_t NQAtomic32_addFetch(NQAtomic32* thiz, int32_t i)
 {
-  thiz->counter = counter;
+#if defined(HAVE_ATOMIC_BUILTINS)
+  return __atomic_add_fetch(&thiz->counter, i, __ATOMIC_SEQ_CST);
+
+#elif defined(HAVE_SYNC_BUILTINS)
+  return __sync_add_and_fetch(&thiz->counter, i);
+
+#else
+  thiz->counter += i;
+  return thiz->counter;
+
+#endif
 }
 
 void NQAtomic32_inc(NQAtomic32* thiz)
 {
-#if defined(HAVE_INTEL_ATOMIC_PRIMITIVES)
+#if defined(HAVE_SYNC_BUILTINS)
   (void)__sync_fetch_and_add(&thiz->counter, 1);
 
 #elif (defined(NQ_COMPILER_GCC) || defined(NQ_COMPILER_CLANG)) && (defined(NQ_CPU_X86) || defined(NQ_CPU_AMD64))
@@ -60,7 +70,7 @@ void NQAtomic32_inc(NQAtomic32* thiz)
 
 void NQAtomic32_dec(NQAtomic32* thiz)
 {
-#if defined(HAVE_INTEL_ATOMIC_PRIMITIVES)
+#if defined(HAVE_SYNC_BUILTINS)
   (void)__sync_sub_and_fetch(&thiz->counter, 1);
 
 #elif (defined(NQ_COMPILER_GCC) || defined(NQ_COMPILER_CLANG)) && (defined(NQ_CPU_X86) || defined(NQ_CPU_AMD64))

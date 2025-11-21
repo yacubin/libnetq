@@ -17,7 +17,8 @@
 #endif
 
 #ifdef NQ_OS_WINDOWS
-# include <windows.h>
+# include <winerror.h>
+# include <winsock.h>
 #endif
 
 #ifdef NQ_OS_UNIX

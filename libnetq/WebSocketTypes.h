@@ -7,9 +7,11 @@
  * under the MIT License. See LICENSE file for details.
  */
 
-#ifndef _NETQ_WEBSOCKETTYPES_H
-#define _NETQ_WEBSOCKETTYPES_H
+#ifndef _LIBNETQ_WEBSOCKETTYPES_H
+#define _LIBNETQ_WEBSOCKETTYPES_H
 
+// flag1 + flag2 + len8 + mask
+#define NQ_WEBSOCKET_HEADER_MAX (1 + 1 + 8 + 4)
 #define NQ_WEBSOCKET_SEC_MAGIC "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
-#endif /* _NETQ_WEBSOCKETTYPES_H */
+#endif /* _LIBNETQ_WEBSOCKETTYPES_H */

@@ -199,7 +199,7 @@ void NQLooper_dispatch(NQLooper* looper)
   looper->ops.dispatch(looper);
 }
 
-void NQLooper_call(NQLooper* looper, void* userdata, NQDDetachHandleCallback handle, NQDDetachDestroyCallback destroy)
+void NQLooper_call(NQLooper* looper, void* userdata, NQDispatchHandleCallback handle, NQDispatchDestroyCallback destroy)
 {
   bool success;
 
@@ -246,7 +246,7 @@ static void callAndWaitHandleCallback(void* p)
   NQMutex_unlock(&callData->mutex);
 }
 
-void NQLooper_callAndWait(NQLooper* looper, void* userdata, NQDDetachHandleCallback handle, NQDDetachDestroyCallback destroy)
+void NQLooper_callAndWait(NQLooper* looper, void* userdata, NQDispatchHandleCallback handle, NQDispatchDestroyCallback destroy)
 {
   bool success;
 
@@ -299,7 +299,7 @@ void NQLooper_callAndWait(NQLooper* looper, void* userdata, NQDDetachHandleCallb
   NQCond_destroy(&callData.cond);
 }
 
-static NQTimerIdentifier NQLooper_startTimer(NQLooper* looper, int64_t timeout, bool isInterval, void* userdata, NQDDetachHandleCallback handle, NQDDetachDestroyCallback destroy)
+static NQTimerIdentifier NQLooper_startTimer(NQLooper* looper, int64_t timeout, bool isInterval, void* userdata, NQDispatchHandleCallback handle, NQDispatchDestroyCallback destroy)
 {
   int64_t timeoutPrev, timeoutCur;
 
@@ -337,7 +337,7 @@ static void NQLooper_stopTimer(NQLooper* looper, NQTimerIdentifier id)
     data.destroy(data.userdata);
 }
 
-NQTimerIdentifier NQLooper_callTimeout(NQLooper* looper, int64_t timeout, void* userdata, NQDDetachHandleCallback handle, NQDDetachDestroyCallback destroy)
+NQTimerIdentifier NQLooper_callTimeout(NQLooper* looper, int64_t timeout, void* userdata, NQDispatchHandleCallback handle, NQDispatchDestroyCallback destroy)
 {
   return NQLooper_startTimer(looper, timeout, false, userdata, handle, destroy);
 }
@@ -347,7 +347,7 @@ void NQLooper_clearTimeout(NQLooper* looper, NQTimerIdentifier id)
   NQLooper_stopTimer(looper, id);
 }
 
-NQTimerIdentifier NQLooper_callInterval(NQLooper* looper, int64_t interval, void* userdata, NQDDetachHandleCallback handle, NQDDetachDestroyCallback destroy)
+NQTimerIdentifier NQLooper_callInterval(NQLooper* looper, int64_t interval, void* userdata, NQDispatchHandleCallback handle, NQDispatchDestroyCallback destroy)
 {
   return NQLooper_startTimer(looper, interval, true, userdata, handle, destroy);
 }

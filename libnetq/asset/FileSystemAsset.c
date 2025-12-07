@@ -22,7 +22,8 @@
 #include <libnetq/Assert.h>
 #include <libnetq/Log.h>
 
-struct NQFileSystemAsset {
+struct FileSystemAsset {
+  NQAsset base;
   uint16_t pathLength;
   char pathCharacters[1];
 };
@@ -32,34 +33,7 @@ struct FileSystemAssetFile {
   NQFileHandle handle;
 };
 
-NQFileSystemAsset* NQFileSystemAsset_create(const char* dirname)
-{
-  size_t len = strlen(dirname);
-  if (len > NQ_UINT16_MAX) {
-    NQ_LOGE("The dirname '%s' is huge", dirname);
-    return NULL;
-  }
-
-  NQFileSystemAsset* thiz = (NQFileSystemAsset*)NQMalloc(sizeof(*thiz) + len);
-  if (thiz == NULL) {
-    NQ_LOGE("No memory for '%s'", dirname);
-    return NULL;
-  }
-
-  memcpy(thiz->pathCharacters, dirname, len + 1);
-  if (len > 0 && NQIsPathDelimiter(thiz->pathCharacters[len - 1]))
-    thiz->pathCharacters[--len] = '\0';
-  thiz->pathLength = (uint16_t)len;
-
-  return thiz;
-}
-
-void NQFileSystemAsset_destroy(NQFileSystemAsset* thiz)
-{
-  NQFree((void*)thiz);
-}
-
-NQAssetDir* NQFileSystemAsset_openDir(NQFileSystemAsset* thiz, const char* dirname)
+static NQAssetDir* fileSystemAssetOpenDir(NQAsset* asset, const char* dirname)
 {
   NQ_ASSERT_NOT_REACHED();
   return NULL;
@@ -91,12 +65,14 @@ static const struct NQAssetFileCallbacks s_fileCallbacks =
   .read = fileRead,
 };
 
-NQAssetFile* NQFileSystemAsset_openFile(NQFileSystemAsset* asset, const char* filename, int mode)
+static NQAssetFile* fileSystemAssetOpenFile(NQAsset* asset, const char* filename, int mode)
 {
+  struct FileSystemAsset* fsAsset = NQ_CONTAINER_OF(asset, struct FileSystemAsset, base);
+
   // TODO: Replace to NQPathJoin
   NQStringPrint fullpath;
   NQStringPrint_init(&fullpath);
-  NQStringPrint_printf(&fullpath, "%s/%s", asset->pathCharacters, filename);
+  NQStringPrint_printf(&fullpath, "%s/%s", fsAsset->pathCharacters, filename);
 
   NQFileHandle handle = NQFileOpen(NQStringPrint_characters(&fullpath), NQ_FOPEN_READ);
   NQStringPrint_finalize(&fullpath);
@@ -113,6 +89,44 @@ NQAssetFile* NQFileSystemAsset_openFile(NQFileSystemAsset* asset, const char* fi
 
   thiz->base.callbacks = &s_fileCallbacks;
   thiz->handle = handle;
+
+  return &thiz->base;
+}
+
+static void fileSystemAssetDestroy(NQAsset* asset)
+{
+  struct FileSystemAsset* thiz = NQ_CONTAINER_OF(asset, struct FileSystemAsset, base);
+
+  NQFree((void*)thiz);
+}
+
+static const struct NQAssetCallbacks s_fileSystemAssetCallbacks =
+{
+  .destroy = fileSystemAssetDestroy,
+  .openDir = fileSystemAssetOpenDir,
+  .openFile = fileSystemAssetOpenFile,
+};
+
+NQAsset* NQFileSystemAssetCreate(const char* dirname)
+{
+  size_t len = strlen(dirname);
+  if (len > NQ_UINT16_MAX) {
+    NQ_LOGE("The dirname '%s' is huge", dirname);
+    return NULL;
+  }
+
+  struct FileSystemAsset* thiz = (struct FileSystemAsset*)NQMalloc(sizeof(*thiz) + len);
+  if (thiz == NULL) {
+    NQ_LOGE("No memory for '%s'", dirname);
+    return NULL;
+  }
+
+  thiz->base.callbacks = &s_fileSystemAssetCallbacks;
+
+  memcpy(thiz->pathCharacters, dirname, len + 1);
+  if (len > 0 && NQIsPathDelimiter(thiz->pathCharacters[len - 1]))
+    thiz->pathCharacters[--len] = '\0';
+  thiz->pathLength = (uint16_t)len;
 
   return &thiz->base;
 }

@@ -27,7 +27,7 @@ typedef struct NQStringPrint {
 NQ_EXPORT void NQStringPrint_init(NQStringPrint*);
 NQ_EXPORT void NQStringPrint_finalize(NQStringPrint*);
 
-NQ_EXPORT void NQStringPrint_printf(NQStringPrint*, const char* format, ...) NQ_ATTRIBUTE_PRINTF(2, 3);
+NQ_EXPORT int NQStringPrint_printf(NQStringPrint*, const char* format, ...) NQ_ATTRIBUTE_PRINTF(2, 3);
 NQ_EXPORT int NQStringPrint_vprintf(NQStringPrint*, const char* format, va_list);
 NQ_EXPORT int NQStringPrint_write(NQStringPrint*, const char* characters, size_t length);
 NQ_EXPORT void NQStringPrint_reset(NQStringPrint*);

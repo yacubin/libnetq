@@ -29,20 +29,6 @@ extern "C" {
 #define NQToDigitValue(c) ((c) - '0')
 #define NQToHexValue(c) ((c) < 'A' ? (c) - '0' : ((c) - 'A' + 10) & 0xF)
 
-#define NQ_FALSE_STRING "false"
-#define NQ_TRUE_STRING "true"
-#define NQ_OFF_STRING "off"
-#define NQ_ON_STRING "on"
-#define NQ_ZERO_STRING "0"
-#define NQ_ONE_STRING "1"
-
-NQ_EXPORT bool NQIsFalse(const char* s);
-NQ_EXPORT bool NQIsTrue(const char* s);
-NQ_EXPORT bool NQIsOff(const char* s);
-NQ_EXPORT bool NQIsOn(const char* s);
-NQ_EXPORT bool NQIsEnabled(const char* s);
-NQ_EXPORT bool NQIsDisabled(const char* s);
-
 #ifdef __cplusplus
 }
 #endif

@@ -31,8 +31,8 @@ typedef struct NQLooperSource NQLooperSource;
 #define NQ_TIMER_RELEASE (1 << 3)
 
 typedef void (*NQTimerCallback) (void* userdata, NQTimerIdentifier id, int flags);
-typedef void (*NQDDetachHandleCallback) (void* userdata);
-typedef void (*NQDDetachDestroyCallback) (void* userdata);
+typedef void (*NQDispatchHandleCallback) (void* userdata);
+typedef void (*NQDispatchDestroyCallback) (void* userdata);
 
 struct NQLooperOperations {
   int type;
@@ -75,12 +75,12 @@ NQ_EXPORT void NQLooper_finalize(NQLooper* looper);
 NQ_EXPORT bool NQLooper_isLoopThread(const NQLooper* looper);
 NQ_EXPORT void NQLooper_dispatch(NQLooper* looper);
 
-NQ_EXPORT void NQLooper_call(NQLooper* looper, void* userdata, NQDDetachHandleCallback handle, NQDDetachDestroyCallback destroy);
-NQ_EXPORT void NQLooper_callAndWait(NQLooper* looper, void* userdata, NQDDetachHandleCallback handle, NQDDetachDestroyCallback destroy);
+NQ_EXPORT void NQLooper_call(NQLooper* looper, void* userdata, NQDispatchHandleCallback handle, NQDispatchDestroyCallback destroy);
+NQ_EXPORT void NQLooper_callAndWait(NQLooper* looper, void* userdata, NQDispatchHandleCallback handle, NQDispatchDestroyCallback destroy);
 
-NQ_EXPORT NQTimerIdentifier NQLooper_callTimeout(NQLooper* looper, int64_t timeout, void* userdata, NQDDetachHandleCallback handle, NQDDetachDestroyCallback destroy);
+NQ_EXPORT NQTimerIdentifier NQLooper_callTimeout(NQLooper* looper, int64_t timeout, void* userdata, NQDispatchHandleCallback handle, NQDispatchDestroyCallback destroy);
 NQ_EXPORT void NQLooper_clearTimeout(NQLooper* looper, NQTimerIdentifier id);
-NQ_EXPORT NQTimerIdentifier NQLooper_callInterval(NQLooper* looper, int64_t interval, void* userdata, NQDDetachHandleCallback handle, NQDDetachDestroyCallback destroy);
+NQ_EXPORT NQTimerIdentifier NQLooper_callInterval(NQLooper* looper, int64_t interval, void* userdata, NQDispatchHandleCallback handle, NQDispatchDestroyCallback destroy);
 NQ_EXPORT void NQLooper_clearInterval(NQLooper* looper, NQTimerIdentifier id);
 
 NQ_EXPORT void NQLooper_wakeup(NQLooper* looper);

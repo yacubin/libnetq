@@ -18,6 +18,7 @@ extern "C" {
 
 NQ_EXPORT const char* NQGetBuildCPU(void);
 NQ_EXPORT const char* NQGetBuildABI(void);
+NQ_EXPORT int NQPutBuildUserAgent(const char* product, const char* version, char* buf, size_t len);
 
 #ifdef __cplusplus
 }

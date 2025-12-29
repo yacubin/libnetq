@@ -18,25 +18,7 @@
 extern "C" {
 #endif
 
-#ifdef NDEBUG
-
-#define NQ_ASSERT_ENABLED 0
-#define NQ_ASSERT_DISABLED 1
-
-#define NQ_ASSERT(condition) ((void)0)
-#define NQ_ASSERT_WITH_MESSAGE(condition, ...) ((void)0)
-#define NQ_ASSERT_NOT_REACHED() ((void)0)
-#define NQ_ASSERT_UNUSED(variable, condition) ((void)variable)
-
-#define NQ_ALWAYS_ASSERT(condition) do { \
-  if (NQ_UNLIKELY(!(condition))) { \
-    NQAbort(); \
-  } \
-} while (0)
-#define NQ_ALWAYS_ASSERT_WITH_MESSAGE(condition, ...) NQ_ALWAYS_ASSERT(condition)
-#define NQ_ALWAYS_ASSERT_NOT_REACHED() NQAbort()
-
-#else
+#if NQ_DEBUG
 
 #define NQ_ASSERT_ENABLED 1
 #define NQ_ASSERT_DISABLED 0
@@ -70,7 +52,25 @@ extern "C" {
 #define NQ_ALWAYS_ASSERT_WITH_MESSAGE(condition, ...) NQ_ASSERT_WITH_MESSAGE(condition, __VA_ARGS__)
 #define NQ_ALWAYS_ASSERT_NOT_REACHED() NQ_ASSERT_NOT_REACHED()
 
-#endif /* NDEBUG */
+#else
+
+#define NQ_ASSERT_ENABLED 0
+#define NQ_ASSERT_DISABLED 1
+
+#define NQ_ASSERT(condition) ((void)0)
+#define NQ_ASSERT_WITH_MESSAGE(condition, ...) ((void)0)
+#define NQ_ASSERT_NOT_REACHED() ((void)0)
+#define NQ_ASSERT_UNUSED(variable, condition) ((void)variable)
+
+#define NQ_ALWAYS_ASSERT(condition) do { \
+  if (NQ_UNLIKELY(!(condition))) { \
+    NQAbort(); \
+  } \
+} while (0)
+#define NQ_ALWAYS_ASSERT_WITH_MESSAGE(condition, ...) NQ_ALWAYS_ASSERT(condition)
+#define NQ_ALWAYS_ASSERT_NOT_REACHED() NQAbort()
+
+#endif /* NQ_DEBUG */
 
 #ifdef __cplusplus
 #define NQ_STATIC_ASSERT static_assert

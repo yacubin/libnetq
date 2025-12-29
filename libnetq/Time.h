@@ -95,7 +95,7 @@ enum NQTimeFormat {
   NQ_DT_RFC3339 | NQ_DT_DATE | NQ_DT_TIME | NQ_DT_MS | NQ_DT_TZ
 */
 
-NQ_EXPORT size_t NQTimeFormat(NQTime time, int format, char* buffer, size_t size);
+NQ_EXPORT int NQTimeFormat(NQTime time, int format, char* buffer, size_t size);
 
 #ifdef __cplusplus
 }

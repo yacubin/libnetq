@@ -7,11 +7,14 @@
 /* Enable symbol export as a shared library */
 #cmakedefine NQ_USE_EXPORT 1
 
-/* Define if you have zlib */
+/* Define if you have ZLIB */
 #cmakedefine01 WITH_ZLIB
 
-/* Define if you have ole32 */
+/* Define if you have OLE32 */
 #cmakedefine01 WITH_OLE32
+
+/* Define if you have OpenSSL */
+#cmakedefine01 WITH_OPENSSL
 
 /* Define to 1 if you have the <stddef.h> header file. */
 #cmakedefine HAVE_STDDEF_H 1

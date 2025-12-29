@@ -53,29 +53,18 @@ char NQLogLevelToChar(NQLogLevel level)
   };
 }
 
-int NQLog_snprint(char* buffer, size_t size, NQLogLevel level, const char* tag, const char* format, ...)
-{
-  int result;
-  va_list args;
-  va_start(args, format);
-  result = NQLog_vsnprint(buffer, size, level, tag, format, args);
-  va_end(args);
-  return result;
-}
-
-int NQLog_vsnprint(char* buffer, size_t size, NQLogLevel level, const char* tag, const char* format, va_list args)
+static int printLogPrefix(char* buffer, size_t size, NQLogLevel level, const char* tag)
 {
   int n;
   char* ptr;
   char* end;
-  size_t result;
   size_t len;
 
   ptr = buffer;
   end = ptr + size;
 
-  result = NQTimeFormat(NQGetTime(), NQ_DT_RFC3339, buffer, size);
-  ptr += result;
+  n = NQTimeFormat(NQGetTime(), NQ_DT_RFC3339, buffer, size);
+  ptr += n;
 
   if (ptr < end)
     *ptr = ' ';
@@ -97,9 +86,39 @@ int NQLog_vsnprint(char* buffer, size_t size, NQLogLevel level, const char* tag,
   if (ptr < end)
     *ptr = ' ';
   ptr++;
-  
+
+  return ptr - buffer;
+}
+
+int NQLog_snprint(char* buffer, size_t size, NQLogLevel level, const char* tag, const char* format, ...)
+{
+  int result;
+  va_list args;
+  va_start(args, format);
+  result = NQLog_vsnprint(buffer, size, level, tag, format, args);
+  va_end(args);
+  return result;
+}
+
+int NQLog_vsnprint(char* buffer, size_t size, NQLogLevel level, const char* tag, const char* format, va_list args)
+{
+  int n;
+  char* ptr;
+  char* end;
+  size_t len;
+
+  ptr = buffer;
+  end = ptr + size;
+
+  n = printLogPrefix(buffer, size, level, tag);
+  if (n < 0)
+    return n;
+  ptr += n;
+
   len = ptr < end ? end - ptr : 0;
   n = vsnprintf(ptr, len, format, args);
+  if (n < 0)
+    return n;
   ptr += n;
 
   return ptr - buffer;
@@ -152,17 +171,24 @@ int NQLog_vprint(NQLogLevel level, const char* tag, const char* format, va_list 
   result = NQLog_vsnprint(buffer, sizeof(buffer), level, tag, format, args);
 
   char* ptr;
-  if (result + 2 <= sizeof(buffer))
-    ptr = buffer + result;
-  else
+  if (result + 2 > sizeof(buffer))
     ptr = buffer + sizeof(buffer) - 2;
+  else {
+    ptr = buffer + result;
+    while (true) {
+      char ch = ptr[-1];
+      if (ch != '\n' && ch != '\r')
+        break;
+      ptr--;
+    }
+  }
 
-#ifdef NQ_COMPILER_MSVC
-  *ptr++ = '\0';
-  OutputDebugStringA(buffer);
-#else
   *ptr++ = '\n';
   *ptr++ = '\0';
+
+#ifdef NQ_COMPILER_MSVC
+  OutputDebugStringA(buffer);
+#else
   fputs(buffer, stderr);
 #endif
 

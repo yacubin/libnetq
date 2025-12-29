@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2022-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -12,33 +12,135 @@
 
 #include <libnetq/CStrBase.h>
 
-static const char* s_strings[] = {
-  NQHTTP_HEADER_ACCEPT_ENCODING,
-  NQHTTP_HEADER_USER_AGENT,
-  NQHTTP_HEADER_SERVER,
-  NQHTTP_HEADER_AUTHORIZATION,
-  NQHTTP_HEADER_CACHE_CONTROL,
-  NQHTTP_HEADER_CONTENT_TYPE,
-  NQHTTP_HEADER_CONTENT_DISPOSITION,
-  NQHTTP_HEADER_CROSS_ORIGIN_OPENER_POLICY,
-  NQHTTP_HEADER_CROSS_ORIGIN_EMBEDDER_POLICY,
-  NQHTTP_HEADER_HOST,
-  NQHTTP_HEADER_UPGRADE,
-  NQHTTP_HEADER_CONNECTION,
-  NQHTTP_HEADER_ORIGIN,
-  NQHTTP_HEADER_SEC_WEBSOCKET_ACCEPT,
-  NQHTTP_HEADER_SEC_WEBSOCKET_KEY,
-  NQHTTP_HEADER_SEC_WEBSOCKET_VERSION,
-  NQHTTP_HEADER_SEC_WEBSOCKET_PROTOCOL,
-  NQHTTP_HEADER_SEC_WEBSOCKET_EXTENSIONS,
-};
-
-const char* NQHTTPHeaderTypeToString(NQHTTPHeaderType type)
+static const char* findChar(const char* start, const char* end, char ch)
 {
-  return s_strings[type];
+  for (;;) {
+    if (end <= start) {
+      return NULL;
+    }
+    if (*start == ch) {
+      return start;
+    }
+    start++;
+  }
 }
 
-bool NQHTTPHeaderParse(const char* data, size_t size, NQHTTPHeader* result)
+static const char* findCharIfNot(const char* start, const char* end, char ch)
+{
+  for (;;) {
+    if (end <= start) {
+      return NULL;
+    }
+    if (*start != ch) {
+      return start;
+    }
+    start++;
+  }
+}
+
+bool NQHttpRequestLineParse(const char* data, size_t size, NQHttpRequestLine* result)
+{
+  const char* start = data;
+  const char* end = data + size;
+
+  start = result->methodData = findCharIfNot(start, end, ' ');
+  if (start == NULL) {
+    return false;
+  }
+
+  start = findChar(start + 1, end, ' ');
+  if (start == NULL) {
+    return false;
+  }
+
+  result->methodSize = start - result->methodData;
+
+  start = result->urlData = findCharIfNot(start + 1, end, ' ');
+  if (start == NULL) {
+    return false;
+  }
+
+  start = findChar(start + 1, end, ' ');
+  if (start == NULL) {
+    return false;
+  }
+
+  result->urlSize = start - result->urlData;
+
+  start = result->versionData = findCharIfNot(start + 1, end, ' ');
+  if (start == NULL) {
+    return false;
+  }
+
+  result->versionSize = end - start;
+  return true;
+}
+
+bool NQHttpStatusLineParse(const char* data, size_t size, NQHttpStatusLine* result)
+{
+  const char* start = data;
+  const char* end = data + size;
+
+  start = result->versionData = findCharIfNot(start, end, ' ');
+  if (start == NULL) {
+    return false;
+  }
+
+  start = findChar(start + 1, end, ' ');
+  if (start == NULL) {
+    return false;
+  }
+
+  result->versionSize = start - result->versionData;
+
+  start = result->codeData = findCharIfNot(start + 1, end, ' ');
+  if (start == NULL) {
+    return false;
+  }
+
+  start = findChar(start + 1, end, ' ');
+  if (start == NULL) {
+    return false;
+  }
+
+  result->codeSize = start - result->codeData;
+
+  start = result->reasonData = findCharIfNot(start + 1, end, ' ');
+  if (start == NULL) {
+    return false;
+  }
+
+  result->reasonSize = end - start;
+  return true;
+}
+
+bool NQHttpHeaderLineParse(const char* data, size_t size, NQHttpHeaderLine* result)
+{
+  const char* start = data;
+  const char* end = data + size;
+
+  start = result->nameData = findCharIfNot(start, end, ' ');
+  if (start == NULL) {
+    return false;
+  }
+
+  start = findChar(start + 1, end, ':');
+  if (start == NULL) {
+    return false;
+  }
+
+  result->nameSize = start - result->nameData;
+
+  start = result->valueData = findCharIfNot(start + 1, end, ' ');
+  if (start == NULL) {
+    return false;
+  }
+
+  result->valueSize = end - start;
+  return true;
+}
+
+bool NQHttpHeaderValueParse(const char* data, size_t size, NQHttpHeaderValue* result)
 {
   const char* end = data + size;
 
@@ -122,8 +224,8 @@ bool NQHTTPHeaderParse(const char* data, size_t size, NQHTTPHeader* result)
   if (result != NULL) {
     result->keyData = key;
     result->keySize = klen;
-    result->valData = val;
-    result->valSize = vlen;
+    result->valueData = val;
+    result->valueSize = vlen;
   }
 
   return true;
@@ -159,18 +261,18 @@ bool NQHttpFormDataParse(const char* data, size_t size, NQHttpFormData* result)
       count++;
       continue;
     }
-    NQHTTPHeader kv;
-    if (NQHTTPHeaderParse(data, size, &kv)) {
+    NQHttpHeaderValue kv;
+    if (NQHttpHeaderValueParse(data, size, &kv)) {
       if (kv.keySize == 4 && memcmp("name", kv.keyData, kv.keySize) == 0) {
         if(result != NULL) {
-          result->nameData = kv.valData;
-          result->nameSize = kv.valSize;
+          result->nameData = kv.valueData;
+          result->nameSize = kv.valueSize;
         }
       }
       else if (kv.keySize == 8 && memcmp("filename", kv.keyData, kv.keySize) == 0) {
         if(result != NULL) {
-          result->filenameData = kv.valData;
-          result->filenameSize = kv.valSize;
+          result->filenameData = kv.valueData;
+          result->filenameSize = kv.valueSize;
         }
       }
     }

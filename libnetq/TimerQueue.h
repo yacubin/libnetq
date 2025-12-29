@@ -28,18 +28,11 @@ struct NQTimerData {
   void (*destroy) (void* userdata);
 };
 
-enum {
-  NQ_TIMER_WAIT,
-  NQ_TIMER_REPEATE,
-  NQ_TIMER_REMOVE,
-};
-
-NQ_EXPORT NQTimerQueue* NQTimerQueue_create(void);
+NQ_EXPORT NQTimerQueue* NQTimerQueue_create(size_t maxSize);
 NQ_EXPORT void NQTimerQueue_destroy(NQTimerQueue*);
 
-NQ_EXPORT int64_t NQTimerQueue_timeout(NQTimerQueue*, int64_t now);
-// TODO: return timeout
-NQ_EXPORT int NQTimerQueue_nextFired(NQTimerQueue*, int64_t now, NQTimerData* data);
+NQ_EXPORT int NQTimerQueue_timeout(NQTimerQueue*, int64_t now);
+NQ_EXPORT int NQTimerQueue_shiftTimer(NQTimerQueue*, int64_t now, NQTimerData* data);
 
 NQ_EXPORT NQTimerIdentifier NQTimerQueue_startTimer(NQTimerQueue*, bool isInterval, int64_t now, int64_t timeout, NQTimerData* data);
 NQ_EXPORT bool NQTimerQueue_stopTimer(NQTimerQueue*, NQTimerIdentifier identifier, NQTimerData* data);

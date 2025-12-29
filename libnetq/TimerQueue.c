@@ -17,8 +17,8 @@
 #include <libnetq/List.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Assert.h>
+#include <libnetq/Math.h>
 
-#define NQ_TIMER_MAX (1 << 10)
 #define NQ_TIMER_ACTIVE   (1 << 0)
 #define NQ_TIMER_INTERVAL (1 << 1)
 
@@ -40,7 +40,8 @@ struct NQTimerEntry {
 struct NQTimerQueue {
   NQListHead activeList;
   NQListHead freeList;
-  NQTimerEntry allocTimer[NQ_TIMER_MAX];
+  uint32_t allocCount;
+  NQTimerEntry allocTimer[1];
 };
 
 static inline NQTimerEntry* toTimerEntry(NQListHead* list)
@@ -69,28 +70,36 @@ static void NQTimerList_insert(NQListHead* list, NQTimerEntry* entry)
   }
 }
 
-static void NQTimerQueue_init(NQTimerQueue* thiz)
+static void NQTimerQueue_init(NQTimerQueue* thiz, uint32_t allocCount)
 {
   uint32_t index;
 
-  memset(thiz, 0, sizeof(*thiz));
-
+  thiz->allocCount = allocCount;
   NQListHead_init(&thiz->activeList);
   NQListHead_init(&thiz->freeList);
 
-  for (index = 0; index < NQ_ARRAY_LENGTH(thiz->allocTimer); index++) {
+  for (index = 0; index < allocCount; index++) {
     NQTimerEntry* entry = &thiz->allocTimer[index];
     entry->id = index + 1;
     NQListHead_addBack(&thiz->freeList, &entry->list);
   }
 }
 
-NQTimerQueue* NQTimerQueue_create()
+NQTimerQueue* NQTimerQueue_create(size_t maxSize)
 {
-  NQTimerQueue* thiz = (NQTimerQueue*)NQMalloc(sizeof(NQTimerQueue));
+  if (maxSize == 0)
+    return NULL;
+
+  unsigned n = NQGetFls64(maxSize);
+  if (n > 16)
+    return NULL;
+
+  uint32_t allocCount = (1u << n);
+  NQTimerQueue* thiz = (NQTimerQueue*)NQZeroMalloc(sizeof(NQTimerQueue) + sizeof(NQTimerEntry) * (allocCount - 1));
   if (thiz == NULL)
     return NULL;
-  NQTimerQueue_init(thiz);
+
+  NQTimerQueue_init(thiz, allocCount);
   return thiz;
 }
 
@@ -99,7 +108,7 @@ void NQTimerQueue_destroy(NQTimerQueue* thiz)
   NQFree(thiz);
 }
 
-int64_t NQTimerQueue_timeout(NQTimerQueue* thiz, int64_t now)
+int NQTimerQueue_timeout(NQTimerQueue* thiz, int64_t now)
 {
   if (NQListHead_isEmpty(&thiz->activeList))
     return -1;
@@ -107,60 +116,56 @@ int64_t NQTimerQueue_timeout(NQTimerQueue* thiz, int64_t now)
   NQTimerEntry* entry = toTimerEntry(thiz->activeList.next);
   int64_t t = entry->timePoint;
   if (now < t)
-    return t - now;
+    return (int)(t - now);
 
   return 0;
 }
 
-static int NQTimerQueue_stopNearTimer(NQTimerQueue* thiz, NQTimerData* data)
+int NQTimerQueue_shiftTimer(NQTimerQueue* thiz, int64_t now, NQTimerData* data)
 {
   if (NQListHead_isEmpty(&thiz->activeList))
-    return NQ_TIMER_WAIT;
+    return -1;
 
   NQTimerEntry* entry = toTimerEntry(thiz->activeList.next);
   NQ_ASSERT(entry->flags & NQ_TIMER_ACTIVE);
-  if (data != NULL)
-    *data = entry->data;
-  
-  NQListHead_remove(&entry->list);
-  entry->id += NQ_TIMER_MAX;
-  entry->flags &= ~NQ_TIMER_ACTIVE;
-  NQListHead_addBack(&thiz->freeList, &entry->list);
-  
-  return NQ_TIMER_REMOVE;
-}
 
-int NQTimerQueue_nextFired(NQTimerQueue* thiz, int64_t now, NQTimerData* data)
-{
-  if (now == -1)
-    return NQTimerQueue_stopNearTimer(thiz, data);
+  if (now == -1) {
+    if (data != NULL)
+      *data = entry->data;
 
-  int64_t timeout = NQTimerQueue_timeout(thiz, now);
-  if (timeout != 0)
-    return NQ_TIMER_WAIT;
-
-  NQ_ASSERT(NQListHead_isEmpty(&thiz->activeList) == false);
-  NQTimerEntry* entry = toTimerEntry(thiz->activeList.next);
-  NQ_ASSERT(entry->flags & NQ_TIMER_ACTIVE);
-  NQListHead_remove(&entry->list);
-
-  if (data != NULL)
-    *data = entry->data;
-
-  int status;
-  if (entry->flags & NQ_TIMER_INTERVAL) {
-    entry->timePoint += entry->timeout;
-    NQTimerList_insert(&thiz->activeList, entry);
-    status = NQ_TIMER_REPEATE;
-  }
-  else {
-    entry->id += NQ_TIMER_MAX;
+    NQListHead_remove(&entry->list);
+    entry->id += thiz->allocCount;
     entry->flags &= ~NQ_TIMER_ACTIVE;
     NQListHead_addBack(&thiz->freeList, &entry->list);
-    status = NQ_TIMER_REMOVE;
+
+    return 0;
+  }
+
+  int64_t t = entry->timePoint;
+  int64_t timeout = (now < t) ? (t - now) : 0;
+  if (timeout > 0)
+    return (int)timeout;
+
+  NQListHead_remove(&entry->list);
+
+  bool isInterval = (entry->flags & NQ_TIMER_INTERVAL) != 0;
+  if (data != NULL) {
+    data->userdata = entry->data.userdata;
+    data->handle = entry->data.handle;
+    data->destroy = isInterval ? NULL : entry->data.destroy;
+  }
+
+  if (isInterval) {
+    entry->timePoint += entry->timeout;
+    NQTimerList_insert(&thiz->activeList, entry);
+  }
+  else {
+    entry->id += thiz->allocCount;
+    entry->flags &= ~NQ_TIMER_ACTIVE;
+    NQListHead_addBack(&thiz->freeList, &entry->list);
   }
   
-  return status;
+  return 0;
 }
 
 NQTimerIdentifier NQTimerQueue_startTimer(NQTimerQueue* thiz, bool isInterval, int64_t now, int64_t timeout, NQTimerData* data)
@@ -192,7 +197,7 @@ static NQTimerEntry* NQTimerQueue_findEntryById(NQTimerQueue* thiz, NQTimerIdent
   if (identifier == NQ_TIMER_INVALID)
     return NULL;
 
-  size_t index = (identifier - 1) & (NQ_TIMER_MAX - 1);
+  size_t index = (identifier - 1) & (thiz->allocCount - 1);
   NQTimerEntry* entry = &thiz->allocTimer[index];
   if (entry->id != identifier)
     return NULL;
@@ -210,7 +215,7 @@ bool NQTimerQueue_stopTimer(NQTimerQueue* thiz, NQTimerIdentifier identifier, NQ
     *data = entry->data;
 
   NQListHead_remove(&entry->list);
-  entry->id += NQ_TIMER_MAX;
+  entry->id += thiz->allocCount;
   entry->flags &= ~NQ_TIMER_ACTIVE;
   NQListHead_addBack(&thiz->freeList, &entry->list);
   

@@ -7,17 +7,5 @@
  * under the MIT License. See LICENSE file for details.
  */
 
-#ifndef _LIBNETQ_SPRINTF_H
-#define _LIBNETQ_SPRINTF_H
-
-#include <libnetq/Basic.h>
-
-#ifdef NQ_SYS_LINUX
-#include <linux/stdarg.h>
-#include <linux/sprintf.h>
-#else
-#include <stdio.h>
-#endif
-
-#endif /* _LIBNETQ_SPRINTF_H */
-
+#include "config.h"
+#include "libnetq/RefCount.h"

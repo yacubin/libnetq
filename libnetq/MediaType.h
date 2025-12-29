@@ -19,6 +19,7 @@
 #define NQ_MEDIATYPE_APPLICATION_XHTMLXML           "application/xhtml+xml"
 #define NQ_MEDIATYPE_APPLICATION_XML                "application/xml"
 #define NQ_MEDIATYPE_APPLICATION_XABIWORD           "application/x-abiword"
+#define NQ_MEDIATYPE_APPLICATION_XGZIP              "application/x-gzip"
 #define NQ_MEDIATYPE_APPLICATION_XTAR               "application/x-tar"
 #define NQ_MEDIATYPE_APPLICATION_XWWWFORMURLENCODED "application/x-www-form-urlencoded"
 #define NQ_MEDIATYPE_AUDIO_AAC                      "audio/aac"

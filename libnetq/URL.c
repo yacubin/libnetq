@@ -14,15 +14,12 @@
 #include "libnetq/URL.h"
 
 #include <libnetq/CStrBase.h>
-#include <libnetq/ObjectClass.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Math.h>
 #include <libnetq/CType.h>
 #include <libnetq/Assert.h>
 #include <libnetq/Log.h>
-
-extern const NQObjectClass __NQURLClass;
 
 struct NQURLData {
   unsigned schemePosition;
@@ -40,7 +37,6 @@ struct NQURLData {
 };
 
 struct NQURL {
-  const NQObjectClass* class;
   struct NQURLData data;
   unsigned length;
   char characters[1];
@@ -62,13 +58,19 @@ enum NQURLCharType NQGetURLCharType(char ch)
 static const char lowerDigits[17] = "0123456789abcdef";
 
 static NQ_ALWAYS_INLINE
-int urlEncodeImpl(const char* input, size_t inlen, char* output, size_t outlen, bool pluseAsSpace)
+void checkBuiltinOutput(char* output, size_t outlen)
 {
 #if NQ_HAS_BUILTIN(__builtin_constant_p)
   if (__builtin_constant_p(output)) {
     NQ_ASSERT(!output && !outlen);
   }
 #endif
+}
+
+static NQ_ALWAYS_INLINE
+int urlEncodeImpl(const char* input, size_t inlen, char* output, size_t outlen, bool pluseAsSpace)
+{
+  checkBuiltinOutput(output, outlen);
 
   size_t result = 0;
   for (size_t i = 0; i < inlen; i++) {
@@ -106,11 +108,7 @@ int urlEncodeImpl(const char* input, size_t inlen, char* output, size_t outlen, 
 static NQ_ALWAYS_INLINE
 int urlDecodeImpl(const char* input, size_t inlen, char* output, size_t outlen, bool pluseAsSpace)
 {
-#if NQ_HAS_BUILTIN(__builtin_constant_p)
-  if (__builtin_constant_p(output)) {
-    NQ_ASSERT(!output && !outlen);
-  }
-#endif
+  checkBuiltinOutput(output, outlen);
 
   size_t result = 0;
   for (size_t i = 0; i < inlen; i++) {
@@ -297,7 +295,6 @@ NQURL* NQURL_create(const char* characters)
     return NULL;
   }
 
-  thiz->class = &__NQURLClass;
   thiz->data = data;
   thiz->length = (unsigned)length;
   memcpy(thiz->characters, characters, length + 1);
@@ -363,10 +360,3 @@ size_t NQURL_getFragment(const NQURL* thiz, char* buffer, size_t length)
 {
   return getComponent(thiz, thiz->data.fragmentPosition, thiz->data.fragmentLength, buffer, length);
 }
-
-const NQObjectClass __NQURLClass = {
-  NQURLObjectType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQURL_destroy,
-};

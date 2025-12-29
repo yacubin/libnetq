@@ -18,7 +18,6 @@ enum NQObjectType {
   NQThreadObjectType = 1000,
   NQDirObjectType = 1001,
   NQDescSetObjectType = 1002,
-  NQWebSocketObjectType = 1003,
   NQLogCircularObjectType = 1004,
   NQHexViewerObjectType = 1005,
   NQUint8ArrayObjectType = 1006,
@@ -26,7 +25,6 @@ enum NQObjectType {
   NQSocketObjectType = 1010,
   NQTLSSocketObjectType = 1011,
   NQLooperSourceObjectType = 1014,
-  NQURLObjectType = 1015,
   NQArgumentsObjectType = 1016,
   kNQKeyValObjectType = 1017,
 };

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -17,7 +17,6 @@ extern "C" {
 #endif
 
 typedef struct NQListHead NQListHead;
-
 struct NQListHead {
   NQListHead* next;
   NQListHead* prev;
@@ -112,6 +111,27 @@ static inline void NQListHead_swap(NQListHead* a, NQListHead* b)
     b->prev->next = b;
   }
 }
+
+static inline void NQListHead_replace(NQListHead* oldList, NQListHead* newList)
+{
+  newList->next = oldList->next;
+  newList->next->prev = newList;
+  newList->prev = oldList->prev;
+  newList->prev->next = newList;
+  NQListHead_init(oldList);
+}
+
+typedef struct NQSList NQSList;
+struct NQSList {
+  NQSList* next;
+};
+
+static inline void NQSList_init(NQSList* thiz)
+{
+  thiz->next = NULL;
+}
+
+#define NQSList_next(thiz) (thiz)->next
 
 #ifdef __cplusplus
 }

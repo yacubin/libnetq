@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/String.h"
 
-#include <libnetq/Atomic.h>
+#include <libnetq/RefCount.h>
 #include <libnetq/Sprintf.h>
 #include <libnetq/Compiler.h>
 #include <libnetq/Malloc.h>
@@ -22,7 +22,7 @@
 #include <libnetq/Log.h>
 
 struct NQString {
-  NQAtomic32 refCount;
+  NQRefCount refCount;
   uint32_t length;
   uint8_t flags;
   uint8_t bytes[1];
@@ -31,13 +31,13 @@ struct NQString {
 #define NQ_STRING_REF_COUNT_STATIC 0x80000000
 
 static NQString s_emptyStringStatic = {
-  NQ_ATOMIC32_INIT(NQ_STRING_REF_COUNT_STATIC), 0, 0, { '\0' },
+  { NQ_STRING_REF_COUNT_STATIC }, 0, 0, { '\0' },
 };
 
 static void NQString_init(NQString* s, size_t length)
 {
   NQ_ASSERT(length < NQ_UINT32_MAX);
-  NQAtomic32_init(&s->refCount, 1);
+  NQRefCount_init(&s->refCount);
   s->length = (uint32_t)length;
   s->flags = 0;
 }
@@ -105,15 +105,13 @@ NQString* NQString_format(const char* format, ...)
 
 NQString* NQString_retain(NQString* s)
 {
-  NQAtomic32_inc(&s->refCount);
+  NQRefCount_ref(&s->refCount);
   return s;
 }
 
 void NQString_destroy(NQString* s)
 {
-  NQAtomic32_dec(&s->refCount);
-  if (s->refCount.counter == 0)
-    NQString_free(s);
+  NQRefCount_unref(&s->refCount, NQString_free, s);
 }
 
 const char* NQString_characters(const NQString* s)

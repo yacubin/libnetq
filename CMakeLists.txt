@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.4
+project(libnetq VERSION 1.0.5
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -55,19 +55,26 @@ if ((MINGW OR UNIX) AND NOT APPLE)
     )
 endif ()
 
+set(HAVE_PTHREAD FALSE)
 set(WITH_PTHREAD OFF)
 find_package(Threads)
-if (Threads_FOUND)
+if(Threads_FOUND)
+  set(HAVE_PTHREAD TRUE)
+endif ()
+if (HAVE_PTHREAD)
   set(WITH_PTHREAD ON)
   if (CMAKE_USE_PTHREADS_INIT AND NOT APPLE)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
   endif ()
 endif ()
 
+set(HAVE_ZLIB FALSE)
 set(WITH_ZLIB OFF)
 find_package(ZLIB)
 if (ZLIB_FOUND)
-  set(HAVE_ZLIB ON)
+  set(HAVE_ZLIB TRUE)
+endif ()
+if (LNQ_WITH_ZLIB OR HAVE_ZLIB)
   LNQ_FEATURE_DEFINE(WITH_ZLIB "Allow compilation with ZLIB library")
   if (NOT LNQ_WITH_ZLIB STREQUAL "AUTO")
     set(WITH_ZLIB ${LNQ_WITH_ZLIB})
@@ -75,12 +82,18 @@ if (ZLIB_FOUND)
     set(WITH_ZLIB ON)
   endif ()
 endif ()
+if (WITH_ZLIB)
+  list(APPEND CMAKE_REQUIRED_INCLUDES "${ZLIB_INCLUDE_DIR}")
+  list(APPEND CMAKE_REQUIRED_LIBRARIES "${ZLIB_LIBRARY}")
+endif ()
 
+set(HAVE_OLE32 FALSE)
 set(WITH_OLE32 OFF)
-set(OLE32_FOUND FALSE)
 check_include_file(combaseapi.h HAVE_COMBASEAPI_H)
 if (HAVE_COMBASEAPI_H)
-  set(OLE32_FOUND TRUE)
+  set(HAVE_OLE32 TRUE)
+endif ()
+if (LNQ_WITH_OLE32 OR HAVE_OLE32)
   LNQ_FEATURE_DEFINE(WITH_OLE32 "Allow compilation with OLE32 library")
   if (NOT LNQ_WITH_OLE32 STREQUAL "AUTO")
     set(WITH_OLE32 ${LNQ_WITH_OLE32})
@@ -89,15 +102,19 @@ if (HAVE_COMBASEAPI_H)
   endif ()
 endif ()
 
-if (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
-  if (LNQ_WITH_OLE32 STREQUAL "AUTO")
-    set(WITH_OLE32 ON)
-  endif ()
+set(HAVE_OPENSSL FALSE)
+set(WITH_OPENSSL OFF)
+find_package(OpenSSL)
+if (OpenSSL_FOUND)
+  set(HAVE_OPENSSL TRUE)
 endif ()
-
-if (WITH_ZLIB)
-  list(APPEND CMAKE_REQUIRED_INCLUDES "${ZLIB_INCLUDE_DIR}")
-  list(APPEND CMAKE_REQUIRED_LIBRARIES "${ZLIB_LIBRARY}")
+if (LNQ_WITH_OPENSSL OR HAVE_OPENSSL)
+  LNQ_FEATURE_DEFINE(WITH_OPENSSL "Allow compilation with OpenSSL library")
+  if (NOT LNQ_WITH_OPENSSL STREQUAL "AUTO")
+    set(WITH_OPENSSL ${LNQ_WITH_OPENSSL})
+  elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
+    set(WITH_OPENSSL ON)
+  endif ()
 endif ()
 
 check_include_file(stddef.h HAVE_STDDEF_H)
@@ -322,9 +339,15 @@ set(libnetq_HEADERS
   libnetq/cpu/z.h
 
   libnetq/net/NetBufferQueue.h
+
   libnetq/web/HttpStatistics.h
+  libnetq/web/JsonRpcTypes.h
+  libnetq/web/UrlHost.h
 
   libnetq/tls/CipherSuite.h
+
+  libnetq/wasm/Opcodes.def
+  libnetq/wasm/ModuleTypes.h
 
   libnetq/Abort.h
   libnetq/Allocator.h
@@ -334,6 +357,7 @@ set(libnetq_HEADERS
   libnetq/AppMain.h
   libnetq/Arguments.h
   libnetq/Array.h
+  libnetq/ASCII.def
   libnetq/Assert.h
   libnetq/Asset.h
   libnetq/Atomic.h
@@ -344,6 +368,7 @@ set(libnetq_HEADERS
   libnetq/BufferBuilder.h
   libnetq/BuildInfo.h
   libnetq/ByteBuffer.h
+  libnetq/ByteBufferWriter.h
   libnetq/ByteOrder.h
   libnetq/CoherentLooper.h
   libnetq/ColorSpace.h
@@ -377,10 +402,12 @@ set(libnetq_HEADERS
   libnetq/HttpMethod.h
   libnetq/HttpMultiPartBuilder.h
   libnetq/HttpMultiPartParser.h
+  libnetq/HttpStatus.def
   libnetq/HttpStatus.h
   libnetq/HttpVersion.h
   libnetq/Image.h
   libnetq/ImageBuilder.h
+  libnetq/IOWriter.h
   libnetq/JSONWriter.h
   libnetq/KeyboardEvent.h
   libnetq/KeyVal.h
@@ -396,10 +423,12 @@ set(libnetq_HEADERS
   libnetq/Malloc.h
   libnetq/Math.h
   libnetq/MediaType.h
+  libnetq/MimeTypes.def
   libnetq/MotionEvent.h
   libnetq/MouseEvent.h
   libnetq/Mutex.h
   libnetq/Network.h
+  libnetq/NetworkLooper.h
   libnetq/Object.h
   libnetq/ObjectClass.h
   libnetq/ObjectType.h
@@ -413,6 +442,7 @@ set(libnetq_HEADERS
   libnetq/PrimitiveStorage.h
   libnetq/PrimitiveType.h
   libnetq/Rect.h
+  libnetq/RefCount.h
   libnetq/RWLock.h
   libnetq/Signal.h
   libnetq/Sleep.h
@@ -453,8 +483,17 @@ set(libnetq_SOURCES
   libnetq/asset/FileSystemAsset.c
   libnetq/asset/PlatformAsset.c
 
+  libnetq/crypto/openssl/MD5.h
+  libnetq/crypto/openssl/MD5.c
+  libnetq/crypto/openssl/SHA1.h
+  libnetq/crypto/openssl/SHA1.c
+
   libnetq/net/NetBufferQueue.c
+
+  libnetq/wasm/ModuleTypes.c
+
   libnetq/web/HttpStatistics.c
+  libnetq/web/UrlHost.c
 
   libnetq/Abort.c
   libnetq/Application.c
@@ -468,6 +507,7 @@ set(libnetq_SOURCES
   libnetq/BufferBuilder.c
   libnetq/BuildInfo.c
   libnetq/ByteBuffer.c
+  libnetq/ByteBufferWriter.c
   libnetq/CoherentLooper.c
   libnetq/CondPosix.c
   libnetq/CondSysLinux.c
@@ -500,6 +540,7 @@ set(libnetq_SOURCES
   libnetq/HttpMultiPartParser.c
   libnetq/Image.c
   libnetq/ImageBuilder.c
+  libnetq/IOWriter.c
   libnetq/JSONWriter.c
   libnetq/KeyVal.c
   libnetq/Leb128.c
@@ -518,6 +559,7 @@ set(libnetq_SOURCES
   libnetq/MutexSysLinux.c
   libnetq/MutexWin.c
   libnetq/Network.c
+  libnetq/NetworkLooper.c
   libnetq/Object.c
   libnetq/OncePosix.c
   libnetq/OnceSysLinux.c
@@ -531,6 +573,7 @@ set(libnetq_SOURCES
   libnetq/PrimitiveStorage.c
   libnetq/PrimitiveType.c
   libnetq/Rect.c
+  libnetq/RefCount.c
   libnetq/RWLockPosix.c
   libnetq/RWLockSysLinux.c
   libnetq/RWLockWin.c
@@ -547,8 +590,8 @@ set(libnetq_SOURCES
   libnetq/ThreadPosix.c
   libnetq/ThreadSysLinux.c
   libnetq/ThreadWin.c
-  libnetq/TimerQueue.c
   libnetq/Time.c
+  libnetq/TimerQueue.c
   libnetq/TimeVal.c
   libnetq/UnlimitedRandom.c
   libnetq/URL.c
@@ -564,12 +607,6 @@ set(libnetq_SOURCES
   libnetq/Zip.c
   )
 
-set(libnetq_DEFFILES
-  libnetq/ASCII.def
-  libnetq/HttpStatus.def
-  libnetq/MimeTypes.def
-  )
-
 set(libnetq_DATAFILES
   config.h.in
   LICENSE
@@ -578,6 +615,7 @@ set(libnetq_DATAFILES
 
 set(libnetq_INCLUDES
   "${CMAKE_CURRENT_SOURCE_DIR}"
+  "${CMAKE_CURRENT_BINARY_DIR}"
   )
 
 set(libnetq_LIBRARIES
@@ -591,7 +629,10 @@ set(libnetq_GENERATED
   "${LNQ_GENERATED_DIR}/config.h"
   )
 
-set_source_files_properties(${libnetq_DEFFILES} PROPERTIES HEADER_FILE_ONLY TRUE)
+set(libnetq_HEADERS2
+  )
+
+set_source_files_properties(${libnetq_HEADERS} PROPERTIES HEADER_FILE_ONLY TRUE)
 
 if (CMAKE_SYSTEM_NAME MATCHES "Android")
   list(APPEND libnetq_LIBRARIES android log)
@@ -623,14 +664,27 @@ if (WITH_OLE32)
   list(APPEND libnetq_LIBRARIES ole32)
 endif ()
 
+if (WITH_OPENSSL)
+  configure_file(libnetq/crypto/openssl/MD5.h "${CMAKE_CURRENT_BINARY_DIR}/libnetq/crypto/MD5.h" COPYONLY)
+  configure_file(libnetq/crypto/openssl/SHA1.h "${CMAKE_CURRENT_BINARY_DIR}/libnetq/crypto/SHA1.h" COPYONLY)
+  list(APPEND libnetq_HEADERS2
+    "${CMAKE_CURRENT_BINARY_DIR}/libnetq/crypto/MD5.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/libnetq/crypto/SHA1.h"
+    )
+  list(APPEND libnetq_HEADERS libnetq/WebSocketCalcAccept.h)
+  list(APPEND libnetq_SOURCES libnetq/WebSocketCalcAccept.c) # Depends SHA1
+  list(APPEND libnetq_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
+endif ()
+
 configure_file(config.h.in "${LNQ_GENERATED_DIR}/config.h" @ONLY)
 
 if (LNQ_PUBLIC_GENERATED_DIR)
   list(APPEND libnetq_INCLUDES "${LNQ_GENERATED_DIR}")
 endif ()
 
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DEFFILES} ${libnetq_DATAFILES})
-add_library(libnetq ${LNQ_LIBRARY_TYPE} ${libnetq_GENERATED} ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DEFFILES} ${libnetq_DATAFILES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DATAFILES})
+source_group(TREE "${CMAKE_CURRENT_BINARY_DIR}" FILES ${libnetq_HEADERS2})
+add_library(libnetq ${LNQ_LIBRARY_TYPE} ${libnetq_GENERATED} ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DATAFILES} ${libnetq_HEADERS2})
 target_include_directories(libnetq PUBLIC "$<BUILD_INTERFACE:${libnetq_INCLUDES}>")
 target_include_directories(libnetq PRIVATE "${LNQ_GENERATED_DIR}")
 target_compile_definitions(libnetq PUBLIC "${libnetq_DEFINITIONS}")
@@ -643,8 +697,14 @@ set_target_properties(libnetq PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 add_library(LibNetQ::LibNetQ ALIAS libnetq)
 
-foreach (_header ${libnetq_HEADERS} ${libnetq_DEFFILES})
+foreach (_header ${libnetq_HEADERS})
   get_filename_component(_directory "${_header}" DIRECTORY)
+  install(FILES "${_header}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${_directory}")
+endforeach ()
+
+foreach (_header ${libnetq_HEADERS2})
+  string(REPLACE "${CMAKE_CURRENT_BINARY_DIR}/" "" _header2 "${_header}")
+  get_filename_component(_directory "${_header2}" DIRECTORY)
   install(FILES "${_header}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${_directory}")
 endforeach ()
 
@@ -655,6 +715,7 @@ install(TARGETS libnetq
   )
 
 message(STATUS "Build type . . . . . . . . . . . . . . . . . ${LNQ_LIBRARY_TYPE}")
-message(STATUS "PThread  . . . . . . . . . . . . . . . . . . ${WITH_PTHREAD} (HAVE ${Threads_FOUND})")
-message(STATUS "ZLib . . . . . . . . . . . . . . . . . . . . ${WITH_ZLIB} (HAVE ${ZLIB_FOUND})")
-message(STATUS "Ole32  . . . . . . . . . . . . . . . . . . . ${WITH_OLE32} (HAVE ${OLE32_FOUND})")
+message(STATUS "PThread  . . . . . . . . . . . . . . . . . . ${WITH_PTHREAD} (HAVE ${HAVE_PTHREAD})")
+message(STATUS "ZLib . . . . . . . . . . . . . . . . . . . . ${WITH_ZLIB} (HAVE ${HAVE_ZLIB})")
+message(STATUS "Ole32  . . . . . . . . . . . . . . . . . . . ${WITH_OLE32} (HAVE ${HAVE_OLE32})")
+message(STATUS "OpenSSL  . . . . . . . . . . . . . . . . . . ${WITH_OPENSSL} (HAVE ${HAVE_OPENSSL})")

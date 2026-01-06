@@ -244,7 +244,7 @@ void nq_gmtime(const time_t* timep, struct tm* result)
 #endif
 }
 
-size_t NQTimeFormat(NQTime time, int format, char* buffer, size_t size)
+int NQTimeFormat(NQTime time, int format, char* buffer, size_t size)
 {
   int n, msec;
   struct tm tm;
@@ -300,7 +300,7 @@ size_t NQTimeFormat(NQTime time, int format, char* buffer, size_t size)
     return 0;
   }
   
-  return n < 0 ? 0 : n;
+  return n;
 }
 
 void NQDataTime_init(NQDataTime* datatime)

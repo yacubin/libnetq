@@ -74,13 +74,8 @@ void NQByteBuffer_clear(NQByteBuffer* thiz)
 
 bool NQByteBuffer_resize(NQByteBuffer* thiz, size_t size)
 {
-  if (size < thiz->size)
+  if (size > thiz->capacity && !NQByteBuffer_expandCapacity(thiz, size))
     return false;
-
-  if (size > thiz->capacity) {
-    if (!NQByteBuffer_expandCapacity(thiz, size))
-      return false;
-  }
 
   thiz->size = (uint32_t)size;
   return true;
@@ -178,4 +173,13 @@ void NQByteBuffer_swap(NQByteBuffer* thiz, NQByteBuffer* other)
   tmpSize = thiz->capacity;
   thiz->capacity = other->capacity;
   other->capacity = tmpSize;
+}
+
+void NQByteBuffer_removeAt(NQByteBuffer* thiz, size_t position, size_t size)
+{
+  NQ_ASSERT((position + size) <= thiz->size);
+  uint8_t* dst = thiz->data + position;
+  const uint8_t* src = dst + size;
+  (void)memmove(dst, src, thiz->data + thiz->size - src);
+  thiz->size -= size;
 }

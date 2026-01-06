@@ -26,6 +26,7 @@ NQ_EXPORT const char* NQUrlPath_segment(const NQUrlPath*, const char* name);
 NQ_EXPORT const char* NQUrlPath_path(const NQUrlPath*);
 NQ_EXPORT bool NQUrlPath_isAbsolute(const NQUrlPath*);
 
+NQ_EXPORT bool NQIsUrlPath(const char* path);
 NQ_EXPORT bool NQIsUrlPathPattern(const char* pattern);
 
 #ifdef __cplusplus

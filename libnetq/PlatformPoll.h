@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -12,12 +12,16 @@
 
 #include <libnetq/Basic.h>
 
-#if defined(NQ_OS_WINDOWS)
-#include <winsock2.h>
+#ifdef NQ_SYS_LINUX
+#include <linux/poll.h>
 #endif
 
 #ifdef NQ_OS_UNIX
 #include <poll.h>
+#endif
+
+#ifdef NQ_OS_WINDOWS
+#include <winsock2.h>
 #endif
 
 #define NQ_POLLIN      POLLIN
@@ -33,14 +37,22 @@
 #define NQ_POLLHUP     POLLHUP
 #define NQ_POLLNVAL    POLLNVAL
 
-#ifdef NQ_OS_WINDOWS
-#define NQPlatformPoll WSAPoll
-typedef WSAPOLLFD NQPlatformPollfd;
+#ifdef NQ_SYS_LINUX
+typedef struct pollfd NQPlatformPollfd;
+static inline int NQPlatformPoll(NQPlatformPollfd* fds, unsigned long nfds, int timeout)
+{
+  return -1;
+}
 #endif
 
 #ifdef NQ_OS_UNIX
-#define NQPlatformPoll poll
 typedef struct pollfd NQPlatformPollfd;
+#define NQPlatformPoll poll
+#endif
+
+#ifdef NQ_OS_WINDOWS
+typedef WSAPOLLFD NQPlatformPollfd;
+#define NQPlatformPoll WSAPoll
 #endif
 
 #endif /* _LIBNETQ_PLATFORMPOLL_H */

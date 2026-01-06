@@ -26,6 +26,18 @@ enum {
   kNQWebSocketOpcodePong = 10,
 };
 
+typedef struct NQWebSocketHeader NQWebSocketHeader;
+struct NQWebSocketHeader {
+  uint64_t payloadSize;
+  uint8_t mask[4];
+  uint8_t rsv;
+  uint8_t opcode;
+  bool fin;
+  bool hasMask;
+};
+
+NQ_EXPORT int NQWebSocketHeaderParse(const uint8_t* data, size_t size, NQWebSocketHeader* result);
+
 typedef struct NQWebSocketFrame NQWebSocketFrame;
 struct NQWebSocketFrame {
   uint8_t opcode;
@@ -38,10 +50,32 @@ struct NQWebSocketFrame {
 
 NQ_EXPORT bool NQWebSocketFrameParse(uint8_t* data, size_t size, NQWebSocketFrame* frame);
 
-static inline void NQWebSocketFramePayloadUnmask(const uint8_t mask[4], uint8_t* data, size_t size)
+typedef struct NQWebSocketUnmaskPayload NQWebSocketUnmaskPayload;
+struct NQWebSocketUnmaskPayload {
+  uint8_t mask[4];
+  uint8_t position;
+};
+
+static inline void NQWebSocketUnmaskPayload_init(NQWebSocketUnmaskPayload* thiz, const uint8_t mask[4])
+{
+  thiz->mask[0] = mask[0];
+  thiz->mask[1] = mask[1];
+  thiz->mask[2] = mask[2];
+  thiz->mask[3] = mask[3];
+  thiz->position = 0;
+}
+
+static inline void NQWebSocketUnmaskPayload_unmask(NQWebSocketUnmaskPayload* thiz, uint8_t* data, size_t size)
 {
   for (size_t i = 0; i < size; i++)
-    data[i] ^= mask[i & 3];
+    data[i] ^= thiz->mask[(thiz->position++) & 3];
+}
+
+static inline void NQWebSocketFramePayloadUnmask(const uint8_t mask[4], uint8_t* data, size_t size)
+{
+  NQWebSocketUnmaskPayload unmaskPayload;
+  NQWebSocketUnmaskPayload_init(&unmaskPayload, mask);
+  NQWebSocketUnmaskPayload_unmask(&unmaskPayload, data, size);
 }
 
 typedef struct NQWebSocketBuffer NQWebSocketBuffer;

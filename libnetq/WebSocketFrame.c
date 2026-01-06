@@ -21,6 +21,7 @@
 
 #define WS_FIN_MASK (0x80)
 #define WS_RSV_MASK (0x70)
+#define WS_RSV_SHIFT (4)
 #define WS_OPCODE_MASK (0x0f)
 #define WS_MASK_MASK (0x80)
 #define WS_LEN1_MASK (0x7f)
@@ -28,34 +29,94 @@
 #define NQ_WEBSOCKET_BUFFER_MAX (NQ_UINT64_MAX - NQ_WEBSOCKET_HEADER_MAX)
 #define NQ_WEBSOCKET_LENGTH1_MAX 125
 
-bool NQWebSocketFrameParse(uint8_t* data, size_t size, NQWebSocketFrame* frame)
+int NQWebSocketHeaderParse(const uint8_t* data, size_t size, NQWebSocketHeader* result)
 {
   if (size < 2) {
-    return false;
+    return 0;
   }
 
-  uint8_t flags1 = *data++;
+  const uint8_t* ptr = data;
+  uint8_t flags1 = *ptr++;
   size--;
 
-  uint8_t flags2 = *data++;
+  uint8_t flags2 = *ptr++;
   size--;
 
   bool fin = (flags1 & WS_FIN_MASK) ? true : false;
-  if (flags1 & WS_RSV_MASK) {
+  uint8_t rsv = (flags1 & WS_RSV_MASK) >> WS_RSV_SHIFT;
+
+  uint8_t opcode = flags1 & WS_OPCODE_MASK;
+  uint64_t payloadSize = flags2 & WS_LEN1_MASK;
+  bool masked = (flags2 & WS_MASK_MASK) ? true : false;
+
+  if (payloadSize == 126) {
+    if (size < 2) {
+      return 0;
+    }
+
+    uint16_t len16;
+    NQGetUint16BE(ptr, &len16);
+    ptr += sizeof(len16);
+    size -= sizeof(len16);
+
+    payloadSize = len16;
+  }
+  else if (payloadSize == 127) {
+    if (size < 8) {
+      return 0;
+    }
+
+    NQGetUint64BE(ptr, &payloadSize);
+    ptr += sizeof(payloadSize);
+    size -= sizeof(payloadSize);
+  }
+
+  uint8_t mkey[4];
+  if (masked) {
+    if (size < sizeof(mkey)) {
+      return 0;
+    }
+    (void)memcpy(mkey, ptr, sizeof(mkey));
+    ptr += sizeof(mkey);
+    size -= sizeof(mkey);
+  }
+  else {
+    mkey[0] = 0;
+    mkey[1] = 0;
+    mkey[2] = 0;
+    mkey[3] = 0;
+  }
+
+  if (result) {
+    result->fin = fin;
+    result->rsv = rsv;
+    result->hasMask = masked;
+    (void)memcpy(result->mask, mkey, sizeof(mkey));
+    result->opcode = opcode;
+    result->payloadSize = payloadSize;
+  }
+
+  return (int)(ptr - data);
+}
+
+bool NQWebSocketFrameParse(uint8_t* data, size_t size, NQWebSocketFrame* frame)
+{
+  NQWebSocketHeader header;
+  int headerSize = NQWebSocketHeaderParse(data, size, &header);
+  if (headerSize <= 0)
+    return false;
+
+  if (header.rsv) {
     return false;
   }
 
-  uint8_t opcode = flags1 & WS_OPCODE_MASK;
-  uint64_t length = flags2 & WS_LEN1_MASK;
-  bool hasMask = (flags2 & WS_MASK_MASK) ? true : false;
-
-  switch (opcode) {
+  switch (header.opcode) {
   case kNQWebSocketOpcodeText:
   case kNQWebSocketOpcodeBinary:
     break;
 
   case kNQWebSocketOpcodeConnectionClose:
-    if (length != 2)
+    if (header.payloadSize != 2)
       return false;
     break;
 
@@ -63,49 +124,25 @@ bool NQWebSocketFrameParse(uint8_t* data, size_t size, NQWebSocketFrame* frame)
     return false;
   }
 
-  if (length == 126) {
-    if (size < 2) {
-      return false;
-    }
+  size_t payloadSize = (size_t)header.payloadSize;
+  if (header.payloadSize != payloadSize)
+    return false;
 
-    uint16_t len16;
-    NQGetUint16BE(data, &len16);
-    data += sizeof(len16);
-    size -= sizeof(len16);
-
-    length = len16;
-  }
-  else if (length == 127) {
-    if (size < 8) {
-      return false;
-    }
+  if ((headerSize + header.payloadSize) != size) {
     return false;
   }
 
-  uint8_t mkey[4] = {0,0,0,0};
-  if (hasMask) {
-    if (size < sizeof(mkey)) {
-      return false;
-    }
-    (void)memcpy(mkey, data, sizeof(mkey));
-    data += sizeof(mkey);
-    size -= sizeof(mkey);
+  uint8_t* payload = data + headerSize;
+  if (header.hasMask) {
+    NQWebSocketFramePayloadUnmask(header.mask, payload, header.payloadSize);
   }
 
-  if (length != size) {
-    return false;
-  }
-
-  if (hasMask) {
-    NQWebSocketFramePayloadUnmask(mkey, data, size);
-  }
-
-  frame->fin = fin;
-  frame->hasMask = hasMask;
-  (void)memcpy(&frame->mask, mkey, sizeof(mkey));
-  frame->opcode = opcode;
-  frame->payload = data;
-  frame->payloadSize = size;
+  frame->fin = header.fin;
+  frame->hasMask = header.hasMask;
+  (void)memcpy(&frame->mask, header.mask, sizeof(header.mask));
+  frame->opcode = header.opcode;
+  frame->payload = payload;
+  frame->payloadSize = header.payloadSize;
 
   return true;
 }

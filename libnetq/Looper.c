@@ -49,21 +49,21 @@ static int64_t NQLooper_timerTimeout(NQLooper* looper)
 
 static void NQLooper_performTimer(NQLooper* looper)
 {
-  int status;
+  int timeout;
   NQTimerData data;
 
   for (;;) {
     NQMutex_lock(&looper->mutex);
-    status = NQTimerQueue_nextFired(looper->timerQueue, looper->poolTime, &data);
+    timeout = NQTimerQueue_shiftTimer(looper->timerQueue, looper->poolTime, &data);
     NQMutex_unlock(&looper->mutex);
 
-    if (status == NQ_TIMER_WAIT)
+    if (timeout != 0)
       break;
 
     if (data.handle)
       data.handle(data.userdata);
 
-    if (status == NQ_TIMER_REMOVE && data.destroy)
+    if (data.destroy)
       data.destroy(data.userdata);
   }
 }
@@ -115,7 +115,7 @@ void NQLooper_init(NQLooper* looper, const struct NQLooperOperations* ops)
 
   NQMutex_init(&looper->mutex);
   looper->tid = NQThreadId();
-  looper->timerQueue = NQTimerQueue_create();
+  looper->timerQueue = NQTimerQueue_create(1000);
   looper->dispatchQueue = NQDispatchQueue_create(0);
   looper->poolTime = NQGetTime();
 
@@ -136,7 +136,7 @@ void NQLooper_finalize(NQLooper* looper)
 
   if (looper->timerQueue) {
     NQTimerData timerData;
-    while (NQTimerQueue_nextFired(looper->timerQueue, -1, &timerData) == NQ_TIMER_REMOVE) {
+    while (NQTimerQueue_shiftTimer(looper->timerQueue, -1, &timerData) >= 0) {
       if (timerData.destroy)
         timerData.destroy(timerData.userdata);
     }

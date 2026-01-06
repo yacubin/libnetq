@@ -245,6 +245,42 @@ bool NQUrlPath_isAbsolute(const NQUrlPath* thiz)
   return thiz->isAbsolute;
 }
 
+static bool isUrlPathChar(char ch)
+{
+  if (NQIsAlpha(ch))
+    return true;
+  else if (NQIsDigit(ch))
+    return true;
+  else if (ch == '-')
+    return true;
+  else if (ch == '_')
+    return true;
+  else if (ch == '/')
+    return true;
+  else if (ch == '.')
+    return true;
+  else if (ch == '~')
+    return true;
+
+  return false;
+}
+
+bool NQIsUrlPath(const char* path)
+{
+  char ch = *path++;
+  if (ch != '\0') {
+    for (;;) {
+      if (!isUrlPathChar(ch))
+        break;
+      ch = *path++;
+      if (ch == '\0')
+        return true;
+    }
+  }
+
+  return false;
+}
+
 bool NQIsUrlPathPattern(const char* pattern)
 {
   if (pattern[0] == '\0')

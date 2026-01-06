@@ -33,6 +33,12 @@ NQ_EXPORT bool NQByteBuffer_resize(NQByteBuffer*, size_t size);
 NQ_EXPORT bool NQByteBuffer_insert(NQByteBuffer*, size_t position, const uint8_t* data, size_t size);
 NQ_EXPORT bool NQByteBuffer_append(NQByteBuffer*, const uint8_t* data, size_t size);
 NQ_EXPORT void NQByteBuffer_swap(NQByteBuffer*, NQByteBuffer* other);
+NQ_EXPORT void NQByteBuffer_removeAt(NQByteBuffer*, size_t position, size_t size);
+
+static inline bool NQByteBuffer_isEmpty(const NQByteBuffer* thiz)
+{
+  return thiz->size == 0;
+}
 
 #ifdef __cplusplus
 }

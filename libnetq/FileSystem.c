@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -141,7 +141,7 @@ bool NQFileSystem_exists(const char* path)
 NQUint8Array* NQFileSystem_loadBytes(const char* path)
 {
   NQFileHandle handle = NQFileOpen(path, NQ_FOPEN_READ);
-  if (NQFileIsInvalid(handle)) {
+  if (NQIsFileInvalid(handle)) {
     NQ_LOGE("Can't open file %s", path);
     return NULL;
   }

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -25,7 +25,7 @@ struct NQString {
   NQRefCount refCount;
   uint32_t length;
   uint8_t flags;
-  uint8_t bytes[1];
+  uint8_t characters[1];
 };
 
 #define NQ_STRING_REF_COUNT_STATIC 0x80000000
@@ -63,8 +63,8 @@ NQString* NQString_createWithLength(const char* characters, size_t length)
     return NULL;
 
   NQString_init(s, length);
-  memcpy(s->bytes, characters, length);
-  s->bytes[length] = '\0';
+  memcpy(s->characters, characters, length);
+  s->characters[length] = '\0';
 
   return s;
 }
@@ -95,7 +95,7 @@ NQString* NQString_format(const char* format, ...)
     length = (size_t)ret;
     s = NQString_alloc(length);
     if (s != NULL)
-      vsnprintf((char*)s->bytes, length + 1, format, args);
+      vsnprintf((char*)s->characters, length + 1, format, args);
   }
 
   va_end(args);
@@ -116,7 +116,7 @@ void NQString_destroy(NQString* s)
 
 const char* NQString_characters(const NQString* s)
 {
-  return (const char*)s->bytes;
+  return (const char*)s->characters;
 }
 
 size_t NQString_length(const NQString* s)

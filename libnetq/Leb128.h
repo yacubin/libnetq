@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -40,23 +40,65 @@ NQ_EXPORT size_t NQLeb128DecodeUint16(const void* data, size_t size, uint16_t* r
 NQ_EXPORT size_t NQLeb128DecodeUint32(const void* data, size_t size, uint32_t* result);
 NQ_EXPORT size_t NQLeb128DecodeUint64(const void* data, size_t size, uint64_t* result);
 
-struct NQSLEB128Ctx {
-  int64_t value;
-  uint32_t index;
-  uint32_t size;
+typedef struct NQLeb128Dec NQLeb128Dec;
+struct NQLeb128Dec {
+  uint64_t valueUint64;
+  unsigned bitWidth;
+  bool isSigned;
 };
 
-NQ_EXPORT void NQSLEB128Ctx_init(struct NQSLEB128Ctx*);
-NQ_EXPORT bool NQSLEB128Ctx_add(struct NQSLEB128Ctx*, uint8_t byte);
+NQ_EXPORT void NQLeb128Dec_init(NQLeb128Dec*, bool isSigned);
+NQ_EXPORT bool NQLeb128Dec_update(NQLeb128Dec*, uint8_t byte);
 
-struct NQULEB128Ctx {
-  uint64_t value;
-  uint32_t index;
-  uint32_t size;
-};
+static inline unsigned NQLeb128Dec_bitWidth(const NQLeb128Dec* thiz)
+{
+  return thiz->bitWidth;
+}
 
-NQ_EXPORT void NQULEB128Ctx_init(struct NQULEB128Ctx*);
-NQ_EXPORT bool NQULEB128Ctx_add(struct NQULEB128Ctx*, uint8_t byte);
+static inline unsigned NQLeb128Dec_size(const NQLeb128Dec* thiz)
+{
+  return (thiz->bitWidth + 7) / 8;
+}
+
+static inline int8_t NQLeb128Dec_valueInt8(const NQLeb128Dec* thiz)
+{
+  return (int8_t)thiz->valueUint64;
+}
+
+static inline int16_t NQLeb128Dec_valueInt16(const NQLeb128Dec* thiz)
+{
+  return (int16_t)thiz->valueUint64;
+}
+
+static inline int32_t NQLeb128Dec_valueInt32(const NQLeb128Dec* thiz)
+{
+  return (int32_t)thiz->valueUint64;
+}
+
+static inline int64_t NQLeb128Dec_valueInt64(const NQLeb128Dec* thiz)
+{
+  return (int64_t)thiz->valueUint64;
+}
+
+static inline uint8_t NQLeb128Dec_valueUint8(const NQLeb128Dec* thiz)
+{
+  return (uint8_t)thiz->valueUint64;
+}
+
+static inline uint16_t NQLeb128Dec_valueUint16(const NQLeb128Dec* thiz)
+{
+  return (uint16_t)thiz->valueUint64;
+}
+
+static inline uint32_t NQLeb128Dec_valueUint32(const NQLeb128Dec* thiz)
+{
+  return (uint32_t)thiz->valueUint64;
+}
+
+static inline uint64_t NQLeb128Dec_valueUint64(const NQLeb128Dec* thiz)
+{
+  return thiz->valueUint64;
+}
 
 #ifdef __cplusplus
 }

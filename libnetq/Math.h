@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -49,34 +49,6 @@ extern "C" {
 #define NQGetMax(a, b) ((a) < (b) ? (b) : (a))
 #define NQGetClamp(_value, _min, _max) (_value > _min ? (_value < _max ? _value : _max) : _min)
 #define NQGetDiff(a, b) (NQGetMax(a, b) - NQGetMin(a, b))
-
-#if NQ_HAS_BUILTIN(__builtin_ctz)
-static NQ_ALWAYS_INLINE unsigned NQGetCtz32(uint32_t x)
-{
-  return x ? __builtin_ctz(x) : sizeof(x) * 8;
-}
-#else
-NQ_EXPORT unsigned NQGetCtz32(uint32_t number);
-#endif
-
-#if NQ_HAS_BUILTIN(__builtin_clzll)
-static NQ_ALWAYS_INLINE unsigned NQGetCtz64(uint64_t x)
-{
-  return x ? __builtin_clzll(x) : sizeof(x) * 8;
-}
-#else
-NQ_EXPORT unsigned NQGetCtz64(uint64_t x);
-#endif
-
-static NQ_ALWAYS_INLINE unsigned NQGetFls32(uint32_t x)
-{
-  return sizeof(x) * 8 - NQGetCtz32(x);
-}
-
-static NQ_ALWAYS_INLINE unsigned NQGetFls64(uint64_t x)
-{
-  return sizeof(x) * 8 - NQGetCtz64(x);
-}
 
 /* Greatest Common Divisor */
 NQ_EXPORT int64_t nq_gcd64(int64_t a, int64_t b);

@@ -8,28 +8,28 @@
  */
 
 #include "config.h"
+#include "libnetq/crypto/SHA1.h"
 
-#if WITH_OPENSSL
+#if USE_OPENSSL_SHA1
 
-#include <libnetq/crypto/SHA1.h>
 #include <libnetq/Assert.h>
 
-void NQSHA1_init(NQSHA1* thiz)
+bool NQSHA1_init(NQSHA1* thiz)
 {
   int rc = SHA1_Init(thiz);
-  NQ_ASSERT_UNUSED(rc, rc == 1);
+  return rc == 1;
 }
 
-void NQSHA1_addBytes(NQSHA1* thiz, const uint8_t* data, size_t size)
+bool NQSHA1_update(NQSHA1* thiz, const uint8_t* data, size_t size)
 {
   int rc = SHA1_Update(thiz, data, size);
-  NQ_ASSERT_UNUSED(rc, rc == 1);
+  return rc == 1;
 }
 
-void NQSHA1_checksum(NQSHA1* thiz, uint8_t* digest)
+bool NQSHA1_final(NQSHA1* thiz, uint8_t* digest)
 {
   int rc = SHA1_Final(digest, thiz);
-  NQ_ASSERT_UNUSED(rc, rc == 1);
+  return rc == 1;
 }
 
-#endif /* WITH_OPENSSL */
+#endif /* USE_OPENSSL_SHA1 */

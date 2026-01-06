@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -11,7 +11,7 @@
 #define _LIBNETQ_SOCKET_H
 
 #include <libnetq/Network.h>
-#include <libnetq/StreamCallbacks.h>
+#include <libnetq/io/StreamCallbacks.h>
 
 #ifdef __cplusplus
 extern "C" {

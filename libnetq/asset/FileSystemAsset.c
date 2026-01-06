@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -77,7 +77,7 @@ static NQAssetFile* fileSystemAssetOpenFile(NQAsset* asset, const char* filename
   NQFileHandle handle = NQFileOpen(NQStringPrint_characters(&fullpath), NQ_FOPEN_READ);
   NQStringPrint_finalize(&fullpath);
 
-  if (NQFileIsInvalid(handle)) {
+  if (NQIsFileInvalid(handle)) {
     return NULL;
   }
 

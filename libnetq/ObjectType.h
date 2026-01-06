@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -23,7 +23,6 @@ enum NQObjectType {
   NQUint8ArrayObjectType = 1006,
   NQAssetSystemObjectType = 1009,
   NQSocketObjectType = 1010,
-  NQTLSSocketObjectType = 1011,
   NQLooperSourceObjectType = 1014,
   NQArgumentsObjectType = 1016,
   kNQKeyValObjectType = 1017,

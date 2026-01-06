@@ -43,3 +43,23 @@ const char* NQGetWasmSectionNameById(int sectionId)
 
   return "Unknown";
 }
+
+const char* NQWasmValTypeToString(uint8_t type)
+{
+  switch (type) {
+  case NQ_WASM_TYPE_I32:
+    return "i32";
+  case NQ_WASM_TYPE_I64:
+    return "i64";
+  case NQ_WASM_TYPE_F32:
+    return "f32";
+  case NQ_WASM_TYPE_F64:
+    return "f64";
+  case NQ_WASM_TYPE_V128:
+    return "v128";
+  case NQ_WASM_TYPE_FUNCREF:
+    return "funcref";
+  }
+
+  return "unknown";
+}

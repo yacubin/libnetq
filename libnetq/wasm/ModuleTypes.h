@@ -12,6 +12,10 @@
 
 #include <libnetq/Basic.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define	NQ_WASM_MAG0 0x00
 #define	NQ_WASM_MAG1 'a'
 #define	NQ_WASM_MAG2 's'
@@ -54,6 +58,48 @@ struct NQWasmHeader {
 
 #define NQ_WASM_MEMTYPE_MAXVAL (1 << 0)
 #define NQ_WASM_MEMTYPE_SHARED (1 << 1)
+#define NQ_WASM_MEMTYPE_WASM64 (1 << 2)
+
+static inline bool NQWasmIsMemType(uint8_t memtype)
+{
+  return (memtype & ~(NQ_WASM_MEMTYPE_MAXVAL | NQ_WASM_MEMTYPE_SHARED | NQ_WASM_MEMTYPE_WASM64)) == 0;
+}
+
+enum {
+  NQ_WASM_TYPE_REFNULL = 0x63,
+  NQ_WASM_TYPE_REF = 0x64,
+  NQ_WASM_TYPE_V128 = 0x7b,
+  NQ_WASM_TYPE_FUNCREF = 0x70,
+  NQ_WASM_TYPE_F64 = 0x7c,
+  NQ_WASM_TYPE_F32 = 0x7d,
+  NQ_WASM_TYPE_I64 = 0x7e,
+  NQ_WASM_TYPE_I32 = 0x7f,
+};
+
+NQ_EXPORT const char* NQWasmValTypeToString(uint8_t type);
+static inline bool NQWasmIsValType(uint8_t valtype)
+{
+  switch (valtype) {
+  case NQ_WASM_TYPE_I32:
+  case NQ_WASM_TYPE_I64:
+  case NQ_WASM_TYPE_F32:
+  case NQ_WASM_TYPE_F64:
+  case NQ_WASM_TYPE_V128:
+  case NQ_WASM_TYPE_REFNULL:
+  case NQ_WASM_TYPE_REF:
+    return true;
+  }
+  return false;
+}
+
+static inline bool NQWasmIsElemType(uint8_t elemtype)
+{
+  switch (elemtype) {
+  case NQ_WASM_TYPE_FUNCREF:
+    return true;
+  }
+  return false;
+}
 
 struct NQWasmMemoryInfo {
   uint32_t minValue;
@@ -61,5 +107,9 @@ struct NQWasmMemoryInfo {
   bool hasMaxValue;
   bool isShared;
 };
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* _LIBNETQ_WASM_MODULETYPES_H */

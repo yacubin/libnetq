@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -22,8 +22,8 @@ extern "C" {
 
 #ifdef NQ_SYS_LINUX
 typedef struct file* NQFileHandle;
-#define NQFileIsValid(handle) (!IS_ERR(handle))
-#define NQFileIsInvalid(handle) IS_ERR(handle)
+#define NQIsFileValid(handle) (!IS_ERR(handle))
+#define NQIsFileInvalid(handle) IS_ERR(handle)
 #endif
 
 #ifdef NQ_OS_WINDOWS
@@ -38,11 +38,11 @@ typedef int NQFileHandle;
 #endif
 
 #if defined(NQ_OS_WINDOWS) || defined(NQ_OS_UNIX)
-#define NQFileIsValid(handle) ((handle) != NQ_INVALID_FILE)
-#define NQFileIsInvalid(handle) ((handle) == NQ_INVALID_FILE)
+#define NQIsFileValid(handle) ((handle) != NQ_INVALID_FILE)
+#define NQIsFileInvalid(handle) ((handle) == NQ_INVALID_FILE)
 #endif
 
-#define NQFileCheck(handle) NQFileIsValid(handle)
+#define NQFileCheck(handle) NQIsFileValid(handle)
 
 typedef enum NQFileOpenMode {
   NQ_FOPEN_READ = 0,

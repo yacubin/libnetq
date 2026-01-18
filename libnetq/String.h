@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -15,6 +15,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct NQStringParams NQStringParams;
+struct NQStringParams {
+  const char* characters;
+  uint32_t length;
+};
 
 typedef struct NQString NQString;
 

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -17,7 +17,7 @@
 #include <libnetq/List.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Assert.h>
-#include <libnetq/Math.h>
+#include <libnetq/BitOps.h>
 
 #define NQ_TIMER_ACTIVE   (1 << 0)
 #define NQ_TIMER_INTERVAL (1 << 1)

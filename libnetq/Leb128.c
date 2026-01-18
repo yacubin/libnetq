@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -11,6 +11,7 @@
 #include "libnetq/Leb128.h"
 
 #include <libnetq/Assert.h>
+#include <libnetq/BitOps.h>
 #include <libnetq/Math.h>
 #include <libnetq/ConstExpr.h>
 
@@ -866,80 +867,35 @@ size_t NQLeb128DecodeUint64(const void* data, size_t size, uint64_t* result)
   return 0;
 }
 
-void NQSLEB128Ctx_init(struct NQSLEB128Ctx* ctx)
+void NQLeb128Dec_init(NQLeb128Dec* thiz, bool isSigned)
 {
-  ctx->value = 0;
-  ctx->index = 0;
-  ctx->size = 0;
+  thiz->valueUint64 = 0;
+  thiz->bitWidth = 0;
+  thiz->isSigned = isSigned;
 }
 
-bool NQSLEB128Ctx_add(struct NQSLEB128Ctx* ctx, uint8_t byte)
+bool NQLeb128Dec_update(NQLeb128Dec* thiz, uint8_t byte)
 {
-  bool done;
+  thiz->valueUint64 |= (NQ_UINT64_C(0x7f) & byte) << thiz->bitWidth;
+  thiz->bitWidth += 7;
 
-  int shift = ctx->index++ * 7;
-  int nbits = shift;
+  if (byte & 0x80)
+    return false;
 
-  if (byte & 0x80) {
-    nbits += 7;
-    done = false;
+  uint64_t highMask = (thiz->bitWidth >= 64) ? 0 : ~NQ_UINT64_C(0) << thiz->bitWidth;
+  if (!thiz->isSigned) {
+    thiz->valueUint64 &= ~highMask;
+    thiz->bitWidth = NQGetMax(thiz->bitWidth - (NQGetClz32(byte) - 25), 1);
   }
   else {
-    uint8_t b;
-    if (byte & 0x40)
-      b = ~(byte | 0x80);
-    else
-      b = byte;
-
-    if (b)
-      nbits += NQGetFls32(b);
-    else if (nbits == 0)
-      nbits = 1; // Zero has 0 size
-
-    if ((byte & 0x40) && (nbits < (sizeof(int64_t) * 8)))
-      ctx->value |= (int64_t)(~0LL) << nbits;
-
-    done = true;
+    if ((byte & 0x40) == 0)
+      thiz->valueUint64 &= ~highMask;
+    else {
+      byte = ~(byte | 0x80);
+      thiz->valueUint64 |= highMask;
+    }
+    thiz->bitWidth = NQGetMax(thiz->bitWidth - (NQGetClz32(byte) - 26), 2);
   }
 
-  ctx->size = (nbits + 7) / 8;
-  if (ctx->size <= sizeof(int64_t)) {
-    ctx->value |= (int64_t)(byte & 0x7f) << shift;
-  }
-
-  return done;
-}
-
-void NQULEB128Ctx_init(struct NQULEB128Ctx* ctx)
-{
-  ctx->value = 0;
-  ctx->index = 0;
-  ctx->size = 0;
-}
-
-bool NQULEB128Ctx_add(struct NQULEB128Ctx* ctx, uint8_t byte)
-{
-  bool done;
-
-  int shift = ctx->index++ * 7;
-  int nbits = shift;
-
-  if (byte & 0x80) {
-    nbits += 7;
-    done = false;
-  }
-  else {
-    if (byte)
-      nbits += NQGetFls32(byte);
-    else if (nbits == 0)
-      nbits = 1; // Zero has 0 size
-    done = true;
-  }
-
-  ctx->size = (nbits + 7) / 8;
-  if (ctx->size <= sizeof(uint64_t)) {
-    ctx->value |= (uint64_t)(byte & 0x7f) << shift;
-  }
-
-  return done;
+  return true;
 }

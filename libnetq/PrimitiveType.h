@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2023-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -61,7 +61,7 @@ typedef enum NQPrimitiveType {
   kNQStringType,
 } NQPrimitiveType;
 
-NQ_EXPORT const char* NQPrimitiveTypeToSTRINGing(NQPrimitiveType type);
+NQ_EXPORT const char* NQPrimitiveTypeToCString(NQPrimitiveType type);
 NQ_EXPORT bool NQParsePrimitiveType(const char* str, NQPrimitiveType* result);
 
 #ifdef __cplusplus

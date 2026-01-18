@@ -1,14 +1,14 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2021-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
  */
 
-#ifndef _LIBNETQ_STREAMCALLBACKS_H
-#define _LIBNETQ_STREAMCALLBACKS_H
+#ifndef _LIBNETQ_IO_STREAMCALLBACKS_H
+#define _LIBNETQ_IO_STREAMCALLBACKS_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,4 +26,4 @@ struct NQStreamCallbacks {
 }
 #endif
 
-#endif /* _LIBNETQ_STREAMCALLBACKS_H */
+#endif /* _LIBNETQ_IO_STREAMCALLBACKS_H */

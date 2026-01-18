@@ -7,11 +7,11 @@
  * under the MIT License. See LICENSE file for details.
  */
 
-#ifndef _LIBNETQ_BYTEBUFFERWRITER_H
-#define _LIBNETQ_BYTEBUFFERWRITER_H
+#ifndef _LIBNETQ_IO_BYTEBUFFERWRITER_H
+#define _LIBNETQ_IO_BYTEBUFFERWRITER_H
 
-#include <libnetq/IOWriter.h>
 #include <libnetq/ByteBuffer.h>
+#include <libnetq/io/IOWriter.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,14 +20,10 @@ extern "C" {
 typedef struct NQByteBufferWriter NQByteBufferWriter;
 struct NQByteBufferWriter {
   NQIOWriter base;
-  union {
-    NQByteBuffer bufferOwn;
-    NQByteBuffer* bufferPtr;
-  };
+  NQByteBuffer buffer;
 };
 
 NQ_EXPORT void NQByteBufferWriter_init(NQByteBufferWriter*);
-NQ_EXPORT void NQByteBufferWriter_init2(NQByteBufferWriter*, NQByteBuffer* buffer);
 
 static inline void NQByteBufferWriter_finalize(NQByteBufferWriter* thiz)
 {
@@ -39,11 +35,11 @@ static inline int NQByteBufferWriter_write(NQByteBufferWriter* thiz, const void*
   return NQIOWriter_write(&thiz->base, data, size);
 }
 
-NQ_EXPORT const uint8_t* NQByteBufferWriter_data(const NQByteBufferWriter* thiz);
-NQ_EXPORT size_t NQByteBufferWriter_size(const NQByteBufferWriter* thiz);
+#define NQByteBufferWriter_data(thiz) NQByteBuffer_data(&(thiz)->buffer)
+#define NQByteBufferWriter_size(thiz) NQByteBuffer_size(&(thiz)->buffer)
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _LIBNETQ_BYTEBUFFERWRITER_H */
+#endif /* _LIBNETQ_IO_BYTEBUFFERWRITER_H */

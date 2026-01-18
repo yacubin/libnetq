@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -11,38 +11,45 @@
 #define _LIBNETQ_STRINGLIST_H
 
 #include <libnetq/Basic.h>
+#include <libnetq/List.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct NQStringList NQStringList;
-
-struct NQStringEntry {
-  struct NQStringEntry* next;
-  uint32_t length;
-  char characters[1];
-};
+typedef struct NQStringListIter NQStringListIter;
 
 struct NQStringList {
-  struct NQStringEntry* first;
-  struct NQStringEntry* last;
+  NQListHead impl;
+  size_t size;
 };
 
 static inline void NQStringList_init(NQStringList* thiz)
 {
-  thiz->first = NULL;
-  thiz->last = NULL;
+  NQListHead_init(&thiz->impl);
+  thiz->size = 0;
 }
 
 NQ_EXPORT void NQStringList_finalize(NQStringList*);
 NQ_EXPORT bool NQStringList_append(NQStringList*, const char* characters);
+NQ_EXPORT bool NQStringList_append2(NQStringList*, const char* characters, size_t length);
+NQ_EXPORT bool NQStringList_split(NQStringList*, const char* str, char separator);
 
-#define NQStringList_first(thiz) (thiz)->first
+NQ_EXPORT const struct NQStringListIter* NQStringList_firstIter(const NQStringList*);
+NQ_EXPORT const struct NQStringListIter* NQStringList_nextIter(const NQStringList*, const struct NQStringListIter* iter);
+
+NQ_EXPORT uint32_t NQStringListIter_length(const struct NQStringListIter*);
+NQ_EXPORT const char* NQStringListIter_characters(const struct NQStringListIter*);
 
 static inline bool NQStringList_isEmpty(const NQStringList* thiz)
 {
-  return (thiz->first == NULL);
+  return NQListHead_isEmpty(&thiz->impl);
+}
+
+static inline size_t NQStringList_size(const NQStringList* thiz)
+{
+  return thiz->size;
 }
 
 #ifdef __cplusplus

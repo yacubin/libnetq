@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -50,7 +50,7 @@ NQFileHandle NQFileOpen(const char* path, NQFileOpenMode mode)
 
 void NQFileClose(NQFileHandle handle)
 {
-  NQ_ASSERT(NQFileIsValid(handle));
+  NQ_ASSERT(NQIsFileValid(handle));
   close(handle);
 }
 
@@ -58,7 +58,7 @@ int NQFileRead(NQFileHandle handle, uint8_t* data, size_t size)
 {
   int bytesRead;
 
-  NQ_ASSERT(NQFileIsValid(handle));
+  NQ_ASSERT(NQIsFileValid(handle));
 
   if (NQ_INT_MAX < size)
     return -1;
@@ -76,7 +76,7 @@ int NQFileWrite(NQFileHandle handle, const uint8_t* data, size_t size)
 {
   int bytesWritten;
 
-  NQ_ASSERT(NQFileIsValid(handle));
+  NQ_ASSERT(NQIsFileValid(handle));
 
   if (NQ_INT_MAX < size)
     return -1;
@@ -121,9 +121,6 @@ long long NQFileGetSize(NQFileHandle handle)
 
   if (fstat(handle, &info))
     return false;
-
-  if (info.st_size > NQ_LLONG_MAX)
-    return -1;
 
   return info.st_size;
 }

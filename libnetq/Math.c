@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -261,47 +261,5 @@ int64_t nq_gcd64(int64_t a, int64_t b)
     return result * b;
   
   return result * a;
-}
-#endif
-
-#if !NQ_HAS_BUILTIN(__builtin_ctz)
-unsigned NQGetCtz32(uint32_t number)
-{
-#if defined(NQ_COMPILER_MSVC) && defined(NQ_CPU_64BIT)
-  unsigned long ret = 0;
-  if (_BitScanForward(&ret, number))
-    return ret;
-  return 32;
-#else
-  unsigned zeroCount = 0;
-  for (int i = 31; i >= 0; i--) {
-    if (!(number >> i))
-      zeroCount++;
-    else
-      break;
-  }
-  return zeroCount;
-#endif
-}
-#endif
-
-#if !NQ_HAS_BUILTIN(__builtin_clzll)
-unsigned NQGetCtz64(uint64_t x)
-{
-#if defined(NQ_COMPILER_MSVC) && defined(NQ_CPU_64BIT) && !defined(NQ_CPU_ARM)
-  unsigned long ret = 0;
-  if (_BitScanReverse64(&ret, x))
-    return 63 - ret;
-  return 64;
-#else
-  unsigned zeroCount = 0;
-  for (int i = 63; i >= 0; i--) {
-    if (!(x >> i))
-      zeroCount++;
-    else
-      break;
-  }
-  return zeroCount;
-#endif
 }
 #endif

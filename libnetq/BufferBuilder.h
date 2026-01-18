@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2021-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -10,13 +10,18 @@
 #ifndef _LIBNETQ_BUFFERBUILDER_H
 #define _LIBNETQ_BUFFERBUILDER_H
 
-#include <libnetq/Basic.h>
+#include <libnetq/Endian.h>
+#include <libnetq/String.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-NQ_EXPORT size_t NQGetBytes(const void* buffer, uint8_t* data, size_t size);
+static inline size_t NQGetBytes(const void* buffer, uint8_t* data, size_t size)
+{
+  memcpy(data, buffer, size);
+  return size;
+}
 
 NQ_EXPORT size_t NQGetInt8(const void* buffer, int8_t* value);
 NQ_EXPORT size_t NQGetUint8(const void* buffer, uint8_t* value);

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2021-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -10,15 +10,7 @@
 #include "config.h"
 #include "libnetq/BufferBuilder.h"
 
-#include <libnetq/CStrBase.h>
-#include <libnetq/Endian.h>
 #include <libnetq/Assert.h>
-
-size_t NQGetBytes(const void* buffer, uint8_t* data, size_t size)
-{
-  memcpy(data, buffer, size);
-  return size;
-}
 
 size_t NQGetInt8(const void* buffer, int8_t* value)
 {

@@ -7,8 +7,8 @@
  * under the MIT License. See LICENSE file for details.
  */
 
-#ifndef _LIBNETQ_IOWRITER_H
-#define _LIBNETQ_IOWRITER_H
+#ifndef _LIBNETQ_IO_IOWRITER_H
+#define _LIBNETQ_IO_IOWRITER_H
 
 #include <libnetq/Basic.h>
 
@@ -23,14 +23,19 @@ struct NQIOWriterCallbacks {
   int (*flush) (NQIOWriter*);
   void (*release) (NQIOWriter*);
 };
+
 struct NQIOWriter {
   const struct NQIOWriterCallbacks* callbacks;
 };
+
+NQ_EXPORT NQIOWriter* NQIOWriter_fromFile(const char* filename);
 
 static inline int NQIOWriter_write(NQIOWriter* thiz, const void* data, size_t size)
 {
   return thiz->callbacks->write(thiz, data, size);
 }
+
+NQ_EXPORT bool NQIOWriter_writeAll(NQIOWriter*, const void* data, size_t size);
 
 static inline int NQIOWriter_flush(NQIOWriter* thiz)
 {
@@ -49,4 +54,4 @@ NQ_EXPORT void NQIOWriter_releaseStub(NQIOWriter*);
 }
 #endif
 
-#endif /* _LIBNETQ_IOWRITER_H */
+#endif /* _LIBNETQ_IO_IOWRITER_H */

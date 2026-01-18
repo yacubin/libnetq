@@ -8,28 +8,28 @@
  */
 
 #include "config.h"
+#include "libnetq/crypto/MD5.h"
 
-#if WITH_OPENSSL
+#if USE_OPENSSL_MD5
 
-#include <libnetq/crypto/MD5.h>
 #include <libnetq/Assert.h>
 
-void NQMD5_init(NQMD5* thiz)
+bool NQMD5_init(NQMD5* thiz)
 {
   int rc = MD5_Init(thiz);
-  NQ_ASSERT_UNUSED(rc, rc == 1);
+  return rc == 1;
 }
 
-void NQMD5_addBytes(NQMD5* thiz, const uint8_t* data, size_t size)
+bool NQMD5_update(NQMD5* thiz, const uint8_t* data, size_t size)
 {
   int rc = MD5_Update(thiz, data, size);
-  NQ_ASSERT_UNUSED(rc, rc == 1);
+  return rc == 1;
 }
 
-void NQMD5_checksum(NQMD5* thiz, uint8_t* digest)
+bool NQMD5_final(NQMD5* thiz, uint8_t digest[NQMD5_DIGEST_SIZE])
 {
   int rc = MD5_Final(digest, thiz);
-  NQ_ASSERT_UNUSED(rc, rc == 1);
+  return rc == 1;
 }
 
-#endif /* WITH_OPENSSL */
+#endif /* USE_OPENSSL_MD5 */

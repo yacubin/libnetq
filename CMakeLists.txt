@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.5
+project(libnetq VERSION 1.0.6
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -12,6 +12,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(GNUInstallDirs)
 include(CheckIncludeFile)
+include(CheckIncludeFiles)
 include(CheckFunctionExists)
 
 macro (LNQ_OPTION_DEFINE _name _description _value)
@@ -30,9 +31,6 @@ endmacro ()
 
 LNQ_OPTION_DEFINE(LIBRARY_TYPE "Choose the library type: SHARED, STATIC, OBJECT" SHARED STATIC OBJECT)
 LNQ_FEATURE_DEFINE(USE_EXPORT "Enable symbol export as a shared library")
-
-option(LNQ_PUBLIC_GENERATED_DIR "Allow config.h to be populate in include directories" OFF)
-set(LNQ_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
 
 if (NOT LNQ_USE_EXPORT STREQUAL AUTO)
   set(NQ_USE_EXPORT ${LNQ_USE_EXPORT})
@@ -94,11 +92,28 @@ if (HAVE_COMBASEAPI_H)
   set(HAVE_OLE32 TRUE)
 endif ()
 if (LNQ_WITH_OLE32 OR HAVE_OLE32)
-  LNQ_FEATURE_DEFINE(WITH_OLE32 "Allow compilation with OLE32 library")
+  LNQ_FEATURE_DEFINE(WITH_OLE32 "Allow compilation with Ole32 library")
   if (NOT LNQ_WITH_OLE32 STREQUAL "AUTO")
     set(WITH_OLE32 ${LNQ_WITH_OLE32})
-  elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
+  elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED" OR WIN32)
     set(WITH_OLE32 ON)
+  endif ()
+endif ()
+
+set(HAVE_ADVAPI32 FALSE)
+set(WITH_ADVAPI32 OFF)
+if (WIN32)
+  check_include_files("windows.h;wincrypt.h" HAVE_WINCRYPT_H)
+endif ()
+if (HAVE_WINCRYPT_H)
+  set(HAVE_ADVAPI32 TRUE)
+endif ()
+if (LNQ_WITH_ADVAPI32 OR HAVE_ADVAPI32)
+  LNQ_FEATURE_DEFINE(WITH_ADVAPI32 "Allow compilation with Advapi32 library")
+  if (NOT LNQ_WITH_ADVAPI32 STREQUAL "AUTO")
+    set(WITH_ADVAPI32 ${LNQ_WITH_ADVAPI32})
+  elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED" OR WIN32)
+    set(WITH_ADVAPI32 ON)
   endif ()
 endif ()
 
@@ -338,6 +353,17 @@ set(libnetq_HEADERS
   libnetq/cpu/x86.h
   libnetq/cpu/z.h
 
+  libnetq/crypto/HMAC_SHA1.h
+
+  libnetq/io/ByteBufferChannel.h
+  libnetq/io/ByteBufferWriter.h
+  libnetq/io/DataReader.h
+  libnetq/io/FileWriter.h
+  libnetq/io/IOWriter.h
+  libnetq/io/ReadWrapper.h
+  libnetq/io/StreamCallbacks.h
+  libnetq/io/WriteWrapper.h
+
   libnetq/net/NetBufferQueue.h
 
   libnetq/web/HttpStatistics.h
@@ -347,6 +373,7 @@ set(libnetq_HEADERS
   libnetq/tls/CipherSuite.h
 
   libnetq/wasm/Opcodes.def
+  libnetq/wasm/Module.h
   libnetq/wasm/ModuleTypes.h
 
   libnetq/Abort.h
@@ -365,10 +392,10 @@ set(libnetq_HEADERS
   libnetq/Base16.h
   libnetq/Base64.h
   libnetq/Basic.h
+  libnetq/BitOps.h
   libnetq/BufferBuilder.h
   libnetq/BuildInfo.h
   libnetq/ByteBuffer.h
-  libnetq/ByteBufferWriter.h
   libnetq/ByteOrder.h
   libnetq/CoherentLooper.h
   libnetq/ColorSpace.h
@@ -407,7 +434,6 @@ set(libnetq_HEADERS
   libnetq/HttpVersion.h
   libnetq/Image.h
   libnetq/ImageBuilder.h
-  libnetq/IOWriter.h
   libnetq/JSONWriter.h
   libnetq/KeyboardEvent.h
   libnetq/KeyVal.h
@@ -449,7 +475,6 @@ set(libnetq_HEADERS
   libnetq/Socket.h
   libnetq/SocketHandle.h
   libnetq/Sprintf.h
-  libnetq/StreamCallbacks.h
   libnetq/String.h
   libnetq/StringList.h
   libnetq/StringPrint.h
@@ -470,6 +495,7 @@ set(libnetq_HEADERS
   libnetq/VA.h
   libnetq/Version.h
   libnetq/WakeOnLan.h
+  libnetq/WebSocketCalcAccept.h
   libnetq/WebSocketFrame.h
   libnetq/WebSocketTypes.h
   libnetq/Window.h
@@ -483,13 +509,38 @@ set(libnetq_SOURCES
   libnetq/asset/FileSystemAsset.c
   libnetq/asset/PlatformAsset.c
 
-  libnetq/crypto/openssl/MD5.h
-  libnetq/crypto/openssl/MD5.c
-  libnetq/crypto/openssl/SHA1.h
-  libnetq/crypto/openssl/SHA1.c
+  libnetq/checksum/CRC32Stub.h
+  libnetq/checksum/CRC32SysLinux.h
+  libnetq/checksum/CRC32SysLinux.c
+  libnetq/checksum/CRC32ZLib.h
+  libnetq/checksum/CRC32ZLib.c
+
+  libnetq/crypto/HMAC_SHA1.c
+  libnetq/crypto/MD5Advapi32.c
+  libnetq/crypto/MD5Advapi32.h
+  libnetq/crypto/MD5OpenSSL.c
+  libnetq/crypto/MD5OpenSSL.h
+  libnetq/crypto/MD5Stub.h
+  libnetq/crypto/MD5SysLinux.c
+  libnetq/crypto/MD5SysLinux.h
+  libnetq/crypto/SHA1Advapi32.c
+  libnetq/crypto/SHA1Advapi32.h
+  libnetq/crypto/SHA1OpenSSL.c
+  libnetq/crypto/SHA1OpenSSL.h
+  libnetq/crypto/SHA1Stub.h
+  libnetq/crypto/SHA1SysLinux.c
+  libnetq/crypto/SHA1SysLinux.h
+
+  libnetq/io/ByteBufferChannel.c
+  libnetq/io/ByteBufferWriter.c
+  libnetq/io/FileWriter.c
+  libnetq/io/IOWriter.c
+  libnetq/io/ReadWrapper.c
+  libnetq/io/WriteWrapper.c
 
   libnetq/net/NetBufferQueue.c
 
+  libnetq/wasm/Module.c
   libnetq/wasm/ModuleTypes.c
 
   libnetq/web/HttpStatistics.c
@@ -507,7 +558,6 @@ set(libnetq_SOURCES
   libnetq/BufferBuilder.c
   libnetq/BuildInfo.c
   libnetq/ByteBuffer.c
-  libnetq/ByteBufferWriter.c
   libnetq/CoherentLooper.c
   libnetq/CondPosix.c
   libnetq/CondSysLinux.c
@@ -540,7 +590,6 @@ set(libnetq_SOURCES
   libnetq/HttpMultiPartParser.c
   libnetq/Image.c
   libnetq/ImageBuilder.c
-  libnetq/IOWriter.c
   libnetq/JSONWriter.c
   libnetq/KeyVal.c
   libnetq/Leb128.c
@@ -601,10 +650,36 @@ set(libnetq_SOURCES
   libnetq/UUID.c
   libnetq/Version.c
   libnetq/WakeOnLan.c
+  libnetq/WebSocketCalcAccept.c
   libnetq/WebSocketFrame.c
   libnetq/Window.c
   libnetq/WindowManager.c
   libnetq/Zip.c
+  )
+
+set(libnetq_CMAKEFILES
+  cmake/FindAmiVideo.cmake
+  cmake/FindDBC.cmake
+  cmake/FindGIF.cmake
+  cmake/FindIFF.cmake
+  cmake/FindILBM.cmake
+  cmake/FindJansson.cmake
+  cmake/FindJBig.cmake
+  cmake/FindJBig2Enc.cmake
+  cmake/FindLeptonica.cmake
+  cmake/FindLibArchive.cmake
+  cmake/FindLibNetQ.cmake
+  cmake/FindLZ4.cmake
+  cmake/FindLZO.cmake
+  cmake/FindMHD.cmake
+  cmake/FindNanoSVG.cmake
+  cmake/FindOpenJP2.cmake
+  cmake/FindPCRE2.cmake
+  cmake/FindQuickJS.cmake
+  cmake/FindTidy.cmake
+  cmake/FindTIFF.cmake
+  cmake/FindWebP.cmake
+  cmake/FindZSTD.cmake
   )
 
 set(libnetq_DATAFILES
@@ -614,8 +689,8 @@ set(libnetq_DATAFILES
   )
 
 set(libnetq_INCLUDES
+  "${CMAKE_CURRENT_BINARY_DIR}/include"
   "${CMAKE_CURRENT_SOURCE_DIR}"
-  "${CMAKE_CURRENT_BINARY_DIR}"
   )
 
 set(libnetq_LIBRARIES
@@ -623,13 +698,6 @@ set(libnetq_LIBRARIES
   )
 
 set(libnetq_DEFINITIONS
-  )
-
-set(libnetq_GENERATED
-  "${LNQ_GENERATED_DIR}/config.h"
-  )
-
-set(libnetq_HEADERS2
   )
 
 set_source_files_properties(${libnetq_HEADERS} PROPERTIES HEADER_FILE_ONLY TRUE)
@@ -664,29 +732,53 @@ if (WITH_OLE32)
   list(APPEND libnetq_LIBRARIES ole32)
 endif ()
 
+if (WITH_ADVAPI32)
+  list(APPEND libnetq_LIBRARIES advapi32)
+endif ()
+
 if (WITH_OPENSSL)
-  configure_file(libnetq/crypto/openssl/MD5.h "${CMAKE_CURRENT_BINARY_DIR}/libnetq/crypto/MD5.h" COPYONLY)
-  configure_file(libnetq/crypto/openssl/SHA1.h "${CMAKE_CURRENT_BINARY_DIR}/libnetq/crypto/SHA1.h" COPYONLY)
-  list(APPEND libnetq_HEADERS2
-    "${CMAKE_CURRENT_BINARY_DIR}/libnetq/crypto/MD5.h"
-    "${CMAKE_CURRENT_BINARY_DIR}/libnetq/crypto/SHA1.h"
-    )
-  list(APPEND libnetq_HEADERS libnetq/WebSocketCalcAccept.h)
-  list(APPEND libnetq_SOURCES libnetq/WebSocketCalcAccept.c) # Depends SHA1
   list(APPEND libnetq_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
 endif ()
 
-configure_file(config.h.in "${LNQ_GENERATED_DIR}/config.h" @ONLY)
-
-if (LNQ_PUBLIC_GENERATED_DIR)
-  list(APPEND libnetq_INCLUDES "${LNQ_GENERATED_DIR}")
+if (WITH_OPENSSL)
+  set(USE_OPENSSL_MD5 1)
+  configure_file(libnetq/crypto/MD5OpenSSL.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
+elseif (WITH_ADVAPI32)
+  set(USE_ADVAPI32_MD5 1)
+  configure_file(libnetq/crypto/MD5Advapi32.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
+else ()
+  message("MD5 has no implementation")
+  configure_file(libnetq/crypto/MD5Stub.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
 endif ()
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/crypto")
 
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DATAFILES})
-source_group(TREE "${CMAKE_CURRENT_BINARY_DIR}" FILES ${libnetq_HEADERS2})
-add_library(libnetq ${LNQ_LIBRARY_TYPE} ${libnetq_GENERATED} ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_DATAFILES} ${libnetq_HEADERS2})
+if (WITH_OPENSSL)
+  set(USE_OPENSSL_SHA1 1)
+  configure_file(libnetq/crypto/SHA1OpenSSL.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
+elseif (WITH_ADVAPI32)
+  set(USE_ADVAPI32_SHA1 1)
+  configure_file(libnetq/crypto/SHA1Advapi32.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
+else ()
+  message("SHA1 has no implementation")
+  configure_file(libnetq/crypto/SHA1Stub.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
+endif ()
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/crypto")
+
+if (WITH_ZLIB)
+  set(USE_ZLIB_CRC32 1)
+  configure_file(libnetq/checksum/CRC32ZLib.h "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/checksum/CRC32.h" COPYONLY)
+else ()
+  message("CRC32 has no implementation")
+  configure_file(libnetq/checksum/CRC32Stub.h "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/checksum/CRC32.h" COPYONLY)
+endif ()
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/checksum/CRC32.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/checksum")
+
+configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/config.h" @ONLY)
+
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_CMAKEFILES} ${libnetq_DATAFILES})
+add_library(libnetq ${LNQ_LIBRARY_TYPE} "${CMAKE_CURRENT_BINARY_DIR}/generated/config.h" ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_CMAKEFILES} ${libnetq_DATAFILES})
 target_include_directories(libnetq PUBLIC "$<BUILD_INTERFACE:${libnetq_INCLUDES}>")
-target_include_directories(libnetq PRIVATE "${LNQ_GENERATED_DIR}")
+target_include_directories(libnetq PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_compile_definitions(libnetq PUBLIC "${libnetq_DEFINITIONS}")
 target_link_libraries(libnetq PUBLIC ${libnetq_LIBRARIES})
 set_target_properties(libnetq PROPERTIES PREFIX "")
@@ -702,11 +794,7 @@ foreach (_header ${libnetq_HEADERS})
   install(FILES "${_header}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${_directory}")
 endforeach ()
 
-foreach (_header ${libnetq_HEADERS2})
-  string(REPLACE "${CMAKE_CURRENT_BINARY_DIR}/" "" _header2 "${_header}")
-  get_filename_component(_directory "${_header2}" DIRECTORY)
-  install(FILES "${_header}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${_directory}")
-endforeach ()
+install(FILES ${libnetq_CMAKEFILES} DESTINATION "${CMAKE_INSTALL_DATADIR}/libnetq/cmake")
 
 install(TARGETS libnetq
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
@@ -718,4 +806,5 @@ message(STATUS "Build type . . . . . . . . . . . . . . . . . ${LNQ_LIBRARY_TYPE}
 message(STATUS "PThread  . . . . . . . . . . . . . . . . . . ${WITH_PTHREAD} (HAVE ${HAVE_PTHREAD})")
 message(STATUS "ZLib . . . . . . . . . . . . . . . . . . . . ${WITH_ZLIB} (HAVE ${HAVE_ZLIB})")
 message(STATUS "Ole32  . . . . . . . . . . . . . . . . . . . ${WITH_OLE32} (HAVE ${HAVE_OLE32})")
+message(STATUS "Advapi32 . . . . . . . . . . . . . . . . . . ${WITH_ADVAPI32} (HAVE ${HAVE_ADVAPI32})")
 message(STATUS "OpenSSL  . . . . . . . . . . . . . . . . . . ${WITH_OPENSSL} (HAVE ${HAVE_OPENSSL})")

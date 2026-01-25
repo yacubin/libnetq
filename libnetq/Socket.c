@@ -124,9 +124,8 @@ bool NQSocket_connect(NQSocket* thiz, const NQEndPoint* ep)
     return false;
   }
 
-  thiz->handle = NQSocketOpen(ep->family, NQ_SOCK_STREAM, 0);
-  if (thiz->handle == NQ_INVALID_SOCKET) {
-    thiz->errorCode = NQGetLastError();
+  thiz->errorCode = NQSocketOpen(ep->family, NQ_SOCK_STREAM, 0, &thiz->handle);
+  if (thiz->errorCode) {
     return false;
   }
 

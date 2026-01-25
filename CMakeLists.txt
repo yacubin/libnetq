@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.6
+project(libnetq VERSION 1.0.7
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -26,6 +26,24 @@ macro (LNQ_FEATURE_DEFINE _name _description)
   LNQ_OPTION_DEFINE(${_name} "${_description}" "AUTO" "ON" "OFF")
   if (NOT LNQ_${_name} MATCHES "AUTO|ON|OFF|FALSE|TRUE|0|1")
     message(FATAL_ERROR "Wrong '${LNQ_${_name}}' value for LNQ_${_name}")
+  endif ()
+endmacro ()
+
+macro (LNQ_ADD_LIBRARY _name)
+  string(TOUPPER ${_name} _library_upper_name)
+  set(HAVE_${_library_upper_name} FALSE)
+  set(WITH_${_library_upper_name} OFF)
+  find_package(${_name})
+  if (${_name}_FOUND)
+    set(HAVE_${_library_upper_name} TRUE)
+  endif ()
+  if (LNQ_WITH_${_library_upper_name} OR HAVE_${_library_upper_name})
+    LNQ_FEATURE_DEFINE(WITH_${_library_upper_name} "Allow compilation with ${_name} library")
+    if (NOT LNQ_WITH_${_library_upper_name} STREQUAL "AUTO")
+      set(WITH_${_library_upper_name} ${LNQ_WITH_${_library_upper_name}})
+    elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
+      set(WITH_${_library_upper_name} ON)
+    endif ()
   endif ()
 endmacro ()
 
@@ -66,25 +84,6 @@ if (HAVE_PTHREAD)
   endif ()
 endif ()
 
-set(HAVE_ZLIB FALSE)
-set(WITH_ZLIB OFF)
-find_package(ZLIB)
-if (ZLIB_FOUND)
-  set(HAVE_ZLIB TRUE)
-endif ()
-if (LNQ_WITH_ZLIB OR HAVE_ZLIB)
-  LNQ_FEATURE_DEFINE(WITH_ZLIB "Allow compilation with ZLIB library")
-  if (NOT LNQ_WITH_ZLIB STREQUAL "AUTO")
-    set(WITH_ZLIB ${LNQ_WITH_ZLIB})
-  elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
-    set(WITH_ZLIB ON)
-  endif ()
-endif ()
-if (WITH_ZLIB)
-  list(APPEND CMAKE_REQUIRED_INCLUDES "${ZLIB_INCLUDE_DIR}")
-  list(APPEND CMAKE_REQUIRED_LIBRARIES "${ZLIB_LIBRARY}")
-endif ()
-
 set(HAVE_OLE32 FALSE)
 set(WITH_OLE32 OFF)
 check_include_file(combaseapi.h HAVE_COMBASEAPI_H)
@@ -117,19 +116,14 @@ if (LNQ_WITH_ADVAPI32 OR HAVE_ADVAPI32)
   endif ()
 endif ()
 
-set(HAVE_OPENSSL FALSE)
-set(WITH_OPENSSL OFF)
-find_package(OpenSSL)
-if (OpenSSL_FOUND)
-  set(HAVE_OPENSSL TRUE)
-endif ()
-if (LNQ_WITH_OPENSSL OR HAVE_OPENSSL)
-  LNQ_FEATURE_DEFINE(WITH_OPENSSL "Allow compilation with OpenSSL library")
-  if (NOT LNQ_WITH_OPENSSL STREQUAL "AUTO")
-    set(WITH_OPENSSL ${LNQ_WITH_OPENSSL})
-  elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
-    set(WITH_OPENSSL ON)
-  endif ()
+LNQ_ADD_LIBRARY(ZLIB)
+LNQ_ADD_LIBRARY(OpenSSL)
+LNQ_ADD_LIBRARY(Jansson)
+LNQ_ADD_LIBRARY(CJSON)
+
+if (WITH_ZLIB)
+  list(APPEND CMAKE_REQUIRED_INCLUDES "${ZLIB_INCLUDE_DIR}")
+  list(APPEND CMAKE_REQUIRED_LIBRARIES "${ZLIB_LIBRARY}")
 endif ()
 
 check_include_file(stddef.h HAVE_STDDEF_H)
@@ -360,9 +354,14 @@ set(libnetq_HEADERS
   libnetq/io/DataReader.h
   libnetq/io/FileWriter.h
   libnetq/io/IOWriter.h
+  libnetq/io/NsVarWriter.h
   libnetq/io/ReadWrapper.h
   libnetq/io/StreamCallbacks.h
   libnetq/io/WriteWrapper.h
+
+  libnetq/json/JSON.h
+  libnetq/json/JSONTypes.h
+  libnetq/json/JSONWriter.h
 
   libnetq/net/NetBufferQueue.h
 
@@ -434,7 +433,6 @@ set(libnetq_HEADERS
   libnetq/HttpVersion.h
   libnetq/Image.h
   libnetq/ImageBuilder.h
-  libnetq/JSONWriter.h
   libnetq/KeyboardEvent.h
   libnetq/KeyVal.h
   libnetq/Library.h
@@ -509,6 +507,7 @@ set(libnetq_SOURCES
   libnetq/asset/FileSystemAsset.c
   libnetq/asset/PlatformAsset.c
 
+  libnetq/checksum/CRC32.h
   libnetq/checksum/CRC32Stub.h
   libnetq/checksum/CRC32SysLinux.h
   libnetq/checksum/CRC32SysLinux.c
@@ -516,6 +515,7 @@ set(libnetq_SOURCES
   libnetq/checksum/CRC32ZLib.c
 
   libnetq/crypto/HMAC_SHA1.c
+  libnetq/crypto/MD5.h
   libnetq/crypto/MD5Advapi32.c
   libnetq/crypto/MD5Advapi32.h
   libnetq/crypto/MD5OpenSSL.c
@@ -523,6 +523,7 @@ set(libnetq_SOURCES
   libnetq/crypto/MD5Stub.h
   libnetq/crypto/MD5SysLinux.c
   libnetq/crypto/MD5SysLinux.h
+  libnetq/crypto/SHA1.h
   libnetq/crypto/SHA1Advapi32.c
   libnetq/crypto/SHA1Advapi32.h
   libnetq/crypto/SHA1OpenSSL.c
@@ -535,8 +536,15 @@ set(libnetq_SOURCES
   libnetq/io/ByteBufferWriter.c
   libnetq/io/FileWriter.c
   libnetq/io/IOWriter.c
+  libnetq/io/NsVarWriter.c
   libnetq/io/ReadWrapper.c
   libnetq/io/WriteWrapper.c
+
+  libnetq/json/JSON.c
+  libnetq/json/JSONCJSON.c
+  libnetq/json/JSONJansson.c
+  libnetq/json/JSONStub.c
+  libnetq/json/JSONWriter.c
 
   libnetq/net/NetBufferQueue.c
 
@@ -590,7 +598,6 @@ set(libnetq_SOURCES
   libnetq/HttpMultiPartParser.c
   libnetq/Image.c
   libnetq/ImageBuilder.c
-  libnetq/JSONWriter.c
   libnetq/KeyVal.c
   libnetq/Leb128.c
   libnetq/Library.c
@@ -659,6 +666,7 @@ set(libnetq_SOURCES
 
 set(libnetq_CMAKEFILES
   cmake/FindAmiVideo.cmake
+  cmake/FindCJSON.cmake
   cmake/FindDBC.cmake
   cmake/FindGIF.cmake
   cmake/FindIFF.cmake
@@ -666,6 +674,7 @@ set(libnetq_CMAKEFILES
   cmake/FindJansson.cmake
   cmake/FindJBig.cmake
   cmake/FindJBig2Enc.cmake
+  cmake/FindJSONC.cmake
   cmake/FindLeptonica.cmake
   cmake/FindLibArchive.cmake
   cmake/FindLibNetQ.cmake
@@ -740,6 +749,14 @@ if (WITH_OPENSSL)
   list(APPEND libnetq_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
 endif ()
 
+if (WITH_JANSSON)
+  list(APPEND libnetq_LIBRARIES Jansson::Jansson)
+endif ()
+
+if (WITH_CJSON)
+  list(APPEND libnetq_LIBRARIES CJSON::CJSON)
+endif ()
+
 if (WITH_OPENSSL)
   set(USE_OPENSSL_MD5 1)
   configure_file(libnetq/crypto/MD5OpenSSL.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
@@ -747,7 +764,7 @@ elseif (WITH_ADVAPI32)
   set(USE_ADVAPI32_MD5 1)
   configure_file(libnetq/crypto/MD5Advapi32.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
 else ()
-  message("MD5 has no implementation")
+  message("!MD5 has no implementation")
   configure_file(libnetq/crypto/MD5Stub.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
 endif ()
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/crypto")
@@ -759,7 +776,7 @@ elseif (WITH_ADVAPI32)
   set(USE_ADVAPI32_SHA1 1)
   configure_file(libnetq/crypto/SHA1Advapi32.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
 else ()
-  message("SHA1 has no implementation")
+  message("!SHA1 has no implementation")
   configure_file(libnetq/crypto/SHA1Stub.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
 endif ()
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/crypto")
@@ -768,10 +785,18 @@ if (WITH_ZLIB)
   set(USE_ZLIB_CRC32 1)
   configure_file(libnetq/checksum/CRC32ZLib.h "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/checksum/CRC32.h" COPYONLY)
 else ()
-  message("CRC32 has no implementation")
+  message("!CRC32 has no implementation")
   configure_file(libnetq/checksum/CRC32Stub.h "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/checksum/CRC32.h" COPYONLY)
 endif ()
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/checksum/CRC32.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/checksum")
+
+if (WITH_JANSSON)
+  set(USE_JANSSON_JSON 1)
+elseif (WITH_CJSON)
+  set(USE_CJSON_JSON 1)
+else ()
+  message("!JSON has no implementation")
+endif ()
 
 configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/config.h" @ONLY)
 
@@ -808,3 +833,5 @@ message(STATUS "ZLib . . . . . . . . . . . . . . . . . . . . ${WITH_ZLIB} (HAVE 
 message(STATUS "Ole32  . . . . . . . . . . . . . . . . . . . ${WITH_OLE32} (HAVE ${HAVE_OLE32})")
 message(STATUS "Advapi32 . . . . . . . . . . . . . . . . . . ${WITH_ADVAPI32} (HAVE ${HAVE_ADVAPI32})")
 message(STATUS "OpenSSL  . . . . . . . . . . . . . . . . . . ${WITH_OPENSSL} (HAVE ${HAVE_OPENSSL})")
+message(STATUS "Jansson  . . . . . . . . . . . . . . . . . . ${WITH_JANSSON} (HAVE ${HAVE_JANSSON})")
+message(STATUS "cJSON  . . . . . . . . . . . . . . . . . . . ${WITH_CJSON} (HAVE ${HAVE_CJSON})")

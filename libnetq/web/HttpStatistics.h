@@ -10,7 +10,7 @@
 #ifndef _LIBNETQ_WEB_HTTPSTATISTICS_H
 #define _LIBNETQ_WEB_HTTPSTATISTICS_H
 
-#include <libnetq/JSONWriter.h>
+#include <libnetq/json/JSONWriter.h>
 
 #ifdef __cplusplus
 extern "C" {

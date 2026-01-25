@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2023-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -11,10 +11,10 @@
 #define NQ_LOG_TAG NQ_CLASS_NAME
 
 #include "config.h"
-#include "libnetq/JSONWriter.h"
+#include "libnetq/json/JSONWriter.h"
 
 #include <libnetq/CType.h>
-#include <libnetq/CStrBase.h>
+#include <libnetq/String.h>
 #include <libnetq/Sprintf.h>
 #include <libnetq/Assert.h>
 #include <libnetq/Log.h>
@@ -448,7 +448,7 @@ bool NQJSONWriter_writeChar(NQJSONWriter* thiz, char val)
   return false;
 }
 
-bool NQJSONWriter_writeCStr(NQJSONWriter* thiz, const char* val)
+bool NQJSONWriter_writeString(NQJSONWriter* thiz, const char* val)
 {
   if (!thiz->hasError) {
     if (writeString(thiz, val, kNoLength))
@@ -458,7 +458,7 @@ bool NQJSONWriter_writeCStr(NQJSONWriter* thiz, const char* val)
   return false;
 }
 
-bool NQJSONWriter_writeCStrWithLength(NQJSONWriter* thiz, const char* val, size_t len)
+bool NQJSONWriter_writeString2(NQJSONWriter* thiz, const char* val, size_t len)
 {
   if (len == kNoLength)
     return false;
@@ -632,7 +632,7 @@ bool NQJSONWriter_writeKeyChar(NQJSONWriter* thiz, const char* key, char val)
   return false;
 }
 
-bool NQJSONWriter_writeKeyCStr(NQJSONWriter* thiz, const char* key, const char* val)
+bool NQJSONWriter_writeKeyString(NQJSONWriter* thiz, const char* key, const char* val)
 {
   if (!thiz->hasError) {
     if (writeKey(thiz, key, kNoLength) && writeString(thiz, val, kNoLength))
@@ -642,7 +642,7 @@ bool NQJSONWriter_writeKeyCStr(NQJSONWriter* thiz, const char* key, const char* 
   return false;
 }
 
-bool NQJSONWriter_writeKeyCStrWithLength(NQJSONWriter* thiz, const char* key, const char* val, size_t len)
+bool NQJSONWriter_writeKeyString2(NQJSONWriter* thiz, const char* key, const char* val, size_t len)
 {
   if (len == kNoLength)
     return false;

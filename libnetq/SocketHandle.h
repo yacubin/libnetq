@@ -15,7 +15,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  
+
 #ifdef NQ_SYS_LINUX
 typedef int NQSocketHandle;
 #define NQ_INVALID_SOCKET (-1)
@@ -58,7 +58,7 @@ enum {
 
 #define NQSocketIsValid(handle) ((handle) != NQ_INVALID_SOCKET)
 
-NQ_EXPORT NQSocketHandle NQSocketOpen(int domain, int type, int protocol);
+NQ_EXPORT int NQSocketOpen(int domain, int type, int protocol, NQSocketHandle* result);
 NQ_EXPORT int NQSocketSend(NQSocketHandle handle, const uint8_t* buf, size_t len, int flags);
 NQ_EXPORT int NQSocketRecv(NQSocketHandle handle, uint8_t* buf, size_t len, int flags);
 NQ_EXPORT void NQSocketClose(NQSocketHandle handle);

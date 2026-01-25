@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -13,6 +13,8 @@
 #include <libnetq/UTF.h>
 #include <libnetq/CStrBase.h>
 #include <libnetq/Math.h>
+#include <libnetq/Malloc.h>
+#include <libnetq/Limits.h>
 #include <libnetq/Assert.h>
 
 #ifdef NQ_OS_WINDOWS
@@ -20,6 +22,65 @@
 #endif
 
 NQ_STATIC_ASSERT(sizeof(uint16_t) == sizeof(NQWChar), "Bad size of NQWChar");
+
+static inline char normalizeCharacter(char ch)
+{
+  return ch == NQ_WINPATH_DELIMITER ? NQ_PATH_DELIMITER : ch;
+}
+
+NQPath* NQPath_create(const char* path)
+{
+  size_t len = strlen(path);
+  if (len > NQ_UINT16_MAX)
+    return NULL;
+
+  NQPath* thiz = (NQPath*)NQMalloc(sizeof(*thiz) + len);
+  if (thiz == NULL)
+    return NULL;
+
+  thiz->length = len;
+  char* ptr = thiz->characters;
+  for (size_t i = 0; i < len; i++) {
+    *ptr++ = normalizeCharacter(path[i]);
+  }
+  *ptr++ = '\0';
+
+  return thiz;
+}
+
+NQPath* NQPath_fromJoin2(const char* path1, const char* path2)
+{
+  size_t len1 = strlen(path1);
+  size_t len2 = strlen(path2);
+  size_t length = len1 + 1 + len2;
+  if (length > NQ_UINT16_MAX || length < len1 || length < len2)
+    return NULL;
+
+  NQPath* thiz = (NQPath*)NQMalloc(sizeof(*thiz) + length);
+  if (thiz == NULL)
+    return NULL;
+
+  thiz->length = length;
+  char* ptr = thiz->characters;
+  for (size_t i = 0; i < len1; i++) {
+    *ptr++ = normalizeCharacter(path1[i]);
+  }
+
+  *ptr++ = NQ_PATH_DELIMITER;
+
+  for (size_t i = 0; i < len2; i++) {
+    *ptr++ = normalizeCharacter(path2[i]);
+  }
+
+  *ptr++ = '\0';
+
+  return thiz;
+}
+
+void NQPath_destroy(NQPath* thiz)
+{
+  NQFree(thiz);
+}
 
 size_t NQPathFrom(char* buffer, size_t n, const NQWChar* path)
 {

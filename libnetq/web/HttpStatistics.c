@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2023-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/web/HttpStatistics.h"
 
-#include <libnetq/CStrBase.h>
+#include <libnetq/String.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Hash.h>
@@ -156,10 +156,10 @@ bool NQHttpStatistics_writeTo(NQHttpStatistics* thiz, NQJSONWriter* writer)
       if (!NQJSONWriter_writeObjectBegin(writer))
         return false;
 
-      if (!NQJSONWriter_writeKeyCStr(writer, "url", curr->url))
+      if (!NQJSONWriter_writeKeyString(writer, "url", curr->url))
         return false;
 
-      if (!NQJSONWriter_writeKeyCStr(writer, "method", curr->method))
+      if (!NQJSONWriter_writeKeyString(writer, "method", curr->method))
         return false;
 
       if (!NQJSONWriter_writeKeyUint32(writer, "counter", curr->counter))

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2021-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -28,6 +28,9 @@ extern "C" {
 #define NQIsPrintable(c) (' ' <= (c) && (c) <= '~')
 #define NQToDigitValue(c) ((c) - '0')
 #define NQToHexValue(c) ((c) < 'A' ? (c) - '0' : ((c) - 'A' + 10) & 0xF)
+
+#define NQIsFirstIdentifier(c) (NQIsAlpha(c) || c == '_')
+#define NQIsNextIdentifier(c) (NQIsDigit(c) || NQIsFirstIdentifier(c))
 
 #ifdef __cplusplus
 }

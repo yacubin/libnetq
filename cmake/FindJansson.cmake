@@ -35,7 +35,7 @@ find_path(Jansson_INCLUDE_DIR
 
 find_library(Jansson_LIBRARY
   NAMES
-    jansson
+    jansson jansson_d
   PATHS
     ${PC_JANSSON_LIBDIR}
     ${PC_JANSSON_LIBRARIES_DIRS}
@@ -46,17 +46,17 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(Jansson DEFAULT_MSG Jansson_INCLUDE_DIR Jansso
 
 mark_as_advanced(Jansson_INCLUDE_DIR Jansson_LIBRARY)
 
-if(JANSSON_FOUND)
+if (JANSSON_FOUND)
   set(Jansson_FOUND TRUE)
-endif()
+endif ()
 
-if(Jansson_FOUND)
+if (Jansson_FOUND)
   set(Jansson_INCLUDE_DIRS ${Jansson_INCLUDE_DIR})
   set(Jansson_LIBRARIES ${Jansson_LIBRARY})
-endif()
+endif ()
 
 if (Jansson_FOUND AND NOT TARGET Jansson::Jansson)
-  add_library(Jansson::Jansson INTERFACE IMPORTED)
-  set_property(TARGET Jansson::Jansson PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${Jansson_INCLUDE_DIR}")
-  set_property(TARGET Jansson::Jansson PROPERTY INTERFACE_LINK_LIBRARIES "${Jansson_LIBRARY}")
+  add_library(Jansson::Jansson UNKNOWN IMPORTED)
+  set_target_properties(Jansson::Jansson PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${Jansson_INCLUDE_DIR}")
+  set_target_properties(Jansson::Jansson PROPERTIES IMPORTED_LOCATION "${Jansson_LIBRARY}")
 endif ()

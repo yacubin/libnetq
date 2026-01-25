@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -23,6 +23,11 @@
 #include <uapi/linux/in6.h> // sockaddr_in6
 
 typedef int socklen_t;
+
+static inline int NQSocketGetLastError(void)
+{
+  return errno;
+}
 
 #define NQSocketInit() ((void)0)
 #define NQSocketOpenImpl(domain, type, protocol) \
@@ -77,6 +82,11 @@ static void WSAStartupInit(void)
   NQ_ASSERT_UNUSED(status, !status);
 }
 
+static inline int NQSocketGetLastError(void)
+{
+  return WSAGetLastError();
+}
+
 #define NQSocketInit() (NQOnce_call(&s_once, &WSAStartupInit))
 
 #endif
@@ -88,6 +98,7 @@ static void WSAStartupInit(void)
 #include <netinet/tcp.h> // For: TCP_NODELAY
 #include <fcntl.h>       // For: fcntl
 #include <unistd.h>      // For: close
+#include <errno.h>
 
 #define NQ_SOCKET_ERROR (-1)
 
@@ -100,6 +111,11 @@ static void WSAStartupInit(void)
 #define _SD_RECV    SHUT_RD
 #define _SD_SEND    SHUT_WR
 #define _SD_BOTH    SHUT_RDWR
+
+static inline int NQSocketGetLastError(void)
+{
+  return errno;
+}
 
 #define NQSocketInit() ((void)0)
 
@@ -221,7 +237,7 @@ static socklen_t NQEndPoint_toInet(const NQEndPoint* thiz, struct sockaddr* addr
   return 0;
 }
 
-NQSocketHandle NQSocketOpen(int domain, int type, int protocol)
+int NQSocketOpen(int domain, int type, int protocol, NQSocketHandle* result)
 {
   NQSocketInit();
 
@@ -229,7 +245,12 @@ NQSocketHandle NQSocketOpen(int domain, int type, int protocol)
   type = toComposeType(type);
   protocol = toComposeProtocol(protocol);
 
-  return NQSocketOpenImpl(domain, type, protocol);
+  NQSocketHandle handle = NQSocketOpenImpl(domain, type, protocol);
+  if (handle == NQ_INVALID_SOCKET)
+    return -NQSocketGetLastError();
+
+  *result = handle;
+  return 0;
 }
 
 int NQSocketSend(NQSocketHandle handle, const uint8_t* buf, size_t len, int flags)
@@ -601,8 +622,8 @@ int NQSocketPair(int domain, int type, int protocol, NQSocketHandle sock[2])
   sock[0] = NQ_INVALID_SOCKET;
   sock[1] = NQ_INVALID_SOCKET;
 
-  listener = NQSocketOpen(domain, type, protocol);
-  if (NQ_INVALID_SOCKET == listener)
+  lastError = NQSocketOpen(domain, type, protocol, &listener);
+  if (lastError)
     return SOCKET_ERROR;
 
   // ignore errors coming out of this setsockopt.  This is because
@@ -624,8 +645,8 @@ int NQSocketPair(int domain, int type, int protocol, NQSocketHandle sock[2])
     if (listen(listener, 1) != 0)
       break;
 
-    sock[0] = NQSocketOpen(domain, type, protocol);
-    if (NQ_INVALID_SOCKET == sock[0])
+    lastError = NQSocketOpen(domain, type, protocol, &sock[0]);
+    if (lastError)
       break;
 
     if (NQSocketConnectImpl(sock[0], (struct sockaddr*)&address, sizeof(address)) != 0)

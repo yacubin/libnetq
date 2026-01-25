@@ -1,14 +1,14 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2023-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
  */
 
-#ifndef _LIBNETQ_JSONWRITER_H
-#define _LIBNETQ_JSONWRITER_H
+#ifndef _LIBNETQ_JSON_JSONWRITER_H
+#define _LIBNETQ_JSON_JSONWRITER_H
 
 #include <libnetq/Basic.h>
 
@@ -46,8 +46,8 @@ NQ_EXPORT bool NQJSONWriter_writeArrayEnd(NQJSONWriter*);
 
 NQ_EXPORT bool NQJSONWriter_writeNull(NQJSONWriter*);
 NQ_EXPORT bool NQJSONWriter_writeChar(NQJSONWriter*, char val);
-NQ_EXPORT bool NQJSONWriter_writeCStr(NQJSONWriter*, const char* val);
-NQ_EXPORT bool NQJSONWriter_writeCStrWithLength(NQJSONWriter*, const char* val, size_t len);
+NQ_EXPORT bool NQJSONWriter_writeString(NQJSONWriter*, const char* val);
+NQ_EXPORT bool NQJSONWriter_writeString2(NQJSONWriter*, const char* val, size_t len);
 NQ_EXPORT bool NQJSONWriter_writeInt64(NQJSONWriter*, int64_t val);
 NQ_EXPORT bool NQJSONWriter_writeInt32(NQJSONWriter*, int32_t val);
 NQ_EXPORT bool NQJSONWriter_writeInt16(NQJSONWriter*, int16_t val);
@@ -65,8 +65,8 @@ NQ_EXPORT bool NQJSONWriter_writeKeyObjectBegin(NQJSONWriter*, const char* key);
 NQ_EXPORT bool NQJSONWriter_writeKeyArrayBegin(NQJSONWriter*, const char* key);
 NQ_EXPORT bool NQJSONWriter_writeKeyNull(NQJSONWriter*, const char* key);
 NQ_EXPORT bool NQJSONWriter_writeKeyChar(NQJSONWriter*, const char* key, char val);
-NQ_EXPORT bool NQJSONWriter_writeKeyCStr(NQJSONWriter*, const char* key, const char* val);
-NQ_EXPORT bool NQJSONWriter_writeKeyCStrWithLength(NQJSONWriter*, const char* key, const char* val, size_t len);
+NQ_EXPORT bool NQJSONWriter_writeKeyString(NQJSONWriter*, const char* key, const char* val);
+NQ_EXPORT bool NQJSONWriter_writeKeyString2(NQJSONWriter*, const char* key, const char* val, size_t len);
 NQ_EXPORT bool NQJSONWriter_writeKeyInt64(NQJSONWriter*, const char* key, int64_t val);
 NQ_EXPORT bool NQJSONWriter_writeKeyInt32(NQJSONWriter*, const char* key, int32_t val);
 NQ_EXPORT bool NQJSONWriter_writeKeyInt16(NQJSONWriter*, const char* key, int16_t val);
@@ -83,4 +83,4 @@ NQ_EXPORT bool NQJSONWriter_writeKeyBool(NQJSONWriter*, const char* key, bool va
 }
 #endif
 
-#endif /* _LIBNETQ_JSONWRITER_H */
+#endif /* _LIBNETQ_JSON_JSONWRITER_H */

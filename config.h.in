@@ -19,6 +19,12 @@
 /* Define if you have OpenSSL */
 #cmakedefine01 WITH_OPENSSL
 
+/* Define if you have Jansson */
+#cmakedefine01 WITH_JANSSON
+
+/* Define if you have cJSON */
+#cmakedefine01 WITH_CJSON
+
 /* Define to 1 if you have the <stddef.h> header file. */
 #cmakedefine HAVE_STDDEF_H 1
 
@@ -123,6 +129,12 @@
 
 /* Use CRC32 implementation from the ZLib library */
 #cmakedefine01 USE_ZLIB_CRC32
+
+/* Use JSON implementation from the Jansson library */
+#cmakedefine01 USE_JANSSON_JSON
+
+/* Use JSON implementation from the cJSON library */
+#cmakedefine01 USE_CJSON_JSON
 
 /* Define to 2 if the system does not provide POSIX.1 features except with
 this defined. */

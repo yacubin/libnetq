@@ -11,6 +11,7 @@
 #define _LIBNETQ_STRING_H
 
 #include <libnetq/CStrBase.h>
+#include <libnetq/RefCount.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,16 +24,32 @@ struct NQStringParams {
 };
 
 typedef struct NQString NQString;
+struct NQString {
+  NQRefCount refCount;
+  uint32_t length;
+  uint8_t flags;
+  char characters[1];
+};
 
+NQ_EXPORT NQString* NQString_alloc(size_t length);
 NQ_EXPORT NQString* NQString_create(const char* characters);
-NQ_EXPORT NQString* NQString_createWithLength(const char* characters, size_t length);
+NQ_EXPORT NQString* NQString_create2(const char* characters, size_t length);
 NQ_EXPORT NQString* NQString_format(const char* format, ...) NQ_ATTRIBUTE_PRINTF(1, 2);
+NQ_EXPORT NQString* NQString_fromFile(const char* filename);
 NQ_EXPORT NQString* NQString_retain(NQString* s);
-NQ_EXPORT void NQString_destroy(NQString* s);
+NQ_EXPORT void NQString_release(NQString* s);
 
-NQ_EXPORT const char* NQString_characters(const NQString* s);
-NQ_EXPORT size_t NQString_length(const NQString* s);
-NQ_EXPORT bool NQString_isEmpty(const NQString* s);
+#define NQString_characters(thiz) (thiz)->characters
+
+static inline size_t NQString_length(const NQString* s)
+{
+  return s->length;
+}
+
+static inline bool NQString_isEmpty(const NQString* s)
+{
+  return s->length == 0;
+}
 
 #ifdef __cplusplus
 }

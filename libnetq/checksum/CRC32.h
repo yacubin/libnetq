@@ -12,12 +12,14 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_SYS_LINUX
-# include <libnetq/checksum/CRC32SysLinux.h>
-#elif USE_ZLIB_CRC32
-# include <libnetq/checksum/CRC32ZLib.h>
-#else
-# include <libnetq/checksum/CRC32Stub.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+NQ_EXPORT uint32_t NQCRC32Calc(uint32_t crc, const uint8_t* data, size_t size);
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* _LIBNETQ_CHECKSUM_CRC32_H */

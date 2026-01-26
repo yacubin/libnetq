@@ -137,30 +137,3 @@ bool NQFileSystem_exists(const char* path)
 
   return false;
 }
-
-NQUint8Array* NQFileSystem_loadBytes(const char* path)
-{
-  NQFileHandle handle = NQFileOpen(path, NQ_FOPEN_READ);
-  if (NQIsFileInvalid(handle)) {
-    NQ_LOGE("Can't open file %s", path);
-    return NULL;
-  }
-
-  long long size = NQFileGetSize(handle);
-  if (size > NQ_UINT32_MAX) {
-    NQ_LOGE("File %s is too big", path);
-    return NULL;
-  }
-
-  NQUint8Array* result = NQUint8Array_alloc((uint32_t)size);
-  if (result != NULL) {
-    int64_t n = NQFileReadn(handle, NQUint8Array_data(result), (int64_t)size);
-    if (n != (int64_t)size){
-      NQUint8Array_destroy(result);
-      result = NULL;
-    }
-  }
-
-  NQFileClose(handle);
-  return result;
-}

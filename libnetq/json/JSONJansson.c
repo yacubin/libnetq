@@ -24,7 +24,13 @@ const char* NQJSON_package(void)
 
 const char* NQJSON_version(void)
 {
-  return jansson_version_str();
+  return JANSSON_VERSION;
+}
+
+NQJSON* NQJSON_fromFile(const char* filename)
+{
+  json_error_t error;
+  return (NQJSON*)json_load_file(filename, 0, &error);
 }
 
 NQJSON* NQJSON_parse(const char* text)

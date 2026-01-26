@@ -26,7 +26,7 @@ typedef int socklen_t;
 
 static inline int NQSocketGetLastError(void)
 {
-  return errno;
+  return 0;
 }
 
 #define NQSocketInit() ((void)0)

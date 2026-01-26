@@ -16,6 +16,7 @@
 #if USE_CJSON_JSON
 
 #include <libnetq/String.h>
+
 #include <cjson/cJSON.h>
 
 const char* NQJSON_package(void)
@@ -26,6 +27,31 @@ const char* NQJSON_package(void)
 const char* NQJSON_version(void)
 {
   return cJSON_Version();
+}
+
+NQJSON* NQJSON_fromFile(const char* filename)
+{
+  NQString* text = NQString_fromFile(filename);
+  if (text == NULL)
+    return NULL;
+  NQJSON* json = (NQJSON*)cJSON_ParseWithLength(NQString_characters(text), NQString_length(text));
+  NQString_release(text);
+  return json;
+}
+
+NQJSON* NQJSON_parse(const char* text)
+{
+  return (NQJSON*)cJSON_Parse(text);
+}
+
+NQJSON* NQJSON_parse2(const char* text, size_t length)
+{
+  return (NQJSON*)cJSON_ParseWithLength(text, length);
+}
+
+NQJSON* NQJSON_clone(NQJSON* json, bool deep)
+{
+  return (NQJSON*)cJSON_Duplicate((cJSON*)json, deep); // FIXME
 }
 
 NQJSON* NQJSON_createNull(void)
@@ -204,21 +230,6 @@ const char* NQJSON_objectIterKey(NQJSON_ObjectIter* iter)
 NQJSON* NQJSON_objectIterValue(NQJSON_ObjectIter* iter)
 {
   return (NQJSON*)iter;
-}
-
-NQJSON* NQJSON_parse(const char* text)
-{
-  return (NQJSON*)cJSON_Parse(text);
-}
-
-NQJSON* NQJSON_parse2(const char* text, size_t length)
-{
-  return (NQJSON*)cJSON_ParseWithLength(text, length);
-}
-
-NQJSON* NQJSON_clone(NQJSON* json, bool deep)
-{
-  return (NQJSON*)cJSON_Duplicate((cJSON*)json, deep); // FIXME
 }
 
 void NQJSON_release(NQJSON* json)

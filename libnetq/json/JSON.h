@@ -21,6 +21,7 @@ typedef struct NQJSON NQJSON;
 NQ_EXPORT const char* NQJSON_package(void);
 NQ_EXPORT const char* NQJSON_version(void);
 
+NQ_EXPORT NQJSON* NQJSON_fromFile(const char* filename);
 NQ_EXPORT NQJSON* NQJSON_parse(const char* text);
 NQ_EXPORT NQJSON* NQJSON_parse2(const char* text, size_t length);
 NQ_EXPORT NQJSON* NQJSON_clone(NQJSON*, bool deep);

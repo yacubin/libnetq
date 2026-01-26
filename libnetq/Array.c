@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -13,30 +13,18 @@
 #include "config.h"
 #include "libnetq/Array.h"
 
-#include <libnetq/CStrBase.h>
+#include <libnetq/String.h>
 #include <libnetq/ObjectClass.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
+#include <libnetq/FileHandle.h>
+#include <libnetq/Log.h>
 
-extern const NQObjectClass __NQUint8ArrayClass;
-
-struct NQUint8Array {
-  const NQObjectClass* class;
-  uint32_t size;
-  uint8_t data[1];
-};
-
-static NQUint8Array s_zeroUint8Array = { &__NQUint8ArrayClass, 0, {0} };
-
-static void NQUint8Array_initWithSize(NQUint8Array* array, uint32_t size)
-{
-  array->class = &__NQUint8ArrayClass;
-  array->size = size;
-}
+static NQUint8Array s_zeroArray = { 0, {0} };
 
 static void NQUint8Array_init(NQUint8Array* array, const uint8_t* data, uint32_t size)
 {
-  NQUint8Array_initWithSize(array, size);
+  array->size = size;
   memcpy(array->data, data, size);
 }
 
@@ -46,13 +34,13 @@ NQUint8Array* NQUint8Array_alloc(size_t size)
     return NULL;
 
   if (size == 0)
-    return &s_zeroUint8Array;
+    return &s_zeroArray;
 
   NQUint8Array* array = (NQUint8Array*)NQMalloc(sizeof(NQUint8Array) + size - 1);
   if (array == NULL)
     return NULL;
 
-  NQUint8Array_initWithSize(array, (uint32_t)size);
+  array->size = (uint32_t)size;
   return array;
 }
 
@@ -68,7 +56,7 @@ NQUint8Array* NQUint8Array_create(const uint8_t* data, size_t size)
 
 void NQUint8Array_destroy(NQUint8Array* array)
 {
-  if (array == &s_zeroUint8Array)
+  if (array == &s_zeroArray)
     return;
   
   NQFree((void*)array);
@@ -76,8 +64,8 @@ void NQUint8Array_destroy(NQUint8Array* array)
 
 NQUint8Array* NQUint8Array_copy(const NQUint8Array* array)
 {
-  if (array == &s_zeroUint8Array)
-    return &s_zeroUint8Array;
+  if (array == &s_zeroArray)
+    return &s_zeroArray;
 
   NQUint8Array* newArray = (NQUint8Array*)NQMalloc(sizeof(NQUint8Array) + array->size - 1);
   if (newArray == NULL)
@@ -87,24 +75,29 @@ NQUint8Array* NQUint8Array_copy(const NQUint8Array* array)
   return newArray;
 }
 
-uint8_t* NQUint8Array_data(NQUint8Array* array)
+NQUint8Array* NQUint8Array_fromFile(const char* filename)
 {
-  return array->data;
-}
+  NQFileHandle handle = NQFileOpen(filename, NQ_FOPEN_READ);
+  if (NQIsFileInvalid(handle)) {
+    NQ_LOGE("Can't open file %s", filename);
+    return NULL;
+  }
 
-const uint8_t* NQUint8Array_cdata(const NQUint8Array* array)
-{
-  return array->data;
-}
+  long long size = NQFileGetSize(handle);
+  if (size > NQ_UINT32_MAX) {
+    NQ_LOGE("File %s is too big", filename);
+    return NULL;
+  }
 
-size_t NQUint8Array_size(const NQUint8Array* array)
-{
-  return array->size;
-}
+  NQUint8Array* thiz = NQUint8Array_alloc((uint32_t)size);
+  if (thiz != NULL) {
+    int64_t n = NQFileReadn(handle, NQUint8Array_data(thiz), (int64_t)size);
+    if (n != (int64_t)size){
+      NQUint8Array_destroy(thiz);
+      thiz = NULL;
+    }
+  }
 
-const NQObjectClass __NQUint8ArrayClass = {
-  NQUint8ArrayObjectType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQUint8Array_destroy,
-};
+  NQFileClose(handle);
+  return thiz;
+}

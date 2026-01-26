@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -10,24 +10,8 @@
 #ifndef _LIBNETQ_COMPILER_H
 #define _LIBNETQ_COMPILER_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define NQ_VERSION_DEC(major, minor, patch) (major * 10000 + minor * 100 + patch)
 #define NQ_VERSION_HEX(major, minor, patch) (major * 0x10000 + minor * 0x100 + patch)
-
-#if defined(__has_attribute)
-#define NQ_HAS_ATTRIBUTE(x) __has_attribute(x)
-#else
-#define NQ_HAS_ATTRIBUTE(x) 0
-#endif
-
-#if defined(__has_builtin)
-#define NQ_HAS_BUILTIN(x) __has_builtin(x)
-#else
-#define NQ_HAS_BUILTIN(x) 0
-#endif
 
 #if defined(__GNUC__)
 #define NQ_COMPILER_GCC 1
@@ -55,6 +39,27 @@ extern "C" {
 
 #if defined(_MSC_VER)
 #define NQ_COMPILER_MSVC 1
+#endif
+
+#if defined(__has_attribute)
+#define NQ_HAS_ATTRIBUTE(x) __has_attribute(x)
+#else
+#define NQ_HAS_ATTRIBUTE(x) 0
+#define __has_attribute(x) 0
+#endif
+
+#if defined(__has_builtin)
+#define NQ_HAS_BUILTIN(x) __has_builtin(x)
+#else
+#define NQ_HAS_BUILTIN(x) 0
+#define __has_builtin(x) 0
+#endif
+
+#if defined(__has_include)
+#define NQ_HAS_INCLUDE(x) __has_include(x)
+#else
+#define NQ_HAS_INCLUDE(x) 0
+#define __has_include(x) 0
 #endif
 
 #if !defined(NQ_LIKELY) && defined(NQ_COMPILER_GCC)
@@ -166,6 +171,10 @@ extern "C" {
 #define NQ_ATTRIBUTE_WPRINTF(formatIndex, argumentsIndex)
 #endif
 
+#if defined(__SSE__) || defined(__SSE2__) || defined(NQ_COMPILER_MSVC)
+#define NQ_HAS_COMPILER_SSE
+#endif
+
 #define NQ_FILE __FILE__
 #define NQ_LINE __LINE__
 #define NQ_DATE __DATE__
@@ -189,14 +198,6 @@ extern "C" {
 
 #ifdef __cplusplus
 #define NQ_USE_CPP 1
-#endif
-
-#if !defined(__has_include) && defined(NQ_COMPILER_MSVC)
-#define __has_include(path) 0
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif /* _LIBNETQ_COMPILER_H */

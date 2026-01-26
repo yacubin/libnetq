@@ -686,6 +686,13 @@ bool NQWasmModule_writeTo(const NQWasmModule* thiz, NQWasmWriteCallback write, v
   return wasmModuleWriteTo(thiz, &writer);
 }
 
+void NQWasmModule_init(NQWasmModule* thiz)
+{
+  thiz->header.magic = NQ_WASM_MAGIC;
+  thiz->header.version = NQ_WASM_VERSION;
+  NQListHead_init(&thiz->sectionList);
+}
+
 NQWasmModule* NQWasmModule_fromMemory(const void* data, size_t size)
 {
   NQDataReader reader;

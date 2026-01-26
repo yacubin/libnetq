@@ -10,13 +10,11 @@
 #include "config.h"
 #include "libnetq/checksum/CRC32.h"
 
-#if defined(NQ_SYS_LINUX)
-
-#include <linux/crc32.h>
+#if !(defined(NQ_SYS_LINUX) || USE_ZLIB_CRC32)
 
 uint32_t NQCRC32Calc(uint32_t crc, const uint8_t* data, size_t size)
 {
-  return crc32(crc, data, size);
+  return 0;
 }
 
-#endif /* NQ_SYS_LINUX */
+#endif

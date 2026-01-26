@@ -33,7 +33,6 @@ void NQNsVarWriter_init(NQNsVarWriter* thiz, const struct NQNsVarWriterEntry* en
 
 int NQNsVarWriter_write(NQNsVarWriter* thiz, const void* data, size_t size)
 {
-  int ret;
   const char* ptr = (const char*)data;
   const char* end = ptr + size;
   const char* start = (thiz->state == kEnvInitState) ? ptr : NULL;

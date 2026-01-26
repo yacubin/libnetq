@@ -13,20 +13,13 @@
 #include "config.h"
 #include "libnetq/String.h"
 
-#include <libnetq/RefCount.h>
 #include <libnetq/Sprintf.h>
 #include <libnetq/Compiler.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Assert.h>
+#include <libnetq/FileHandle.h>
 #include <libnetq/Log.h>
-
-struct NQString {
-  NQRefCount refCount;
-  uint32_t length;
-  uint8_t flags;
-  uint8_t characters[1];
-};
 
 #define NQ_STRING_REF_COUNT_STATIC 0x80000000
 
@@ -34,7 +27,7 @@ static NQString s_emptyStringStatic = {
   { NQ_STRING_REF_COUNT_STATIC }, 0, 0, { '\0' },
 };
 
-static void NQString_init(NQString* s, size_t length)
+static inline void NQString_init(NQString* s, size_t length)
 {
   NQ_ASSERT(length < NQ_UINT32_MAX);
   NQRefCount_init(&s->refCount);
@@ -42,31 +35,38 @@ static void NQString_init(NQString* s, size_t length)
   s->flags = 0;
 }
 
-#define NQString_alloc(length) ((NQString*)NQMalloc(sizeof(NQString) + length))
-#define NQString_free(s) (NQFree((void*)s))
-
-NQString* NQString_create(const char* characters)
+NQString* NQString_alloc(size_t length)
 {
-  size_t length = strlen(characters);
-  return NQString_createWithLength(characters, length);
-}
-
-NQString* NQString_createWithLength(const char* characters, size_t length)
-{
-  if (NQ_UINT32_MAX <= length) {
+  if (NQ_UINT32_MAX < length) {
     NQ_LOGE("Not support large string");
     return NULL;
   }
 
-  NQString* s = NQString_alloc(length);
-  if (s == NULL)
+  NQString* thiz = (NQString*)NQMalloc(sizeof(NQString) + length);
+  NQString_init(thiz, length);
+  return thiz;
+}
+
+NQString* NQString_create(const char* characters)
+{
+  size_t length = strlen(characters);
+  NQString* thiz = NQString_alloc(length);
+  if (thiz == NULL)
     return NULL;
 
-  NQString_init(s, length);
-  memcpy(s->characters, characters, length);
-  s->characters[length] = '\0';
+  memcpy(thiz->characters, characters, length + 1);
+  return thiz;
+}
 
-  return s;
+NQString* NQString_create2(const char* characters, size_t length)
+{
+  NQString* thiz = NQString_alloc(length);
+  if (thiz == NULL)
+    return NULL;
+
+  memcpy(thiz->characters, characters, length);
+  thiz->characters[length] = '\0';
+  return thiz;
 }
 
 NQString* NQString_format(const char* format, ...)
@@ -109,22 +109,36 @@ NQString* NQString_retain(NQString* s)
   return s;
 }
 
-void NQString_destroy(NQString* s)
+void NQString_release(NQString* s)
 {
-  NQRefCount_unref(&s->refCount, NQString_free, s);
+  NQRefCount_unref(&s->refCount, NQFree, s);
 }
 
-const char* NQString_characters(const NQString* s)
+NQString* NQString_fromFile(const char* filename)
 {
-  return (const char*)s->characters;
-}
+  NQFileHandle handle = NQFileOpen(filename, NQ_FOPEN_READ);
+  if (NQIsFileInvalid(handle)) {
+    NQ_LOGE("Can't open file %s", filename);
+    return NULL;
+  }
 
-size_t NQString_length(const NQString* s)
-{
-  return s->length;
-}
+  long long size = NQFileGetSize(handle);
+  if (size > NQ_UINT32_MAX) {
+    NQ_LOGE("File %s is too big", filename);
+    return NULL;
+  }
 
-bool NQString_isEmpty(const NQString* s)
-{
-  return s->length == 0;
+  NQString* thiz = NQString_alloc((uint32_t)size);
+  if (thiz != NULL) {
+    int64_t n = NQFileReadn(handle, (uint8_t*)NQString_characters(thiz), (int64_t)size);
+    if (n == (int64_t)size)
+      thiz->characters[size] = '\0';
+    else {
+      NQString_release(thiz);
+      thiz = NULL;
+    }
+  }
+
+  NQFileClose(handle);
+  return thiz;
 }

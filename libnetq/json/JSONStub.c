@@ -25,6 +25,12 @@ const char* NQJSON_version(void)
   return NULL;
 }
 
+NQJSON* NQJSON_fromFile(const char* filename)
+{
+  NQ_UNUSED_PARAM(filename);
+  return NULL;
+}
+
 NQJSON* NQJSON_parse(const char* text)
 {
   NQ_UNUSED_PARAM(text);

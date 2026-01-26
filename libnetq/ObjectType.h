@@ -20,7 +20,6 @@ enum NQObjectType {
   NQDescSetObjectType = 1002,
   NQLogCircularObjectType = 1004,
   NQHexViewerObjectType = 1005,
-  NQUint8ArrayObjectType = 1006,
   NQAssetSystemObjectType = 1009,
   NQSocketObjectType = 1010,
   NQLooperSourceObjectType = 1014,

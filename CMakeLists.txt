@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.7
+project(libnetq VERSION 1.0.8
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -323,6 +323,8 @@ set(libnetq_HEADERS
   libnetq/asset/FileSystemAsset.h
   libnetq/asset/PlatformAsset.h
 
+  libnetq/checksum/CRC32.h
+
   libnetq/cpu/alpha.h
   libnetq/cpu/amd64.h
   libnetq/cpu/arm.h
@@ -507,11 +509,8 @@ set(libnetq_SOURCES
   libnetq/asset/FileSystemAsset.c
   libnetq/asset/PlatformAsset.c
 
-  libnetq/checksum/CRC32.h
-  libnetq/checksum/CRC32Stub.h
-  libnetq/checksum/CRC32SysLinux.h
+  libnetq/checksum/CRC32Stub.c
   libnetq/checksum/CRC32SysLinux.c
-  libnetq/checksum/CRC32ZLib.h
   libnetq/checksum/CRC32ZLib.c
 
   libnetq/crypto/HMAC_SHA1.c
@@ -764,7 +763,7 @@ elseif (WITH_ADVAPI32)
   set(USE_ADVAPI32_MD5 1)
   configure_file(libnetq/crypto/MD5Advapi32.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
 else ()
-  message("!MD5 has no implementation")
+  message("! MD5 has no implementation")
   configure_file(libnetq/crypto/MD5Stub.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
 endif ()
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/crypto")
@@ -776,26 +775,23 @@ elseif (WITH_ADVAPI32)
   set(USE_ADVAPI32_SHA1 1)
   configure_file(libnetq/crypto/SHA1Advapi32.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
 else ()
-  message("!SHA1 has no implementation")
+  message("! SHA1 has no implementation")
   configure_file(libnetq/crypto/SHA1Stub.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
 endif ()
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/crypto")
 
 if (WITH_ZLIB)
   set(USE_ZLIB_CRC32 1)
-  configure_file(libnetq/checksum/CRC32ZLib.h "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/checksum/CRC32.h" COPYONLY)
 else ()
-  message("!CRC32 has no implementation")
-  configure_file(libnetq/checksum/CRC32Stub.h "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/checksum/CRC32.h" COPYONLY)
+  message("! CRC32 has no implementation")
 endif ()
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/checksum/CRC32.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/checksum")
 
 if (WITH_JANSSON)
   set(USE_JANSSON_JSON 1)
 elseif (WITH_CJSON)
   set(USE_CJSON_JSON 1)
 else ()
-  message("!JSON has no implementation")
+  message("! JSON has no implementation")
 endif ()
 
 configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/config.h" @ONLY)
@@ -806,9 +802,8 @@ target_include_directories(libnetq PUBLIC "$<BUILD_INTERFACE:${libnetq_INCLUDES}
 target_include_directories(libnetq PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
 target_compile_definitions(libnetq PUBLIC "${libnetq_DEFINITIONS}")
 target_link_libraries(libnetq PUBLIC ${libnetq_LIBRARIES})
-set_target_properties(libnetq PROPERTIES PREFIX "")
-set_target_properties(libnetq PROPERTIES OUTPUT_NAME "${libnetq_BUILD_NAME}")
 set_target_properties(libnetq PROPERTIES LINKER_LANGUAGE "C")
+set_target_properties(libnetq PROPERTIES PREFIX "" IMPORT_PREFIX "")
 set_target_properties(libnetq PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR})
 set_target_properties(libnetq PROPERTIES POSITION_INDEPENDENT_CODE ON)
 

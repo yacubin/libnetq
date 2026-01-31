@@ -26,9 +26,9 @@ if (NOT TARGET NanoSVG::nanosvg)
     NanoSVG_nanosvg_LIBRARY
     )
 
-  add_library(NanoSVG::nanosvg INTERFACE IMPORTED)
-  set_property(TARGET NanoSVG::nanosvg PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${NanoSVG_nanosvg_INCLUDE_DIR}")
-  set_property(TARGET NanoSVG::nanosvg PROPERTY INTERFACE_LINK_LIBRARIES "${NanoSVG_nanosvg_LIBRARY}")
+  add_library(NanoSVG::nanosvg UNKNOWN IMPORTED)
+  set_target_properties(NanoSVG::nanosvg PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${NanoSVG_nanosvg_INCLUDE_DIR}")
+  set_target_properties(NanoSVG::nanosvg PROPERTIES IMPORTED_LOCATION "${NanoSVG_nanosvg_LIBRARY}")
 
   list(APPEND NanoSVG_INCLUDE_DIRS "${NanoSVG_nanosvg_INCLUDE_DIR}")
   list(APPEND NanoSVG_LIBRARIES "${NanoSVG_nanosvg_LIBRARY}")
@@ -40,16 +40,19 @@ if (NOT TARGET NanoSVG::nanosvgrast)
     NAMES nanosvgrast.h
     PATH_SUFFIXES nanosvg
     )
+
   find_library(NanoSVG_nanosvgrast_LIBRARY
     NAMES nanosvgrast
     )
+
   mark_as_advanced(
     NanoSVG_nanosvgrast_INCLUDE_DIR
     NanoSVG_nanosvgrast_LIBRARY
     )
-  add_library(NanoSVG::nanosvgrast INTERFACE IMPORTED)
-  set_property(TARGET NanoSVG::nanosvgrast PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${NanoSVG_nanosvgrast_INCLUDE_DIR}")
-  set_property(TARGET NanoSVG::nanosvgrast PROPERTY INTERFACE_LINK_LIBRARIES "${NanoSVG_nanosvgrast_LIBRARY}")
+
+  add_library(NanoSVG::nanosvgrast UNKNOWN IMPORTED)
+  set_target_properties(NanoSVG::nanosvgrast PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${NanoSVG_nanosvgrast_INCLUDE_DIR}")
+  set_target_properties(NanoSVG::nanosvgrast PROPERTIES IMPORTED_LOCATION "${NanoSVG_nanosvgrast_LIBRARY}")
 
   list(APPEND NanoSVG_INCLUDE_DIRS "${NanoSVG_nanosvgrast_INCLUDE_DIR}")
   list(APPEND NanoSVG_LIBRARIES "${NanoSVG_nanosvgrast_LIBRARY}")
@@ -59,11 +62,10 @@ endif ()
 if (NanoSVG_PACKAGE_HANDLE_STANDARD_ARGS)
   include(FindPackageHandleStandardArgs)
   FIND_PACKAGE_HANDLE_STANDARD_ARGS(NanoSVG DEFAULT_MSG ${NanoSVG_PACKAGE_HANDLE_STANDARD_ARGS})
+  if (NANOSVG_FOUND)
+    set(NanoSVG_FOUND TRUE)
+  endif()
 endif ()
-
-if (NANOSVG_FOUND OR NanoSVG_FOUND)
-  set(NanoSVG_FOUND TRUE)
-endif()
 
 if (NanoSVG_FOUND AND NOT TARGET NanoSVG::NanoSVG)
   add_library(NanoSVG::NanoSVG INTERFACE IMPORTED)

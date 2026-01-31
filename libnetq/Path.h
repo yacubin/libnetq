@@ -27,14 +27,17 @@ struct NQPath {
   char characters[1];
 };
 
-#define NQPath_characters(thiz) (thiz)->characters
-#define NQPath_length(thiz) (thiz)->length
-
 NQ_EXPORT NQPath* NQPath_create(const char* path);
 NQ_EXPORT NQPath* NQPath_fromJoin2(const char* path1, const char* path2);
 NQ_EXPORT void NQPath_destroy(NQPath*);
 
-typedef struct NQPathBuilder NQPathBuilder; // TODO
+#define NQPath_characters(thiz) (thiz)->characters
+static inline size_t NQPath_length(NQPath* thiz)
+{
+  return thiz->length;
+}
+
+typedef struct NQPathBuilder NQPathBuilder;
 struct NQPathBuilder {
   char* characters;
   uint16_t length;
@@ -42,7 +45,23 @@ struct NQPathBuilder {
   char buffer[80];
 };
 
-// NQPathAppendComponent
+NQ_EXPORT void NQPathBuilder_init(NQPathBuilder*);
+NQ_EXPORT bool NQPathBuilder_initJoin1(NQPathBuilder*, const char* path1);
+NQ_EXPORT bool NQPathBuilder_initJoin2(NQPathBuilder*, const char* path1, const char* path2);
+NQ_EXPORT bool NQPathBuilder_initJoin3(NQPathBuilder*, const char* path1, const char* path2, const char* path3);
+NQ_EXPORT void NQPathBuilder_finalize(NQPathBuilder*);
+
+#define NQPathBuilder_characters(thiz) (thiz)->characters
+static inline size_t NQPathBuilder_length(NQPathBuilder* thiz)
+{
+  return thiz->length;
+}
+
+NQ_EXPORT void NQPathBuilder_clear(NQPathBuilder*, const char* path);
+NQ_EXPORT bool NQPathBuilder_join(NQPathBuilder*, const char* path);
+NQ_EXPORT bool NQPathBuilder_add(NQPathBuilder*, const char* text);
+NQ_EXPORT void NQPathBuilder_removeLastSegment(NQPathBuilder*);
+
 NQ_EXPORT size_t NQPathFrom(char* buffer, size_t n, const NQWChar* path);
 NQ_EXPORT size_t NQGetAbsolutePath(char* buffer, size_t n, const char* path);
 NQ_EXPORT size_t NQWinPathFrom(NQWChar* buffer, size_t n, const char* path);

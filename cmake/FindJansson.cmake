@@ -10,7 +10,6 @@
 if (TARGET Jansson::Jansson)
   set(Jansson_FIND_QUIETLY TRUE)
   set(Jansson_FOUND TRUE)
-  set(JANSSON_FOUND TRUE)
   return ()
 endif ()
 
@@ -18,7 +17,7 @@ if (Jansson_INCLUDE_DIR AND Jansson_LIBRARY)
   set(Jansson_FIND_QUIETLY TRUE)
 endif ()
 
-find_package(PkgConfig)
+find_package(PkgConfig QUIET)
 if (PKGCONFIG_FOUND)
   pkg_check_modules(PC_JANSSON Jansson)
   set(Jansson_DEFINITIONS ${PC_JANSSON_CFLAGS_OTHER})
@@ -41,11 +40,10 @@ find_library(Jansson_LIBRARY
     ${PC_JANSSON_LIBRARIES_DIRS}
   )
 
-include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Jansson DEFAULT_MSG Jansson_INCLUDE_DIR Jansson_LIBRARY)
-
 mark_as_advanced(Jansson_INCLUDE_DIR Jansson_LIBRARY)
 
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Jansson DEFAULT_MSG Jansson_INCLUDE_DIR Jansson_LIBRARY)
 if (JANSSON_FOUND)
   set(Jansson_FOUND TRUE)
 endif ()

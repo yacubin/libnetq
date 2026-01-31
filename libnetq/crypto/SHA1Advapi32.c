@@ -39,7 +39,7 @@ void NQSHA1_finalize(NQSHA1* thiz)
 
 bool NQSHA1_update(NQSHA1* thiz, const uint8_t* data, size_t size)
 {
-  if (!CryptHashData(thiz->hHash, data, size, 0)) {
+  if (!CryptHashData(thiz->hHash, data, (DWORD)size, 0)) {
     NQ_LOGE("CryptHashData failed: %d", GetLastError());
     return false;
   }

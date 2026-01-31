@@ -10,7 +10,6 @@
 if (TARGET CJSON::CJSON)
   set(CJSON_FIND_QUIETLY TRUE)
   set(CJSON_FOUND TRUE)
-  set(CJSON_FOUND TRUE)
   return ()
 endif ()
 
@@ -18,7 +17,7 @@ if (CJSON_INCLUDE_DIR AND CJSON_LIBRARY)
   set(CJSON_FIND_QUIETLY TRUE)
 endif ()
 
-find_package(PkgConfig)
+find_package(PkgConfig QUIET)
 if (PKGCONFIG_FOUND)
   pkg_check_modules(PC_CJSON libcjson)
   set(CJSON_DEFINITIONS ${PC_CJSON_CFLAGS_OTHER})
@@ -39,10 +38,10 @@ find_library(CJSON_LIBRARY
     ${PC_CJSON_LIBRARIES_DIRS}
   )
 
+mark_as_advanced(CJSON_INCLUDE_DIR CJSON_LIBRARY)
+
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(CJSON DEFAULT_MSG CJSON_INCLUDE_DIR CJSON_LIBRARY)
-
-mark_as_advanced(CJSON_INCLUDE_DIR CJSON_LIBRARY)
 
 if(CJSON_FOUND)
   set(CJSON_INCLUDE_DIRS ${CJSON_INCLUDE_DIR})

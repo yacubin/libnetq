@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.8
+project(libnetq VERSION 1.0.9
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -15,15 +15,17 @@ include(CheckIncludeFile)
 include(CheckIncludeFiles)
 include(CheckFunctionExists)
 
-macro (LNQ_OPTION_DEFINE _name _description _value)
+macro (LNQ_OPTION_DEFINE _name _description _type _value)
   set(LNQ_${_name} "${_value}" CACHE STRING "${_description}")
-  if (NOT "${ARGN}" STREQUAL "")
-    set_property(CACHE LNQ_${_name} PROPERTY STRINGS "${_value};${ARGN}")
+  if ("${_type}" STREQUAL "ENUM")
+    if (NOT "${ARGN}" STREQUAL "")
+      set_property(CACHE LNQ_${_name} PROPERTY STRINGS "${_value};${ARGN}")
+    endif ()
   endif ()
 endmacro ()
 
 macro (LNQ_FEATURE_DEFINE _name _description)
-  LNQ_OPTION_DEFINE(${_name} "${_description}" "AUTO" "ON" "OFF")
+  LNQ_OPTION_DEFINE(${_name} "${_description}" ENUM "AUTO" "ON" "OFF")
   if (NOT LNQ_${_name} MATCHES "AUTO|ON|OFF|FALSE|TRUE|0|1")
     message(FATAL_ERROR "Wrong '${LNQ_${_name}}' value for LNQ_${_name}")
   endif ()
@@ -47,7 +49,8 @@ macro (LNQ_ADD_LIBRARY _name)
   endif ()
 endmacro ()
 
-LNQ_OPTION_DEFINE(LIBRARY_TYPE "Choose the library type: SHARED, STATIC, OBJECT" SHARED STATIC OBJECT)
+LNQ_OPTION_DEFINE(LIBRARY_TYPE "Choose the library type: SHARED, STATIC, OBJECT" ENUM SHARED STATIC OBJECT)
+LNQ_OPTION_DEFINE(CHECK_LEVEL "Runtime check in debug mode only" NUMBER 0)
 LNQ_FEATURE_DEFINE(USE_EXPORT "Enable symbol export as a shared library")
 
 if (NOT LNQ_USE_EXPORT STREQUAL AUTO)
@@ -57,6 +60,8 @@ elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED")
 else ()
   set(NQ_USE_EXPORT OFF)
 endif ()
+
+set(NQ_CHECK_LEVEL ${LNQ_CHECK_LEVEL})
 
 math(EXPR NQ_VERSION_CODE "${PROJECT_VERSION_MAJOR} * 10000000 + ${PROJECT_VERSION_MINOR} * 100000 + ${PROJECT_VERSION_PATCH} * 1000")
 
@@ -120,6 +125,10 @@ LNQ_ADD_LIBRARY(ZLIB)
 LNQ_ADD_LIBRARY(OpenSSL)
 LNQ_ADD_LIBRARY(Jansson)
 LNQ_ADD_LIBRARY(CJSON)
+LNQ_ADD_LIBRARY(PCRE2)
+LNQ_ADD_LIBRARY(CivetWeb)
+LNQ_ADD_LIBRARY(LibEvent)
+LNQ_ADD_LIBRARY(LibUV)
 
 if (WITH_ZLIB)
   list(APPEND CMAKE_REQUIRED_INCLUDES "${ZLIB_INCLUDE_DIR}")
@@ -351,6 +360,8 @@ set(libnetq_HEADERS
 
   libnetq/crypto/HMAC_SHA1.h
 
+  libnetq/fs/Stat.h
+
   libnetq/io/ByteBufferChannel.h
   libnetq/io/ByteBufferWriter.h
   libnetq/io/DataReader.h
@@ -366,6 +377,8 @@ set(libnetq_HEADERS
   libnetq/json/JSONWriter.h
 
   libnetq/net/NetBufferQueue.h
+
+  libnetq/regex/Regex.h
 
   libnetq/web/HttpStatistics.h
   libnetq/web/JsonRpcTypes.h
@@ -435,6 +448,7 @@ set(libnetq_HEADERS
   libnetq/HttpVersion.h
   libnetq/Image.h
   libnetq/ImageBuilder.h
+  libnetq/JSON.h
   libnetq/KeyboardEvent.h
   libnetq/KeyVal.h
   libnetq/Library.h
@@ -469,6 +483,7 @@ set(libnetq_HEADERS
   libnetq/PrimitiveType.h
   libnetq/Rect.h
   libnetq/RefCount.h
+  libnetq/Regex.h
   libnetq/RWLock.h
   libnetq/Signal.h
   libnetq/Sleep.h
@@ -484,7 +499,6 @@ set(libnetq_HEADERS
   libnetq/ThreadData.h
   libnetq/Time.h
   libnetq/TimerQueue.h
-  libnetq/TimeVal.h
   libnetq/Types.h
   libnetq/UnlimitedRandom.h
   libnetq/URL.h
@@ -531,6 +545,8 @@ set(libnetq_SOURCES
   libnetq/crypto/SHA1SysLinux.c
   libnetq/crypto/SHA1SysLinux.h
 
+  libnetq/fs/Stat.c
+
   libnetq/io/ByteBufferChannel.c
   libnetq/io/ByteBufferWriter.c
   libnetq/io/FileWriter.c
@@ -546,6 +562,9 @@ set(libnetq_SOURCES
   libnetq/json/JSONWriter.c
 
   libnetq/net/NetBufferQueue.c
+
+  libnetq/regex/RegexPcre2.c
+  libnetq/regex/RegexStub.c
 
   libnetq/wasm/Module.c
   libnetq/wasm/ModuleTypes.c
@@ -623,6 +642,7 @@ set(libnetq_SOURCES
   libnetq/PlatformLooperCF.c
   libnetq/PlatformLooperStub.c
   libnetq/PlatformLooperWin.c
+  libnetq/PlatformPoll.c
   libnetq/Poll.c
   libnetq/PollVector.c
   libnetq/PrimitiveStorage.c
@@ -647,7 +667,6 @@ set(libnetq_SOURCES
   libnetq/ThreadWin.c
   libnetq/Time.c
   libnetq/TimerQueue.c
-  libnetq/TimeVal.c
   libnetq/UnlimitedRandom.c
   libnetq/URL.c
   libnetq/UrlPath.c
@@ -665,6 +684,7 @@ set(libnetq_SOURCES
 
 set(libnetq_CMAKEFILES
   cmake/FindAmiVideo.cmake
+  cmake/FindCivetWeb.cmake
   cmake/FindCJSON.cmake
   cmake/FindDBC.cmake
   cmake/FindGIF.cmake
@@ -676,7 +696,11 @@ set(libnetq_CMAKEFILES
   cmake/FindJSONC.cmake
   cmake/FindLeptonica.cmake
   cmake/FindLibArchive.cmake
+  cmake/FindLibEvent.cmake
+  cmake/FindLibHeif.cmake
+  cmake/FindLibJpegTurbo.cmake
   cmake/FindLibNetQ.cmake
+  cmake/FindLibUV.cmake
   cmake/FindLZ4.cmake
   cmake/FindLZO.cmake
   cmake/FindMHD.cmake
@@ -756,6 +780,14 @@ if (WITH_CJSON)
   list(APPEND libnetq_LIBRARIES CJSON::CJSON)
 endif ()
 
+if (WITH_PCRE2)
+  list(APPEND libnetq_LIBRARIES PCRE2::PCRE2)
+endif ()
+
+if (WITH_CIVETWEB)
+  list(APPEND libnetq_LIBRARIES CivetWeb::CivetWeb)
+endif ()
+
 if (WITH_OPENSSL)
   set(USE_OPENSSL_MD5 1)
   configure_file(libnetq/crypto/MD5OpenSSL.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
@@ -763,8 +795,9 @@ elseif (WITH_ADVAPI32)
   set(USE_ADVAPI32_MD5 1)
   configure_file(libnetq/crypto/MD5Advapi32.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
 else ()
-  message("! MD5 has no implementation")
+  set(USE_STUB_MD5 1)
   configure_file(libnetq/crypto/MD5Stub.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
+  message("! MD5 has no implementation")
 endif ()
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/crypto")
 
@@ -775,14 +808,16 @@ elseif (WITH_ADVAPI32)
   set(USE_ADVAPI32_SHA1 1)
   configure_file(libnetq/crypto/SHA1Advapi32.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
 else ()
-  message("! SHA1 has no implementation")
+  set(USE_STUB_SHA1 1)
   configure_file(libnetq/crypto/SHA1Stub.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
+  message("! SHA1 has no implementation")
 endif ()
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/crypto")
 
 if (WITH_ZLIB)
   set(USE_ZLIB_CRC32 1)
 else ()
+  set(USE_STUB_CRC32 1)
   message("! CRC32 has no implementation")
 endif ()
 
@@ -791,7 +826,15 @@ if (WITH_JANSSON)
 elseif (WITH_CJSON)
   set(USE_CJSON_JSON 1)
 else ()
+  set(USE_STUB_JSON 1)
   message("! JSON has no implementation")
+endif ()
+
+if (WITH_PCRE2)
+  set(USE_PCRE2_REGEX 1)
+else ()
+  set(USE_STUB_REGEX 1)
+  message("! Regex has no implementation")
 endif ()
 
 configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/config.h" @ONLY)
@@ -815,6 +858,7 @@ foreach (_header ${libnetq_HEADERS})
 endforeach ()
 
 install(FILES ${libnetq_CMAKEFILES} DESTINATION "${CMAKE_INSTALL_DATADIR}/libnetq/cmake")
+install(FILES ${libnetq_CMAKEFILES} DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/libnetq")
 
 install(TARGETS libnetq
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
@@ -830,3 +874,7 @@ message(STATUS "Advapi32 . . . . . . . . . . . . . . . . . . ${WITH_ADVAPI32} (H
 message(STATUS "OpenSSL  . . . . . . . . . . . . . . . . . . ${WITH_OPENSSL} (HAVE ${HAVE_OPENSSL})")
 message(STATUS "Jansson  . . . . . . . . . . . . . . . . . . ${WITH_JANSSON} (HAVE ${HAVE_JANSSON})")
 message(STATUS "cJSON  . . . . . . . . . . . . . . . . . . . ${WITH_CJSON} (HAVE ${HAVE_CJSON})")
+message(STATUS "PCRE2  . . . . . . . . . . . . . . . . . . . ${WITH_PCRE2} (HAVE ${HAVE_PCRE2})")
+message(STATUS "CivetWeb . . . . . . . . . . . . . . . . . . ${WITH_CIVETWEB} (HAVE ${HAVE_CIVETWEB})")
+message(STATUS "LibEvent . . . . . . . . . . . . . . . . . . ${WITH_LIBEVENT} (HAVE ${HAVE_LIBEVENT})")
+message(STATUS "LibUV  . . . . . . . . . . . . . . . . . . . ${WITH_LIBUV} (HAVE ${HAVE_LIBUV})")

@@ -52,7 +52,7 @@ typedef struct pollfd NQPlatformPollfd;
 
 #ifdef NQ_OS_WINDOWS
 typedef WSAPOLLFD NQPlatformPollfd;
-#define NQPlatformPoll WSAPoll
+NQ_EXPORT int NQPlatformPoll(NQPlatformPollfd* fds, unsigned long nfds, int timeout);
 #endif
 
 #endif /* _LIBNETQ_PLATFORMPOLL_H */

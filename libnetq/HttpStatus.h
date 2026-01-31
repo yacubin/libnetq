@@ -11,30 +11,38 @@
 #define _LIBNETQ_HTTPSTATUS_H
 
 /* 1xx – Informational Responses */
-#define NQ_HTTP_STATUS_CONTINUE               100
-#define NQ_HTTP_STATUS_SWITCHING_PROTOCOLS    101
-#define NQ_HTTP_STATUS_PROCESSING             102
-#define NQ_HTTP_STATUS_EARLY_HINTS            103
+#define NQ_HTTP_CONTINUE                      100
+#define NQ_HTTP_SWITCHING_PROTOCOLS           101
+#define NQ_HTTP_PROCESSING                    102
+#define NQ_HTTP_EARLY_HINTS                   103
 
 /* 2xx – Success */
-#define NQ_HTTP_STATUS_OK                     200
-#define NQ_HTTP_STATUS_CREATED                201
-#define NQ_HTTP_STATUS_ACCEPTED               202
-#define NQ_HTTP_STATUS_NO_CONTENT             204
-#define NQ_HTTP_STATUS_RESET_CONTENT          205
-#define NQ_HTTP_STATUS_PARTIAL_CONTENT        206
+#define NQ_HTTP_OK                            200
+#define NQ_HTTP_CREATED                       201
+#define NQ_HTTP_ACCEPTED                      202
+#define NQ_HTTP_NO_CONTENT                    204
+#define NQ_HTTP_RESET_CONTENT                 205
+#define NQ_HTTP_PARTIAL_CONTENT               206
 
 /* 3xx – Redirection */
-#define NQ_HTTP_STATUS_MOVED_PERMANENTLY      301
-#define NQ_HTTP_STATUS_TEMPORARY_REDIRECT     307
+#define NQ_HTTP_MOVED_PERMANENTLY             301
+#define NQ_HTTP_MOVED_TEMPORARILY             302
+#define NQ_HTTP_NOT_MODIFIED                  304
+#define NQ_HTTP_TEMPORARY_REDIRECT            307
 
 /* 4xx – Client Errors */
-#define NQ_HTTP_STATUS_NOT_FOUND              404
-#define NQ_HTTP_STATUS_PRECONDITION_FAILED    412
-#define NQ_HTTP_STATUS_UPGRADE_REQUIRED       426
+#define NQ_HTTP_BAD_REQUEST                   400
+#define NQ_HTTP_NOT_FOUND                     404
+#define NQ_HTTP_NOT_ALLOWED                   405
+#define NQ_HTTP_PRECONDITION_FAILED           412
+#define NQ_HTTP_REQUEST_ENTITY_TOO_LARGE      413
+#define NQ_HTTP_EXPECTATION_FAILED            417
+#define NQ_HTTP_UPGRADE_REQUIRED              426
 
 /* 5xx – Server Errors */
-#define NQ_HTTP_STATUS_INTERNAL_SERVER_ERROR  500
+#define NQ_HTTP_INTERNAL_SERVER_ERROR         500
+#define NQ_HTTP_NOT_IMPLEMENTED               501
+#define NQ_HTTP_SERVICE_UNAVAILABLE           503
 
 static inline bool NQIsHttpStatusInformational(int code)
 {

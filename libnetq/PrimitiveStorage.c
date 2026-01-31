@@ -30,6 +30,7 @@ struct NQPrimitiveStorageEntry {
   uint32_t type;
 
   union {
+    bool dataBool;
     uint32_t dataUint32;
     const char* dataString;
     NQPrimitiveStorageHandler* dataHandler;
@@ -71,13 +72,59 @@ static struct NQPrimitiveStorageEntry* NQPrimitiveStorage_getEntry(NQPrimitiveSt
   return NULL;
 }
 
+size_t NQPrimitiveStorage_getBool(NQPrimitiveStorage* thiz, const char* name, bool* value)
+{
+  struct NQPrimitiveStorageEntry* entry = NQPrimitiveStorage_getEntry(thiz, name);
+
+  if (entry != NULL) {
+    if (entry->type == kNQBoolType) {
+      if (value)
+        memcpy(value, &entry->dataBool, sizeof(*value));
+      return sizeof(*value);
+    }
+    if (entry->type == kNQPrimitiveStorageHandler) {
+      return entry->dataHandler(entry->dataPointer, kNQBoolType, (char*)value, sizeof(*value));
+    }
+  }
+
+  if(thiz->parent != NULL) {
+    return NQPrimitiveStorage_getBool(thiz->parent, name, value);
+  }
+
+  return 0;
+}
+
+bool NQPrimitiveStorage_setBool(NQPrimitiveStorage* thiz, const char* name, bool value)
+{
+  size_t nlenz = strlen(name) + 1;
+
+  struct NQPrimitiveStorageEntry* entry;
+  entry = (struct NQPrimitiveStorageEntry*)NQMalloc(sizeof(*entry) + nlenz);
+  if (entry == NULL)
+    return false;
+
+  entry->type = kNQBoolType;
+
+  char* ptr = (char*)entry + sizeof(*entry);
+  (void)memcpy(ptr, name, nlenz);
+  entry->name = ptr;
+
+  entry->dataBool = value;
+  entry->dataLength = sizeof(value);
+
+  NQListHead_addBack(&thiz->entryList, &entry->list);
+
+  return true;
+}
+
 size_t NQPrimitiveStorage_getUint32(NQPrimitiveStorage* thiz, const char* name, uint32_t* value)
 {
   struct NQPrimitiveStorageEntry* entry = NQPrimitiveStorage_getEntry(thiz, name);
 
   if (entry != NULL) {
     if (entry->type == kNQUint32Type) {
-      memcpy(value, &entry->dataUint32, sizeof(*value));
+      if (value)
+        memcpy(value, &entry->dataUint32, sizeof(*value));
       return sizeof(*value);
     }
     if (entry->type == kNQPrimitiveStorageHandler) {
@@ -122,7 +169,8 @@ size_t NQPrimitiveStorage_getString(NQPrimitiveStorage* thiz, const char* name, 
   if (entry != NULL) {
     if (entry->type == kNQStringType) {
       size_t nlenz = NQGetMin(entry->dataLength + 1, size);
-      memcpy(buffer, entry->dataString, nlenz);
+      if (buffer)
+        memcpy(buffer, entry->dataString, nlenz);
       return entry->dataLength;
     }
     if (entry->type == kNQPrimitiveStorageHandler) {

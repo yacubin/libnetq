@@ -8,8 +8,8 @@
 #
 
 if (TARGET MHD::MHD)
-    set(MHD_FIND_QUIETLY TRUE)
-    set(MHD_FOUND TRUE)
+  set(MHD_FIND_QUIETLY TRUE)
+  set(MHD_FOUND TRUE)
   return ()
 endif ()
 
@@ -17,7 +17,7 @@ if (MHD_INCLUDE_DIR AND MHD_LIBRARY)
   set(MHD_FIND_QUIETLY TRUE)
 endif ()
 
-find_package(PkgConfig)
+find_package(PkgConfig QUIET)
 if (PKGCONFIG_FOUND)
   pkg_check_modules(PC_MHD libmicrohttpd)
   set(MHD_DEFINITIONS ${PC_MHD_CFLAGS_OTHER})
@@ -41,10 +41,10 @@ find_library(MHD_LIBRARY
   DOC "microhttpd library"
   )
 
+mark_as_advanced(MHD_INCLUDE_DIR MHD_LIBRARY)
+
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(MHD DEFAULT_MSG MHD_LIBRARY MHD_INCLUDE_DIR)
-
-mark_as_advanced(MHD_INCLUDE_DIR MHD_LIBRARY)
 
 if(MHD_FOUND)
   set(MHD_INCLUDE_DIRS ${MHD_INCLUDE_DIR})
@@ -52,11 +52,7 @@ if(MHD_FOUND)
 endif()
 
 if (MHD_FOUND AND NOT TARGET MHD::MHD)
-  add_library(MHD::MHD INTERFACE IMPORTED)
-  set_property(TARGET MHD::MHD PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MHD_INCLUDE_DIR}")
-  if (WIN32)
-    set_property(TARGET MHD::MHD PROPERTY INTERFACE_LINK_LIBRARIES "${MHD_LIBRARY}" ws2_32)
-  else ()
-    set_property(TARGET MHD::MHD PROPERTY INTERFACE_LINK_LIBRARIES "${MHD_LIBRARY}")
-  endif ()
+  add_library(MHD::MHD UNKNOWN IMPORTED)
+  set_target_properties(MHD::MHD PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${MHD_INCLUDE_DIR}")
+  set_target_properties(MHD::MHD PROPERTIES IMPORTED_LOCATION "${MHD_LIBRARY}")
 endif ()

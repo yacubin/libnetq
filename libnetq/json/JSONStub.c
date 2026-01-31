@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/json/JSON.h"
 
-#if !(USE_CJSON_JSON || USE_JANSSON_JSON)
+#if USE_STUB_JSON
 
 const char* NQJSON_package(void)
 {
@@ -44,7 +44,7 @@ NQJSON* NQJSON_parse2(const char* text, size_t length)
   return NULL;
 }
 
-NQJSON* NQJSON_clone(NQJSON* json, bool deep)
+NQJSON* NQJSON_clone(const NQJSON* json, bool deep)
 {
   NQ_UNUSED_PARAM(json);
   return NULL;

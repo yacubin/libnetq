@@ -39,7 +39,7 @@ void NQMD5_finalize(NQMD5* thiz)
 
 bool NQMD5_update(NQMD5* thiz, const uint8_t* data, size_t size)
 {
-  if (!CryptHashData(thiz->hHash, data, size, 0)) {
+  if (!CryptHashData(thiz->hHash, data, (DWORD)size, 0)) {
     NQ_LOGE("CryptHashData failed: %d", GetLastError());
     return false;
   }

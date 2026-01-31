@@ -1,3 +1,3 @@
-# libnetq project
+# LNQ project
 
 The cross-platform library.

@@ -15,6 +15,7 @@
 
 #if USE_JANSSON_JSON
 
+#include <libnetq/Log.h>
 #include <jansson.h>
 
 const char* NQJSON_package(void)
@@ -30,22 +31,34 @@ const char* NQJSON_version(void)
 NQJSON* NQJSON_fromFile(const char* filename)
 {
   json_error_t error;
-  return (NQJSON*)json_load_file(filename, 0, &error);
+  NQJSON* thiz = (NQJSON*)json_load_file(filename, 0, &error);
+  if (thiz == NULL) {
+    NQ_LOGE("%s", error.text);
+  }
+  return thiz;
 }
 
 NQJSON* NQJSON_parse(const char* text)
 {
   json_error_t error;
-  return (NQJSON*)json_loads(text, JSON_DECODE_ANY, &error);
+  NQJSON* thiz = (NQJSON*)json_loads(text, JSON_DECODE_ANY, &error);
+  if (thiz == NULL) {
+    NQ_LOGE("%s", error.text);
+  }
+  return thiz;
 }
 
 NQJSON* NQJSON_parse2(const char* text, size_t length)
 {
   json_error_t error;
-  return (NQJSON*)json_loadb(text, length, JSON_DECODE_ANY, &error);
+  NQJSON* thiz = (NQJSON*)json_loadb(text, length, JSON_DECODE_ANY, &error);
+  if (thiz == NULL) {
+    NQ_LOGE("%s", error.text);
+  }
+  return thiz;
 }
 
-NQJSON* NQJSON_clone(NQJSON* json, bool deep)
+NQJSON* NQJSON_clone(const NQJSON* json, bool deep)
 {
   return (NQJSON*)(deep ? json_deep_copy((json_t*)json) : json_copy((json_t*)json));
 }

@@ -151,7 +151,7 @@ bool NQSocket_connect(NQSocket* thiz, const NQEndPoint* ep)
   }
 
   int ec = NQGetLastError();
-  if (!thiz->sync && (ec == NQ_ERROR_INPROGRESS || ec == NQ_ERROR_WOULDBLOCK)) {
+  if (!thiz->sync && (ec == NQ_EINPROGRESS || ec == NQ_EWOULDBLOCK)) {
     thiz->mode = MODE_CONNECTING;
     return true;
   }

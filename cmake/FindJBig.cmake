@@ -8,8 +8,8 @@
 #
 
 if (TARGET JBig::JBig)
+  set(JBig_FIND_QUIETLY TRUE)
   set(JBig_FOUND TRUE)
-  set(JBIG_FOUND TRUE)
   return ()
 endif ()
 
@@ -17,7 +17,7 @@ if (JBig_INCLUDE_DIR AND JBig_LIBRARY)
   set(JBig_FIND_QUIETLY TRUE)
 endif ()
 
-find_package(PkgConfig)
+find_package(PkgConfig QUIET)
 if (PKGCONFIG_FOUND)
   pkg_check_modules(PC_JBig JBig)
 endif ()
@@ -38,19 +38,21 @@ find_library(JBig_LIBRARY
     ${PC_JBig_LIBRARIES_DIRS}
   )
 
-include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(JBig DEFAULT_MSG JBig_INCLUDE_DIR JBig_LIBRARY)
-
 mark_as_advanced(JBig_INCLUDE_DIR JBig_LIBRARY)
 
-if (JBIG_FOUND OR JBig_FOUND)
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(JBig DEFAULT_MSG JBig_INCLUDE_DIR JBig_LIBRARY)
+if (JBIG_FOUND)
   set(JBig_FOUND TRUE)
+endif ()
+
+if (JBig_FOUND)
   set(JBig_INCLUDE_DIRS ${JBig_INCLUDE_DIR})
   set(JBig_LIBRARIES ${JBig_LIBRARY})
 endif()
 
 if (JBig_FOUND AND NOT TARGET JBig::JBig)
-  add_library(JBig::JBig INTERFACE IMPORTED)
-  set_property(TARGET JBig::JBig PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${JBig_INCLUDE_DIR}")
-  set_property(TARGET JBig::JBig PROPERTY INTERFACE_LINK_LIBRARIES "${JBig_LIBRARY}")
+  add_library(JBig::JBig UNKNOWN IMPORTED)
+  set_target_properties(JBig::JBig PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${JBig_INCLUDE_DIR}")
+  set_target_properties(JBig::JBig PROPERTIES IMPORTED_LOCATION "${JBig_LIBRARY}")
 endif ()

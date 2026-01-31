@@ -82,6 +82,150 @@ void NQPath_destroy(NQPath* thiz)
   NQFree(thiz);
 }
 
+static inline void pathBuilderInit(NQPathBuilder* thiz)
+{
+  thiz->characters = thiz->buffer;
+  thiz->characters[0] = '\0';
+  thiz->length = 0;
+  thiz->capacity = sizeof(thiz->buffer);
+}
+
+static inline void pathBuilderFinalize(NQPathBuilder* thiz)
+{
+  if (thiz->characters != thiz->buffer)
+    NQFree(thiz->characters);
+}
+
+static bool pathBuilderReserveCapacity(NQPathBuilder* thiz, size_t newCapacity)
+{
+  if (NQ_UINT16_MAX < newCapacity)
+    return false;
+
+  if (newCapacity <= thiz->capacity)
+    return true;
+
+  char* oldCharacters = thiz->characters;
+  char* newCharacters = (char*)NQMalloc(newCapacity);
+  if (newCharacters == NULL)
+    return false;
+
+  memcpy(newCharacters, oldCharacters, thiz->length);
+  if (oldCharacters != thiz->buffer) {
+    NQFree(oldCharacters);
+  }
+
+  thiz->characters = newCharacters;
+  thiz->capacity = (uint16_t)newCapacity;
+
+  return true;
+}
+
+static inline size_t pathBuilderNextCapacity(NQPathBuilder* thiz, size_t newMinCapacity)
+{
+  return NQGetMax(newMinCapacity, thiz->capacity + thiz->capacity / 4 + 1);
+}
+
+static inline bool pathBuilderExpandCapacity(NQPathBuilder* thiz, size_t newMinCapacity)
+{
+  return pathBuilderReserveCapacity(thiz, pathBuilderNextCapacity(thiz, newMinCapacity));
+}
+
+static bool pathBuilderAdd(NQPathBuilder* thiz, const char* path, bool withDelimeter)
+{
+  size_t length = strlen(path);
+  if (length == 0)
+    return true;
+
+  size_t newSize = thiz->length + 1 + length + 1;
+  if (newSize < thiz->length)
+    return false;
+
+  if (newSize > thiz->capacity) {
+    if (!pathBuilderExpandCapacity(thiz, newSize))
+      return false;
+  }
+
+  char* ptr = thiz->characters + thiz->length;
+  if (withDelimeter)
+    *ptr++ = NQ_PATH_DELIMITER;
+  for (size_t i = 0; i < length; i++)
+    *ptr++ = normalizeCharacter(path[i]);
+  *ptr = '\0';
+
+  thiz->length = (uint16_t)(ptr - thiz->characters);
+  return true;
+}
+
+void NQPathBuilder_init(NQPathBuilder* thiz)
+{
+  pathBuilderInit(thiz);
+}
+
+bool NQPathBuilder_initJoin1(NQPathBuilder* thiz, const char* path1)
+{
+  pathBuilderInit(thiz);
+  return pathBuilderAdd(thiz, path1, false);
+}
+
+bool NQPathBuilder_initJoin2(NQPathBuilder* thiz, const char* path1, const char* path2)
+{
+  pathBuilderInit(thiz);
+  if (!pathBuilderAdd(thiz, path1, false))
+    return false;
+  if (NQPathBuilder_join(thiz, path2))
+    return true;
+  pathBuilderFinalize(thiz);
+  return false;
+}
+
+bool NQPathBuilder_initJoin3(NQPathBuilder* thiz, const char* path1, const char* path2, const char* path3)
+{
+  pathBuilderInit(thiz);
+  if (!pathBuilderAdd(thiz, path1, false))
+    return false;
+  if (NQPathBuilder_join(thiz, path2) && NQPathBuilder_join(thiz, path3))
+    return true;
+  pathBuilderFinalize(thiz);
+  return false;
+}
+
+void NQPathBuilder_finalize(NQPathBuilder* thiz)
+{
+  pathBuilderFinalize(thiz);
+}
+
+void NQPathBuilder_clear(NQPathBuilder* thiz, const char* path)
+{
+  pathBuilderFinalize(thiz);
+  pathBuilderInit(thiz);
+}
+
+bool NQPathBuilder_join(NQPathBuilder* thiz, const char* path)
+{
+  if (thiz->length != 0 && thiz->characters[thiz->length - 1] != NQ_PATH_DELIMITER)
+    return pathBuilderAdd(thiz, path, true);
+  else
+    return pathBuilderAdd(thiz, path, false);
+}
+
+bool NQPathBuilder_add(NQPathBuilder* thiz, const char* text)
+{
+  return pathBuilderAdd(thiz, text, false);
+}
+
+void NQPathBuilder_removeLastSegment(NQPathBuilder* thiz)
+{
+  uint16_t length = thiz->length;
+  while (length) {
+    char ch = thiz->characters[--length];
+    if (ch == NQ_PATH_DELIMITER) {
+      thiz->characters[length] = '\0';
+      thiz->length = length;
+      return;
+    }
+  }
+}
+
 size_t NQPathFrom(char* buffer, size_t n, const NQWChar* path)
 {
   if (n == 0)

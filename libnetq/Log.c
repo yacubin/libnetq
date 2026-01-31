@@ -63,7 +63,7 @@ static int printLogPrefix(char* buffer, size_t size, NQLogLevel level, const cha
   ptr = buffer;
   end = ptr + size;
 
-  n = NQTimeFormat(NQGetTime(), NQ_DT_RFC3339, buffer, size);
+  n = NQTimeMsFormat(NQGetTimeMs(), NQ_DT_RFC3339, buffer, size);
   ptr += n;
 
   if (ptr < end)
@@ -87,7 +87,7 @@ static int printLogPrefix(char* buffer, size_t size, NQLogLevel level, const cha
     *ptr = ' ';
   ptr++;
 
-  return ptr - buffer;
+  return (int)(ptr - buffer);
 }
 
 int NQLog_snprint(char* buffer, size_t size, NQLogLevel level, const char* tag, const char* format, ...)
@@ -121,7 +121,7 @@ int NQLog_vsnprint(char* buffer, size_t size, NQLogLevel level, const char* tag,
     return n;
   ptr += n;
 
-  return ptr - buffer;
+  return (int)(ptr - buffer);
 }
 
 int NQLog_print(NQLogLevel level, const char* tag, const char* format, ...)
@@ -166,9 +166,8 @@ int NQLog_vprint(NQLogLevel level, const char* tag, const char* format, va_list 
   result = __android_log_vprint(prio, tag, format, args);
   return result;
 #else
-  size_t result;
   char buffer[BUFFER_SIZE];
-  result = NQLog_vsnprint(buffer, sizeof(buffer), level, tag, format, args);
+  int result = NQLog_vsnprint(buffer, sizeof(buffer), level, tag, format, args);
 
   char* ptr;
   if (result + 2 > sizeof(buffer))

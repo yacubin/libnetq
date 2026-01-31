@@ -27,6 +27,9 @@ struct NQPrimitiveStorage {
 NQ_EXPORT void NQPrimitiveStorage_init(NQPrimitiveStorage*, NQPrimitiveStorage* parent);
 NQ_EXPORT void NQPrimitiveStorage_finalize(NQPrimitiveStorage*);
 
+NQ_EXPORT size_t NQPrimitiveStorage_getBool(NQPrimitiveStorage*, const char* name, bool* value);
+NQ_EXPORT bool NQPrimitiveStorage_setBool(NQPrimitiveStorage*, const char* name, bool value);
+
 NQ_EXPORT size_t NQPrimitiveStorage_getUint32(NQPrimitiveStorage*, const char* name, uint32_t* value);
 NQ_EXPORT bool NQPrimitiveStorage_setUint32(NQPrimitiveStorage*, const char* name, uint32_t value);
 

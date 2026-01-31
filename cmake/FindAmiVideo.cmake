@@ -8,6 +8,7 @@
 #
 
 if (TARGET AmiVideo::AmiVideo)
+  set(AmiVideo_FIND_QUIETLY TRUE)
   set(AmiVideo_FOUND TRUE)
   return ()
 endif ()
@@ -16,7 +17,7 @@ if (AmiVideo_INCLUDE_DIR AND AmiVideo_LIBRARY)
   set(AmiVideo_FIND_QUIETLY TRUE)
 endif ()
 
-find_package(PkgConfig)
+find_package(PkgConfig QUIET)
 if (PKGCONFIG_FOUND)
   pkg_check_modules(PC_AmiVideo libamivideo)
 endif ()
@@ -35,19 +36,21 @@ find_library(AmiVideo_LIBRARY
     ${PC_AmiVideo_LIBRARIES_DIRS}
   )
 
-include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(AmiVideo DEFAULT_MSG AmiVideo_INCLUDE_DIR AmiVideo_LIBRARY)
-
 mark_as_advanced(AmiVideo_INCLUDE_DIR AmiVideo_LIBRARY)
 
-if (AMIVIDEO_FOUND OR AmiVideo_FOUND)
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(AmiVideo DEFAULT_MSG AmiVideo_INCLUDE_DIR AmiVideo_LIBRARY)
+if (AMIVIDEO_FOUND)
   set(AmiVideo_FOUND TRUE)
+endif ()
+
+if (AmiVideo_FOUND)
   set(AmiVideo_INCLUDE_DIRS "${AmiVideo_INCLUDE_DIR}")
   set(AmiVideo_LIBRARIES "${AmiVideo_LIBRARY}")
 endif()
 
 if (AmiVideo_FOUND AND NOT TARGET AmiVideo::AmiVideo)
-  add_library(AmiVideo::AmiVideo INTERFACE IMPORTED)
-  set_property(TARGET AmiVideo::AmiVideo PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${AmiVideo_INCLUDE_DIR}")
-  set_property(TARGET AmiVideo::AmiVideo PROPERTY INTERFACE_LINK_LIBRARIES "${AmiVideo_LIBRARY}")
+  add_library(AmiVideo::AmiVideo UNKNOWN IMPORTED)
+  set_target_properties(AmiVideo::AmiVideo PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${AmiVideo_INCLUDE_DIR}")
+  set_target_properties(AmiVideo::AmiVideo PROPERTIES IMPORTED_LOCATION "${AmiVideo_LIBRARY}")
 endif ()

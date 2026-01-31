@@ -31,13 +31,15 @@ typedef int NQErrorCode;
 #define NQ_ERROR (-1)
 
 #ifdef NQ_OS_WINDOWS
-# define NQ_ERROR_INPROGRESS WSAEINPROGRESS
-# define NQ_ERROR_WOULDBLOCK WSAEWOULDBLOCK
+# define NQ_ENOSYS           ERROR_NOT_SUPPORTED
+# define NQ_EINPROGRESS      WSAEINPROGRESS
+# define NQ_EWOULDBLOCK      WSAEWOULDBLOCK
 #endif
 
 #if defined(NQ_SYS_LINUX) || defined(NQ_OS_UNIX)
-# define NQ_ERROR_INPROGRESS EINPROGRESS
-# define NQ_ERROR_WOULDBLOCK EWOULDBLOCK
+# define NQ_ENOSYS           ENOSYS
+# define NQ_EINPROGRESS      EINPROGRESS
+# define NQ_EWOULDBLOCK      EWOULDBLOCK
 #endif
 
 static inline NQErrorCode NQGetLastError(void)

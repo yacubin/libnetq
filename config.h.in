@@ -7,6 +7,9 @@
 /* Enable symbol export as a shared library */
 #cmakedefine NQ_USE_EXPORT 1
 
+/* Runtime check in debug mode only */
+#define NQ_CHECK_LEVEL @NQ_CHECK_LEVEL@
+
 /* Define if you have ZLIB */
 #cmakedefine01 WITH_ZLIB
 
@@ -24,6 +27,12 @@
 
 /* Define if you have cJSON */
 #cmakedefine01 WITH_CJSON
+
+/* Define if you have PCRE2 */
+#cmakedefine01 WITH_PCRE2
+
+/* Define if you have CivetWeb */
+#cmakedefine01 WITH_CIVETWEB
 
 /* Define to 1 if you have the <stddef.h> header file. */
 #cmakedefine HAVE_STDDEF_H 1
@@ -135,6 +144,24 @@
 
 /* Use JSON implementation from the cJSON library */
 #cmakedefine01 USE_CJSON_JSON
+
+/* Use Regex implementation from the PCRE2 library */
+#cmakedefine01 USE_PCRE2_REGEX
+
+/* Use stub for MD5 */
+#cmakedefine01 USE_STUB_MD5
+
+/* Use stub for SHA1 */
+#cmakedefine01 USE_STUB_SHA1
+
+/* Use stub for CRC32 */
+#cmakedefine01 USE_STUB_CRC32
+
+/* Use stub for JSON */
+#cmakedefine01 USE_STUB_JSON
+
+/* Use stub for Regex */
+#cmakedefine01 USE_STUB_REGEX
 
 /* Define to 2 if the system does not provide POSIX.1 features except with
 this defined. */

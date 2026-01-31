@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2021-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -16,11 +16,11 @@
 #include <sys/select.h>
 #endif
 
-#include <libnetq/CStrBase.h>
+#include <libnetq/String.h>
 #include <libnetq/Math.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/EventWakeup.h>
-#include <libnetq/TimeVal.h>
+#include <libnetq/Time.h>
 #include <libnetq/Assert.h>
 #include <libnetq/LooperSource.h>
 
@@ -128,7 +128,7 @@ static int Looper_poll(NQLooper* looper, int64_t timeout)
 
   int wakeup = NQEventWakeup_handle(&thiz->wakeup);
   int fdMax = Looper_fillFDSet(thiz, wakeup, &fdSet);
-  int waitResult = select(fdMax + 1, &fdSet, NULL, NULL, NQTimeToTimeVal(timeout, &tv));
+  int waitResult = select(fdMax + 1, &fdSet, NULL, NULL, NQTimeMsToTimeVal(timeout, &tv));
 
   if (waitResult < 0)
     return NQ_LOOPER_POLL_ERROR;

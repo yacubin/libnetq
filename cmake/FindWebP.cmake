@@ -8,8 +8,8 @@
 #
 
 if (TARGET WebP::WebP)
+  set(WebP_FIND_QUIETLY TRUE)
   set(WebP_FOUND TRUE)
-  set(WEBP_FOUND TRUE)
   return ()
 endif ()
 
@@ -17,7 +17,7 @@ if (WebP_INCLUDE_DIR AND WebP_webp_LIBRARY AND WebP_webpdecoder_LIBRARY AND WebP
   set(WebP_FIND_QUIETLY TRUE)
 endif ()
 
-find_package(PkgConfig)
+find_package(PkgConfig QUIET)
 if (PKGCONFIG_FOUND)
   pkg_check_modules(PC_WebP libwebp)
 endif ()
@@ -57,15 +57,6 @@ find_library(WebP_webpdemux_LIBRARY
     ${PC_WebP_LIBRARIES_DIRS}
   )
 
-include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(WebP DEFAULT_MSG
-  WebP_INCLUDE_DIR
-  WebP_webp_LIBRARY
-  WebP_webpdecoder_LIBRARY
-  WebP_webpmux_LIBRARY
-  WebP_webpdemux_LIBRARY
-  )
-
 mark_as_advanced(
   WebP_INCLUDE_DIR
   WebP_webp_LIBRARY
@@ -74,14 +65,49 @@ mark_as_advanced(
   WebP_webpdemux_LIBRARY
   )
 
-if (WEBP_FOUND OR WebP_FOUND)
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(WebP DEFAULT_MSG
+  WebP_INCLUDE_DIR
+  WebP_webp_LIBRARY
+  WebP_webpdecoder_LIBRARY
+  WebP_webpmux_LIBRARY
+  WebP_webpdemux_LIBRARY
+  )
+if (WEBP_FOUND)
   set(WebP_FOUND TRUE)
-  set(WebP_INCLUDE_DIRS ${WebP_INCLUDE_DIR})
-  set(WebP_LIBRARIES ${WebP_webp_LIBRARY} ${WebP_webpdecoder_LIBRARY} ${WebP_webpmux_LIBRARY} ${WebP_webpdemux_LIBRARY})
 endif()
 
+if (WebP_FOUND)
+  set(WebP_INCLUDE_DIRS ${WebP_INCLUDE_DIR})
+  set(WebP_LIBRARIES
+    ${WebP_webp_LIBRARY}
+    ${WebP_webpdecoder_LIBRARY}
+    ${WebP_webpmux_LIBRARY}
+    ${WebP_webpdemux_LIBRARY}
+    )
+endif()
+
+if (WebP_FOUND AND NOT TARGET WebP::webpdecoder)
+  add_library(WebP::webpdecoder UNKNOWN IMPORTED)
+  set_target_properties(WebP::webpdecoder PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${WebP_INCLUDE_DIR}")
+  set_target_properties(WebP::webpdecoder PROPERTIES IMPORTED_LOCATION "${WebP_webpdecoder_LIBRARY}")
+endif ()
+
+if (WebP_FOUND AND NOT TARGET WebP::webpmux)
+  add_library(WebP::webpmux UNKNOWN IMPORTED)
+  set_target_properties(WebP::webpmux PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${WebP_INCLUDE_DIR}")
+  set_target_properties(WebP::webpmux PROPERTIES IMPORTED_LOCATION "${WebP_webpmux_LIBRARY}")
+endif ()
+
+if (WebP_FOUND AND NOT TARGET WebP::webpdemux)
+  add_library(WebP::webpdemux UNKNOWN IMPORTED)
+  set_target_properties(WebP::webpdemux PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${WebP_INCLUDE_DIR}")
+  set_target_properties(WebP::webpdemux PROPERTIES IMPORTED_LOCATION "${WebP_webpdemux_LIBRARY}")
+endif ()
+
 if (WebP_FOUND AND NOT TARGET WebP::WebP)
-  add_library(WebP::WebP INTERFACE IMPORTED)
-  set_property(TARGET WebP::WebP PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${WebP_INCLUDE_DIRS})
-  set_property(TARGET WebP::WebP PROPERTY INTERFACE_LINK_LIBRARIES ${WebP_LIBRARIES})
+  add_library(WebP::WebP UNKNOWN IMPORTED)
+  set_target_properties(WebP::WebP PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${WebP_INCLUDE_DIR}")
+  set_target_properties(WebP::WebP PROPERTIES IMPORTED_LOCATION "${WebP_webp_LIBRARY}")
+  set_target_properties(WebP::WebP PROPERTIES INTERFACE_LINK_LIBRARIES "WebP::webpdecoder;WebP::webpmux;WebP::webpdemux")
 endif ()

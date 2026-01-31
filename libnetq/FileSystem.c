@@ -17,6 +17,7 @@
 #include <libnetq/Path.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Log.h>
+#include <libnetq/fs/Stat.h>
 
 #ifdef NQ_OS_WINDOWS
 #include <windows.h>
@@ -110,30 +111,32 @@ bool NQFileSystem_mkdir(const char* path, bool recursive)
   return false;
 }
 
-bool NQFileSystem_exists(const char* path)
+bool NQFileExists(const char* path)
+{
+  NQStat stat;
+  int err = NQGetStat(path, &stat);
+  if (err)
+    return false;
+  return NQStat_isFile(&stat);
+}
+
+NQ_EXPORT bool NQDirectoryExists(const char* path)
+{
+  NQStat stat;
+  int err = NQGetStat(path, &stat);
+  if (err)
+    return false;
+  return NQStat_isDirectory(&stat);
+}
+
+int NQGetLogicalDrives(void)
 {
 #ifdef NQ_OS_WINDOWS
-  WCHAR winpath[MAX_PATH];
-  if (NQWinPathFrom(winpath, sizeof(winpath), path) < sizeof(winpath)) {
-#ifndef NQ_WIN_FS_EXISTS_V2
-    DWORD attr = GetFileAttributesW(winpath);
-    if (attr != INVALID_FILE_ATTRIBUTES) //  && !(attr & FILE_ATTRIBUTE_DIRECTORY)
-      return true;
+  DWORD ret = GetLogicalDrives();
+  if (ret == 0)
+    return -GetLastError();
+  return ret;
 #else
-    WIN32_FIND_DATAW findFileData;
-    HANDLE handle = FindFirstFileW(winpath, &findFileData);
-    if(handle != INVALID_HANDLE_VALUE) {
-      FindClose(handle);
-      return true;
-    }
+  return 0;
 #endif
-  }
-#endif
-
-#ifdef NQ_OS_UNIX
-  if (!access(path, F_OK))
-    return true;
-#endif
-
-  return false;
 }

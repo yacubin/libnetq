@@ -49,7 +49,7 @@ NQJSON* NQJSON_parse2(const char* text, size_t length)
   return (NQJSON*)cJSON_ParseWithLength(text, length);
 }
 
-NQJSON* NQJSON_clone(NQJSON* json, bool deep)
+NQJSON* NQJSON_clone(const NQJSON* json, bool deep)
 {
   return (NQJSON*)cJSON_Duplicate((cJSON*)json, deep); // FIXME
 }

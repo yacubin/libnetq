@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -16,8 +16,16 @@
 #ifdef NQ_SYS_LINUX
 #include <linux/time.h>
 typedef time64_t time_t;
+typedef struct timespec64 NQTimeSpec;
+typedef struct NQTimeVal NQTimeVal;
+struct NQTimeVal {
+  time64_t tv_sec;
+  long tv_usec;
+};
 #else
 #include <time.h>
+typedef struct timespec NQTimeSpec;
+typedef struct timeval NQTimeVal;
 #endif
 
 #ifdef __cplusplus
@@ -28,6 +36,7 @@ extern "C" {
 #define NQ_SECS_PER_MIN   60
 #define NQ_MINS_PER_HOUR  60
 #define NQ_MSECS_PER_SEC  1000
+#define NQ_NSECS_PER_MSEC 1000000
 #define NQ_DAYS_PER_WEEK  7
 #define NQ_DAYS_PER_NYEAR 365
 #define NQ_DAYS_PER_LYEAR 366
@@ -57,24 +66,24 @@ void NQDataTime_initLocalTime(NQDataTime*);
 
 #define NQ_TIME_MAX NQ_INT64_MAX
 
-typedef int64_t NQTime; // in milliseconds
+typedef int64_t NQTimeMs;
 typedef int64_t NQMonoTime;
 typedef int64_t NQMSec;
-typedef uint64_t NQTick; // in milliseconds
+typedef uint64_t NQTickMs;
 typedef int64_t NQUnixTime; // in seconds
+typedef double NQSeconds;
 // NQMonoTime
 
-typedef double NQSeconds;
-NQ_EXPORT NQTime NQGetTime(void);
-NQ_EXPORT NQTick NQGetCPUTick(void);
+NQ_EXPORT NQTimeMs NQGetTimeMs(void);
+NQ_EXPORT NQTickMs NQGetCPUTickMs(void);
 
 static NQ_ALWAYS_INLINE NQUnixTime NQGetUnixTime(void)
 {
-  return NQGetTime() / NQ_MSECS_PER_SEC;
+  return NQGetTimeMs() / NQ_MSECS_PER_SEC;
 }
 
 NQ_EXPORT void NQGetLocaltime(const time_t* t, struct tm* tm);
-NQ_EXPORT void nq_gmtimems(NQTime time, struct tm* ptm, int* pms);
+NQ_EXPORT void nq_gmtimems(NQTimeMs time, struct tm* ptm, int* pms);
 NQ_EXPORT void nq_gmtime(const time_t* t, struct tm* tm);
 NQ_EXPORT time_t nq_timegm(const struct tm* tm);
 
@@ -95,7 +104,12 @@ enum NQTimeFormat {
   NQ_DT_RFC3339 | NQ_DT_DATE | NQ_DT_TIME | NQ_DT_MS | NQ_DT_TZ
 */
 
-NQ_EXPORT int NQTimeFormat(NQTime time, int format, char* buffer, size_t size);
+NQ_EXPORT int NQTimeMsFormat(NQTimeMs time, int format, char* buffer, size_t size);
+NQ_EXPORT NQTimeVal* NQTimeMsToTimeVal(NQTimeMs time, NQTimeVal* tv);
+NQ_EXPORT NQTimeMs NQTimeValToTimeMs(const NQTimeVal* tv);
+NQ_EXPORT NQTimeMs NQTimeSpecToTimeMs(const NQTimeSpec* ts);
+NQ_EXPORT NQTimeMs NQWinFileTimeToTimeMs(uint32_t highDateTime, uint32_t lowDateTime);
+NQ_EXPORT void NQWinFileTimeToTimeSpec(uint32_t highDateTime, uint32_t lowDateTime, NQTimeSpec* ts);
 
 #ifdef __cplusplus
 }

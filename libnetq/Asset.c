@@ -70,6 +70,7 @@ void NQAssetInitialize(const void* binary, const char* dirname, NQAssetHandle ha
 {
   NQPlatformAssetInit(handle);
 
+  NQAsset* asset;
   NQAsset** pAsset = s_assets;
 
   uint32_t size = 0;
@@ -79,15 +80,22 @@ void NQAssetInitialize(const void* binary, const char* dirname, NQAssetHandle ha
     data = (uint8_t*)binary + 4;
     memcpy(&size, data, sizeof(size));
     data += sizeof(size);
-    if (data && size)
-      *pAsset++ = NQBinaryAssetCreate(data, size);
+    if (data && size) {
+      asset = NQBinaryAssetCreate(data, size);
+      if (asset)
+        *pAsset++ = asset;
+    }
   }
 
   if (dirname) {
-    *pAsset++ = NQFileSystemAssetCreate(dirname);
+    asset = NQFileSystemAssetCreate(dirname);
+    if (asset)
+      *pAsset++ = asset;
   }
 
-  *pAsset++ = NQPlatformAssetGetInstance();
+  asset = NQPlatformAssetGetInstance();
+  if (asset)
+    *pAsset++ = asset;
 }
 
 void NQAssetShutdown(void)

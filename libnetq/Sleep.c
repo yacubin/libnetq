@@ -17,7 +17,7 @@
 #elif defined(NQ_OS_WINDOWS)
 # include <windows.h>
 #else
-# include <libnetq/TimeVal.h>
+# include <libnetq/Time.h>
 # if _POSIX_C_SOURCE >= 199309L
 #  include <time.h>
 #  define HAVE_NANOSLEEP 1
@@ -44,7 +44,7 @@ void NQSleep(int64_t ms)
   usleep(ms * NQ_MSECS_PER_SEC);
 #else
   struct timeval tv;
-  int rc = select(0, NULL, NULL, NULL, NQTimeToTimeVal(ms, &tv));
+  int rc = select(0, NULL, NULL, NULL, NQTimeMsToTimeVal(ms, &tv));
   NQ_ASSERT_UNUSED(rc, rc == 0);
 #endif
 }

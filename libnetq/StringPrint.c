@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -31,12 +31,12 @@ void NQStringPrint_finalize(NQStringPrint* thiz)
     NQFree(thiz->characters);
 }
 
-static bool NQStringPrint_resize(NQStringPrint* thiz, size_t newSize)
+static bool reserveCapacity(NQStringPrint* thiz, size_t newCapacity)
 {
-  NQ_ASSERT(newSize > thiz->capacity);
-  NQ_ASSERT(newSize > sizeof(thiz->buffer));
+  NQ_ASSERT(newCapacity > thiz->capacity);
+  NQ_ASSERT(newCapacity > sizeof(thiz->buffer));
 
-  size_t newCapacity = newSize << 1;
+  newCapacity = newCapacity << 1;
   char* newBuffer = (char*)NQMalloc(newCapacity);
   if (newBuffer == NULL)
     return false;
@@ -78,7 +78,7 @@ int NQStringPrint_vprintf(NQStringPrint* thiz, const char* format, va_list list)
     return n;
   }
 
-  if (!NQStringPrint_resize(thiz, newSize))
+  if (!reserveCapacity(thiz, newSize))
     return -1;
 
   int ret = vsnprintf(thiz->characters + thiz->length, thiz->capacity - thiz->length, format, list);
@@ -100,10 +100,11 @@ int NQStringPrint_write(NQStringPrint* thiz, const char* characters, size_t leng
   length = NQGetMin(NQ_INT32_MAX, length);
 
   int newSize = thiz->length + (int)length + 1;
-  if (newSize > thiz->capacity) {
-    if (!NQStringPrint_resize(thiz, newSize))
-      return -1;
-  }
+  if (newSize < thiz->length)
+    return -1;
+
+  if (newSize > thiz->capacity && !reserveCapacity(thiz, newSize))
+    return -1;
 
   memcpy(thiz->characters + thiz->length, characters, length);
   thiz->length += length;
@@ -112,8 +113,45 @@ int NQStringPrint_write(NQStringPrint* thiz, const char* characters, size_t leng
   return (int)length;
 }
 
+bool NQStringPrint_writeAll(NQStringPrint* thiz, const char* characters, size_t length)
+{
+  if (length == 0)
+    return false;
+
+  size_t newSize = thiz->length + length + 1;
+  if (newSize < thiz->length)
+    return false;
+
+  if (newSize > thiz->capacity && !reserveCapacity(thiz, newSize))
+    return false;
+
+  memcpy(thiz->characters + thiz->length, characters, length);
+  thiz->length += length;
+  thiz->characters[thiz->length] = '\0';
+
+  return true;
+}
+
 void NQStringPrint_reset(NQStringPrint* thiz)
 {
   thiz->length = 0;
   thiz->characters[0] = '\0';
+}
+
+bool NQStringPrint_resize(NQStringPrint* thiz, size_t length)
+{
+  if (length > NQ_INT32_MAX)
+    return false;
+
+  size_t newSize = length + 1;
+  if (newSize > thiz->capacity && !reserveCapacity(thiz, newSize))
+    return false;
+
+  if (length < thiz->length)
+    thiz->characters[length] = '\0';
+  else
+    memset(thiz->characters + thiz->length + 1, 0, newSize - thiz->length - 1);
+
+  thiz->length = length;
+  return true;
 }

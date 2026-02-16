@@ -24,7 +24,7 @@ NQ_EXPORT const char* NQJSON_version(void);
 NQ_EXPORT NQJSON* NQJSON_fromFile(const char* filename);
 NQ_EXPORT NQJSON* NQJSON_parse(const char* text);
 NQ_EXPORT NQJSON* NQJSON_parse2(const char* text, size_t length);
-NQ_EXPORT NQJSON* NQJSON_clone(NQJSON*, bool deep);
+NQ_EXPORT NQJSON* NQJSON_clone(const NQJSON*, bool deep);
 
 NQ_EXPORT NQJSON* NQJSON_createNull(void);
 NQ_EXPORT NQJSON* NQJSON_createTrue(void);

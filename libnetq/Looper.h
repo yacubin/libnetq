@@ -63,7 +63,7 @@ struct NQLooper {
   bool notified;
   NQTimerQueue* timerQueue;
   NQDispatchQueue* dispatchQueue;
-  NQTime poolTime;
+  NQTimeMs poolTime;
 
   void* priv;
   struct NQLooperOperations ops;

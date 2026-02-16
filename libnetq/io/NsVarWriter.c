@@ -12,6 +12,8 @@
 
 #include <libnetq/String.h>
 #include <libnetq/CType.h>
+#include <libnetq/Math.h>
+#include <libnetq/Limits.h>
 #include <libnetq/Assert.h>
 
 enum {
@@ -33,8 +35,10 @@ void NQNsVarWriter_init(NQNsVarWriter* thiz, const struct NQNsVarWriterEntry* en
 
 int NQNsVarWriter_write(NQNsVarWriter* thiz, const void* data, size_t size)
 {
+  int res = NQGetMin(NQ_INT32_MIN, size);
+
   const char* ptr = (const char*)data;
-  const char* end = ptr + size;
+  const char* end = ptr + res;
   const char* start = (thiz->state == kEnvInitState) ? ptr : NULL;
 
   while (ptr < end) {
@@ -162,7 +166,7 @@ int NQNsVarWriter_write(NQNsVarWriter* thiz, const void* data, size_t size)
     return -1;
   }
 
-  return size;
+  return res;
 }
 
 int NQNsVarWriter_flush(NQNsVarWriter* thiz)

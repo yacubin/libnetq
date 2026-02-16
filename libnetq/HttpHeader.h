@@ -18,6 +18,7 @@ extern "C" {
 
 #define NQ_HTTP_CRLF "\r\n"
 
+#define NQHTTP_HEADER_ACCEPT                       "Accept"
 #define NQHTTP_HEADER_ACCEPT_ENCODING              "Accept-Encoding"
 #define NQHTTP_HEADER_ACCEPT_LANGUAGE              "Accept-Language"
 #define NQHTTP_HEADER_AUTHORIZATION                "Authorization"
@@ -28,12 +29,18 @@ extern "C" {
 #define NQHTTP_HEADER_CONTENT_MD5                  "Content-MD5"
 #define NQHTTP_HEADER_CONTENT_TRANSFER_ENCODING    "Content-Transfer-Encoding"
 #define NQHTTP_HEADER_CONTENT_TYPE                 "Content-Type"
+#define NQHTTP_HEADER_COOKIE                       "Cookie"
 #define NQHTTP_HEADER_CROSS_ORIGIN_EMBEDDER_POLICY "Cross-Origin-Embedder-Policy"
 #define NQHTTP_HEADER_CROSS_ORIGIN_OPENER_POLICY   "Cross-Origin-Opener-Policy"
 #define NQHTTP_HEADER_HOST                         "Host"
 #define NQHTTP_HEADER_LOCATION                     "Location"
 #define NQHTTP_HEADER_ORIGIN                       "Origin"
 #define NQHTTP_HEADER_PRAGMA                       "Pragma"
+#define NQHTTP_HEADER_SEC_FETCH_DEST               "Sec-Fetch-Dest"
+#define NQHTTP_HEADER_SEC_FETCH_MODE               "Sec-Fetch-Mode"
+#define NQHTTP_HEADER_SEC_FETCH_SITE               "Sec-Fetch-Site"
+#define NQHTTP_HEADER_SEC_FETCH_USER               "Sec-Fetch-User"
+#define NQHTTP_HEADER_SEC_PURPOSE                  "Sec-Purpose"
 #define NQHTTP_HEADER_SEC_WEBSOCKET_ACCEPT         "Sec-WebSocket-Accept"
 #define NQHTTP_HEADER_SEC_WEBSOCKET_EXTENSIONS     "Sec-WebSocket-Extensions"
 #define NQHTTP_HEADER_SEC_WEBSOCKET_KEY            "Sec-WebSocket-Key"
@@ -41,6 +48,7 @@ extern "C" {
 #define NQHTTP_HEADER_SEC_WEBSOCKET_VERSION        "Sec-WebSocket-Version"
 #define NQHTTP_HEADER_SERVER                       "Server"
 #define NQHTTP_HEADER_UPGRADE                      "Upgrade"
+#define NQHTTP_HEADER_UPGRADE_INSECURE_REQUESTS    "Upgrade-Insecure-Requests"
 #define NQHTTP_HEADER_USER_AGENT                   "User-Agent"
 
 #define NQHttpHeaderIsNonStandard(s) ((s)[0] == 'X' && (s)[1] == '-')

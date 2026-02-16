@@ -10,7 +10,6 @@
 if (TARGET JSONC::JSONC)
   set(JSONC_FIND_QUIETLY TRUE)
   set(JSONC_FOUND TRUE)
-  set(JSONC_FOUND TRUE)
   return ()
 endif ()
 
@@ -18,7 +17,7 @@ if (JSONC_INCLUDE_DIR AND JSONC_LIBRARY)
   set(JSONC_FIND_QUIETLY TRUE)
 endif ()
 
-find_package(PkgConfig)
+find_package(PkgConfig QUIET)
 if (PKGCONFIG_FOUND)
   pkg_check_modules(PC_JSONC json-c)
   set(JSONC_DEFINITIONS ${PC_JSONC_CFLAGS_OTHER})
@@ -39,10 +38,10 @@ find_library(JSONC_LIBRARY
     ${PC_JSONC_LIBRARIES_DIRS}
   )
 
+mark_as_advanced(JSONC_INCLUDE_DIR JSONC_LIBRARY)
+
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(JSONC DEFAULT_MSG JSONC_INCLUDE_DIR JSONC_LIBRARY)
-
-mark_as_advanced(JSONC_INCLUDE_DIR JSONC_LIBRARY)
 
 if (JSONC_FOUND)
   set(JSONC_INCLUDE_DIRS ${JSONC_INCLUDE_DIR})

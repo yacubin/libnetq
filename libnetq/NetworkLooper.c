@@ -570,7 +570,7 @@ bool NQNetworkLooper_performOnceWithTime(NQNetworkLooper* thiz, int64_t currentT
 
 bool NQNetworkLooper_performOnce(NQNetworkLooper* thiz)
 {
-  return NQNetworkLooper_performOnce2(thiz, NQGetCPUTick()) == 0;
+  return NQNetworkLooper_performOnce2(thiz, NQGetCPUTickMs()) == 0;
 }
 
 int NQNetworkLooper_poll(NQNetworkLooper* thiz, int timeout)
@@ -591,7 +591,7 @@ int NQNetworkLooper_poll(NQNetworkLooper* thiz, int timeout)
 bool NQNetworkLooper_runOnce(NQNetworkLooper* thiz)
 {
   while (true) {
-    int timeout = NQNetworkLooper_performOnce2(thiz, NQGetCPUTick());
+    int timeout = NQNetworkLooper_performOnce2(thiz, NQGetCPUTickMs());
     if (timeout == 0)
       return true;
     thiz->pollResult = NQPlatformPoll(thiz->pollfd, thiz->pollSize, timeout);
@@ -672,7 +672,7 @@ static bool clearTimer(NQNetworkLooper* thiz, NQTimerIdentifier id, bool isInter
 
 NQTimerIdentifier NQNetworkLooper_setTimeout(NQNetworkLooper* thiz, int delay, NQTimerActionHandler action, NQTimerDestroyHandler destroy, void* userdata)
 {
-  return setTimer(thiz, NQGetCPUTick() + delay, 0, action, destroy, userdata);
+  return setTimer(thiz, NQGetCPUTickMs() + delay, 0, action, destroy, userdata);
 }
 
 bool NQNetworkLooper_clearTimeout(NQNetworkLooper* thiz, NQTimerIdentifier id)
@@ -682,7 +682,7 @@ bool NQNetworkLooper_clearTimeout(NQNetworkLooper* thiz, NQTimerIdentifier id)
 
 NQTimerIdentifier NQNetworkLooper_setInterval(NQNetworkLooper* thiz, int delay, NQTimerActionHandler action, NQTimerDestroyHandler destroy, void* userdata)
 {
-  return setTimer(thiz, NQGetCPUTick() + delay, delay, action, destroy, userdata);
+  return setTimer(thiz, NQGetCPUTickMs() + delay, delay, action, destroy, userdata);
 }
 
 bool NQNetworkLooper_clearInterval(NQNetworkLooper* thiz, NQTimerIdentifier id)

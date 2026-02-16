@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -33,10 +33,10 @@ typedef struct NQNetBufferQueue {
   NQNetBufferEntry entries[SPY_ENTRY_MAX];
 } NQNetBufferQueue;
 
-void NQNetBufferQueue_init(NQNetBufferQueue*);
-NQNetBufferEntry* NQNetBufferQueue_alloc(NQNetBufferQueue*);
-const NQNetBufferEntry* NQNetBufferQueue_shift(NQNetBufferQueue*);
-bool NQNetBufferQueue_isEmpty(const NQNetBufferQueue*);
+NQ_EXPORT void NQNetBufferQueue_init(NQNetBufferQueue*);
+NQ_EXPORT NQNetBufferEntry* NQNetBufferQueue_alloc(NQNetBufferQueue*);
+NQ_EXPORT const NQNetBufferEntry* NQNetBufferQueue_shift(NQNetBufferQueue*);
+NQ_EXPORT bool NQNetBufferQueue_isEmpty(const NQNetBufferQueue*);
 
 #ifdef __cplusplus
 }

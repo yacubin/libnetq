@@ -141,7 +141,7 @@
 #if defined(_I64_MAX)
 # define NQ_INT64_MAX _I64_MAX
 #else
-# define NQ_INT64_MAX (NQ_INT64_C(9223372036854775807)-1)
+# define NQ_INT64_MAX (NQ_INT64_C(9223372036854775807))
 #endif
 
 /* UINT64 */

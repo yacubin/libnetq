@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -10,9 +10,9 @@
 #include "config.h"
 #include "libnetq/Time.h"
 
-#include <libnetq/CStrBase.h>
+#include <libnetq/String.h>
 #include <libnetq/Sprintf.h>
-#include <libnetq/TimeVal.h>
+#include <libnetq/ConstExpr.h>
 #include <libnetq/Assert.h>
 
 #ifdef NQ_SYS_LINUX
@@ -20,20 +20,21 @@
 #include <linux/ktime.h>
 #endif
 
-#if defined(NQ_SYS_LINUX)
-/* nothing */
-#elif defined(NQ_OS_WINDOWS)
-#undef WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#ifdef NQ_OS_WINDOWS
+# undef WIN32_LEAN_AND_MEAN
+# include <winsock2.h>
+# include <windows.h>
+#endif
 
-#define _DELTA_EPOCH_100NS UINT64_C(116444736000000000)
-#else
-#include <sys/time.h>
+#ifdef NQ_OS_UNIX
+# include <sys/time.h>
 #endif
 
 #if defined(NQ_OS_ANDROID) && defined(NQ_CPU_32BIT)
-#include <time64.h>
+# include <time64.h>
 #endif
+
+#define WINFTIME_AS_EPOCH_100NS NQ_UINT64_C(116444736000000000)
 
 // UNIX epoch	since January 1, 1970
 // NTP epoch since January 1, 1900
@@ -42,45 +43,108 @@
 #define _TIME_T_MAX (~_TIME_T_MIN)
 
 #if !defined(HAVE_GMTIME_R) && (defined(NQ_OS_UNIX) || (defined(_POSIX_THREAD_SAFE_FUNCTIONS) && _POSIX_THREAD_SAFE_FUNCTIONS >= 200112L))
-#define HAVE_GMTIME_R 1
+# define HAVE_GMTIME_R 1
 #endif
 
 #if !defined(HAVE_GMTIME_S) && defined(NQ_OS_WINDOWS)
-#define HAVE_GMTIME_S 1
+# define HAVE_GMTIME_S 1
 #endif
 
-NQTime NQGetTime()
+static inline NQTimeVal* timeMsToTimeVal(NQTimeMs time, NQTimeVal* tv)
+{
+  if (time < 0)
+    return NULL;
+
+  if (time == 0) {
+    tv->tv_sec = 0;
+    tv->tv_usec = 0;
+  }
+  else {
+    tv->tv_sec = time / NQ_MSECS_PER_SEC;
+    tv->tv_usec = (time - (NQTimeMs)tv->tv_sec * NQ_MSECS_PER_SEC) * 1000;
+  }
+
+  return tv;
+}
+
+static inline NQTimeMs timeValToTimeMs(const NQTimeVal* tv)
+{
+  return (NQTimeMs)(tv->tv_sec * NQ_MSECS_PER_SEC + tv->tv_usec / NQ_MSECS_PER_SEC);
+}
+
+static inline NQTimeMs timeSpecToTimeMs(const NQTimeSpec* ts)
+{
+  if (ts == NULL)
+    return -1; /* infinitely for select or poll */
+
+  return (NQTimeMs)(ts->tv_sec * NQ_MSECS_PER_SEC + ts->tv_nsec / NQ_NSECS_PER_MSEC);
+}
+
+static inline NQTimeMs winFileTimeToTimeMs(uint32_t highDateTime, uint32_t lowDateTime)
+{
+  uint64_t t = ((uint64_t)highDateTime << 32) | (uint64_t)lowDateTime;
+  return (t - WINFTIME_AS_EPOCH_100NS) / 10000;
+}
+
+static inline void winFileTimeToTimeSpec(uint32_t highDateTime, uint32_t lowDateTime, NQTimeSpec* ts)
+{
+  uint64_t t = ((uint64_t)highDateTime << 32) | (uint64_t)lowDateTime;
+  if (t <= WINFTIME_AS_EPOCH_100NS) {
+    ts->tv_sec = 0;
+    ts->tv_nsec = 0;
+  }
+  else {
+    t -= WINFTIME_AS_EPOCH_100NS;
+    ts->tv_sec  = (time_t)(t / 10000000);
+    ts->tv_nsec = (long)((t % 10000000) * 100);
+  }
+}
+
+#ifdef NQ_OS_WINDOWS
+# if NQ_CHECK_LEVEL >= 2
+static bool WinFileTimeToTimeMsCheck(const FILETIME* ft, NQTimeMs timeMs)
+{
+  ULARGE_INTEGER dateTime;
+  memcpy(&dateTime, ft, sizeof(dateTime));
+  return (dateTime.QuadPart - WINFTIME_AS_EPOCH_100NS) / 10000;
+}
+# else
+#  define WinFileTimeToTimeMsCheck(...) true
+# endif
+#endif
+
+NQTimeMs NQGetTimeMs()
 {
 #if defined(NQ_SYS_LINUX)
   ktime_t now = ktime_get_real();
-  return (NQTime)ktime_to_ms(now);
+  return (NQTimeMs)ktime_to_ms(now);
 #elif defined(NQ_OS_WINDOWS)
   FILETIME fileTime;
-  ULARGE_INTEGER dateTime;
 
   GetSystemTimeAsFileTime(&fileTime);
-  memcpy(&dateTime, &fileTime, sizeof(dateTime));
-  return (dateTime.QuadPart - _DELTA_EPOCH_100NS) / 10000;
+  NQTimeMs timeMs = winFileTimeToTimeMs(fileTime.dwHighDateTime, fileTime.dwLowDateTime);
+  NQ_ASSERT(WinFileTimeToTimeMsCheck(&fileTime, timeMs));
+  return timeMs;
 #else
   struct timeval now;
   gettimeofday(&now, NULL);
-  return NQTimeValToTime(&now);
+  return NQTimeValToTimeMs(&now);
 #endif
 }
 
-NQTick NQGetCPUTick()
+NQTickMs NQGetCPUTickMs()
 {
 #if defined(NQ_SYS_LINUX)
   ktime_t now = ktime_get();
-  return (NQTick)ktime_to_ms(now);
+  return (NQTickMs)ktime_to_ms(now);
 #elif defined(NQ_COMPILER_MINGW64)
-  return (NQTick)GetTickCount();
+  return (NQTickMs)GetTickCount();
 #elif defined(NQ_OS_WINDOWS)
-  return (NQTick)GetTickCount64();
+  return (NQTickMs)GetTickCount64();
 #else
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
-  return (NQTick)ts.tv_sec * 1000 + (NQTick)ts.tv_nsec / 1000000;
+  return (NQTickMs)ts.tv_sec * 1000 + (NQTickMs)ts.tv_nsec / 1000000;
 #endif
 }
 
@@ -165,15 +229,15 @@ time_t nq_timegm(const struct tm* tm)
 #define _MS_PER_YEAR   (365L  * _MS_PER_DAY)
 #define _MS_PER_4YEAR  (1461L * _MS_PER_DAY)
 
-void nq_gmtimems(NQTime time, struct tm* ptm, int* pms)
+void nq_gmtimems(NQTimeMs time, struct tm* ptm, int* pms)
 {
   static const int s_lpdays[] = { -1, 30, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
   static const int s_days[] = { -1, 30, 58, 89, 119, 150, 180, 211, 242, 272, 303, 333, 364 };
   
   const int* mdays;
 
-  NQTime ctimer = time;
-  NQTime tmptimer;
+  NQTimeMs ctimer = time;
+  NQTimeMs tmptimer;
   bool isleapyear = false;
   
   if (pms != NULL)
@@ -182,8 +246,8 @@ void nq_gmtimems(NQTime time, struct tm* ptm, int* pms)
   if (ptm == NULL)
     return;
 
-  tmptimer = (NQTime)(ctimer / _MS_PER_4YEAR);
-  ctimer -= ((NQTime)tmptimer * _MS_PER_4YEAR);
+  tmptimer = (NQTimeMs)(ctimer / _MS_PER_4YEAR);
+  ctimer -= ((NQTimeMs)tmptimer * _MS_PER_4YEAR);
   tmptimer = (tmptimer * 4) + 70;
 
   if (ctimer >= _MS_PER_YEAR) {
@@ -203,7 +267,7 @@ void nq_gmtimems(NQTime time, struct tm* ptm, int* pms)
 
   ptm->tm_year = (int)tmptimer;
   ptm->tm_yday = (int)(ctimer / _MS_PER_DAY);
-  ctimer -= (NQTime)(ptm->tm_yday) * _MS_PER_DAY;
+  ctimer -= (NQTimeMs)(ptm->tm_yday) * _MS_PER_DAY;
 
   if (isleapyear)
     mdays = s_lpdays;
@@ -218,9 +282,9 @@ void nq_gmtimems(NQTime time, struct tm* ptm, int* pms)
 
   ptm->tm_wday = (int)(((time / _MS_PER_DAY) + 4) % 7);
   ptm->tm_hour = (int)(ctimer / _MS_PER_HOUR);
-  ctimer -= (NQTime)ptm->tm_hour * _MS_PER_HOUR;
+  ctimer -= (NQTimeMs)ptm->tm_hour * _MS_PER_HOUR;
   ptm->tm_min = (int)(ctimer / _MS_PER_MIN);
-  ctimer -= (NQTime)ptm->tm_min * _MS_PER_MIN;
+  ctimer -= (NQTimeMs)ptm->tm_min * _MS_PER_MIN;
   ptm->tm_sec = (int)(ctimer / _MS_PER_SEC);
 
 #ifdef NQ_SYS_LINUX
@@ -238,13 +302,13 @@ void nq_gmtime(const time_t* timep, struct tm* result)
   gmtime_s(result, timep);
 #else
   if (timep != NULL)
-    nq_gmtimems(((NQTime)*timep) * _MS_PER_SEC, result, NULL);
+    nq_gmtimems(((NQTimeMs)*timep) * _MS_PER_SEC, result, NULL);
   else if (result != NULL)
     memset(result, 0, sizeof(*result));
 #endif
 }
 
-int NQTimeFormat(NQTime time, int format, char* buffer, size_t size)
+int NQTimeMsFormat(NQTimeMs time, int format, char* buffer, size_t size)
 {
   int n, msec;
   struct tm tm;
@@ -311,4 +375,35 @@ void NQDataTime_init(NQDataTime* datatime)
 void NQDataTime_initLocalTime(NQDataTime* datatime)
 {
   NQ_ASSERT_NOT_REACHED();
+}
+
+NQTimeVal* NQTimeMsToTimeVal(NQTimeMs time, NQTimeVal* tv)
+{
+  return timeMsToTimeVal(time, tv);
+}
+
+NQTimeMs NQTimeValToTimeMs(const NQTimeVal* tv)
+{
+  if (tv == NULL)
+    return -1; /* infinitely for select or poll */
+
+  return timeValToTimeMs(tv);
+}
+
+NQTimeMs NQTimeSpecToTimeMs(const NQTimeSpec* ts)
+{
+  if (ts == NULL)
+    return -1; /* infinitely for select or poll */
+
+  return timeSpecToTimeMs(ts);
+}
+
+NQTimeMs NQWinFileTimeToTimeMs(uint32_t highDateTime, uint32_t lowDateTime)
+{
+  return winFileTimeToTimeMs(highDateTime, lowDateTime);
+}
+
+void NQWinFileTimeToTimeSpec(uint32_t highDateTime, uint32_t lowDateTime, NQTimeSpec* ts)
+{
+  return winFileTimeToTimeSpec(highDateTime, lowDateTime, ts);
 }

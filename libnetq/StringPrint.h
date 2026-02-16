@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -27,13 +27,18 @@ typedef struct NQStringPrint {
 NQ_EXPORT void NQStringPrint_init(NQStringPrint*);
 NQ_EXPORT void NQStringPrint_finalize(NQStringPrint*);
 
+#define NQStringPrint_characters(thiz) (thiz)->characters
+static inline size_t NQStringPrint_length(const NQStringPrint* thiz)
+{
+  return thiz->length;
+}
+
 NQ_EXPORT int NQStringPrint_printf(NQStringPrint*, const char* format, ...) NQ_ATTRIBUTE_PRINTF(2, 3);
 NQ_EXPORT int NQStringPrint_vprintf(NQStringPrint*, const char* format, va_list);
 NQ_EXPORT int NQStringPrint_write(NQStringPrint*, const char* characters, size_t length);
+NQ_EXPORT bool NQStringPrint_writeAll(NQStringPrint*, const char* characters, size_t length);
 NQ_EXPORT void NQStringPrint_reset(NQStringPrint*);
-
-#define NQStringPrint_characters(thiz) (thiz)->characters
-#define NQStringPrint_length(thiz) (thiz)->length
+NQ_EXPORT bool NQStringPrint_resize(NQStringPrint*, size_t length);
 
 #ifdef __cplusplus
 }

@@ -8,8 +8,8 @@
 #
 
 if (TARGET Tidy::Tidy)
+  set(Tidy_FIND_QUIETLY TRUE)
   set(Tidy_FOUND TRUE)
-  set(TIDY_FOUND TRUE)
   return ()
 endif ()
 
@@ -17,7 +17,7 @@ if (Tidy_INCLUDE_DIR AND Tidy_LIBRARY)
   set(Tidy_FIND_QUIETLY TRUE)
 endif ()
 
-find_package(PkgConfig)
+find_package(PkgConfig QUIET)
 if (PKGCONFIG_FOUND)
   pkg_check_modules(PC_Tidy tidy)
 endif ()
@@ -36,19 +36,21 @@ find_library(Tidy_LIBRARY
     ${PC_Tidy_LIBRARIES_DIRS}
   )
 
-include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Tidy DEFAULT_MSG Tidy_INCLUDE_DIR Tidy_LIBRARY)
-
 mark_as_advanced(Tidy_INCLUDE_DIR Tidy_LIBRARY)
 
-if (Tidy_FOUND OR TIDY_FOUND)
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Tidy DEFAULT_MSG Tidy_INCLUDE_DIR Tidy_LIBRARY)
+if (TIDY_FOUND)
   set(Tidy_FOUND TRUE)
+endif()
+
+if (Tidy_FOUND)
   set(Tidy_INCLUDE_DIRS ${Tidy_INCLUDE_DIR})
   set(Tidy_LIBRARIES "${Tidy_LIBRARY}")
 endif()
 
 if (Tidy_FOUND AND NOT TARGET Tidy::Tidy)
-  add_library(Tidy::Tidy INTERFACE IMPORTED)
-  set_property(TARGET Tidy::Tidy PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${Tidy_INCLUDE_DIR}")
-  set_property(TARGET Tidy::Tidy PROPERTY INTERFACE_LINK_LIBRARIES "${Tidy_LIBRARY}")
+  add_library(Tidy::Tidy UNKNOWN IMPORTED)
+  set_target_properties(Tidy::Tidy PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${Tidy_INCLUDE_DIR}")
+  set_target_properties(Tidy::Tidy PROPERTIES IMPORTED_LOCATION "${Tidy_LIBRARY}")
 endif ()

@@ -17,7 +17,7 @@ if (QuickJS_LIBRARIES AND QuickJS_INCLUDE_DIRS)
   set(QuickJS_FOUND TRUE)
 endif ()
 
-find_package(PkgConfig)
+find_package(PkgConfig QUIET)
 if (PKGCONFIG_FOUND)
   pkg_check_modules(PC_QuickJS QuickJS)
   set(QuickJS_DEFINITIONS ${PC_QuickJS_CFLAGS_OTHER})
@@ -40,12 +40,11 @@ find_library(QuickJS_LIBRARY
     ${PC_QuickJS_LIBDIR}
     ${PC_QuickJS_LIBRARY_DIRS}
   )
-  
-include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(QuickJS DEFAULT_MSG QuickJS_INCLUDE_DIR QuickJS_LIBRARY)
 
 mark_as_advanced(QuickJS_INCLUDE_DIR QuickJS_LIBRARY)
-  
+
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(QuickJS DEFAULT_MSG QuickJS_INCLUDE_DIR QuickJS_LIBRARY)
 if(QUICKJS_FOUND)
   set(QuickJS_FOUND TRUE)
 endif ()
@@ -59,7 +58,7 @@ if(QuickJS_FOUND)
 endif()
 
 if (QuickJS_FOUND AND NOT TARGET QuickJS::QuickJS)
-  add_library(QuickJS::QuickJS INTERFACE IMPORTED)
-  set_property(TARGET QuickJS::QuickJS PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${QuickJS_INCLUDE_DIRS})
-  set_property(TARGET QuickJS::QuickJS PROPERTY INTERFACE_LINK_LIBRARIES ${QuickJS_LIBRARIES})
+  add_library(QuickJS::QuickJS UNKNOWN IMPORTED)
+  set_target_properties(QuickJS::QuickJS PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${QuickJS_INCLUDE_DIR}")
+  set_target_properties(QuickJS::QuickJS PROPERTIES IMPORTED_LOCATION "${QuickJS_LIBRARY}")
 endif ()

@@ -67,7 +67,7 @@ static char* NQLogCircular_add_prefix(char* buffer, NQLogLevel level)
   // "13:02:50.071 I *"
   size_t n;
 
-  n = NQTimeFormat(NQGetTime(), NQ_DT_RFC3339_TIMEMS, buffer, LOG_PREFIX_SIZE);
+  n = NQTimeMsFormat(NQGetTimeMs(), NQ_DT_RFC3339_TIMEMS, buffer, LOG_PREFIX_SIZE);
   buffer[n++] = ' ';
   buffer[n++] = NQLogLevelToChar(level);
   buffer[n++] = ' ';

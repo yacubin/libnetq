@@ -8,8 +8,8 @@
 #
 
 if (TARGET LibArchive::LibArchive)
+  set(LibArchive_FIND_QUIETLY TRUE)
   set(LibArchive_FOUND TRUE)
-  set(ARCHIVE_FOUND TRUE)
   return ()
 endif ()
 
@@ -26,20 +26,21 @@ find_library(LibArchive_LIBRARY
   )
 
 unset(LibArchive_FIND_LIBRARIES)
+mark_as_advanced(LibArchive_INCLUDE_DIR LibArchive_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibArchive DEFAULT_MSG LibArchive_INCLUDE_DIR LibArchive_LIBRARY)
-
-mark_as_advanced(LibArchive_INCLUDE_DIR LibArchive_LIBRARY)
-
-if (LibArchive_FOUND OR ARCHIVE_FOUND)
+if (LIBARCHIVE_FOUND)
   set(LibArchive_FOUND TRUE)
+endif ()
+
+if (LibArchive_FOUND)
   set(LibArchive_INCLUDE_DIRS ${LibArchive_INCLUDE_DIR})
   set(LibArchive_LIBRARIES "${LibArchive_LIBRARY}")
 endif()
 
 if (LibArchive_FOUND AND NOT TARGET LibArchive::LibArchive)
-  add_library(LibArchive::LibArchive INTERFACE IMPORTED)
-  set_property(TARGET LibArchive::LibArchive PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${LibArchive_INCLUDE_DIR}")
-  set_property(TARGET LibArchive::LibArchive PROPERTY INTERFACE_LINK_LIBRARIES "${LibArchive_LIBRARY}")
+  add_library(LibArchive::LibArchive UNKNOWN IMPORTED)
+  set_target_properties(LibArchive::LibArchive PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${LibArchive_INCLUDE_DIR}")
+  set_target_properties(LibArchive::LibArchive PROPERTIES IMPORTED_LOCATION "${LibArchive_LIBRARY}")
 endif ()

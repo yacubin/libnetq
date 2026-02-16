@@ -20,7 +20,7 @@
 #include <string.h>
 #endif
 
-size_t NQGetCommandLine(char* buffer, size_t n)
+int NQGetCommandLine(char* buffer, size_t n)
 {
 #ifdef NQ_OS_WINDOWS
   LPWSTR cmdline = GetCommandLineW();
@@ -47,7 +47,7 @@ size_t NQGetCommandLine(char* buffer, size_t n)
   return 0;
 }
 
-size_t NQGetCurrentDirectory(char* buffer, size_t n)
+int NQGetCurrentDirectory(char* buffer, size_t n)
 {
 #ifdef NQ_OS_WINDOWS
   WCHAR winpath[MAX_PATH];
@@ -67,7 +67,7 @@ size_t NQGetCurrentDirectory(char* buffer, size_t n)
   return 0;
 }
 
-size_t NQGetExecutablePath(char* buffer, size_t n)
+int NQGetExecutablePath(char* buffer, size_t n)
 {
 #ifdef NQ_OS_WINDOWS
   WCHAR winpath[MAX_PATH];

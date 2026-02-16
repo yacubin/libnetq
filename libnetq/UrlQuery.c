@@ -131,7 +131,7 @@ size_t urlQueryInit(NQUrlQuery* thiz, const char* query, struct QueryInitInfo* p
   size_t sizeInBytes = sizeof(*thiz) + sizeof(struct ParamEntry) * info.paramCount + info.queryLength + info.namesLength + info.valuesLength;
 
   if (isInit) {
-    thiz->paramCount = info.paramCount;
+    thiz->paramCount = (uint16_t)info.paramCount;
     struct ParamEntry* entry = &thiz->paramEntries[info.paramCount];
     NQ_ASSERT((char*)thiz + sizeInBytes == entry->value);
     entry->name = NULL;

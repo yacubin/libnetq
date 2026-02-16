@@ -8,7 +8,7 @@
 #
 
 if (TARGET Leptonica::Leptonica)
-  set(LEPTONICA_FOUND TRUE)
+  set(Leptonica_FIND_QUIETLY TRUE)
   set(Leptonica_FOUND TRUE)
   return ()
 endif ()
@@ -17,7 +17,7 @@ if (Leptonica_INCLUDE_DIR AND Leptonica_LIBRARY)
   set(Leptonica_FIND_QUIETLY TRUE)
 endif ()
 
-find_package(PkgConfig)
+find_package(PkgConfig QUIET)
 if (PKGCONFIG_FOUND)
   pkg_check_modules(PC_Leptonica leptonica)
 endif ()
@@ -57,20 +57,21 @@ find_library(Leptonica_LIBRARY
   )
 
 unset(Leptonica_FIND_LIBRARIES)
+mark_as_advanced(Leptonica_INCLUDE_DIR Leptonica_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(Leptonica DEFAULT_MSG Leptonica_INCLUDE_DIR Leptonica_LIBRARY)
-
-mark_as_advanced(Leptonica_INCLUDE_DIR Leptonica_LIBRARY)
-
-if (Leptonica_FOUND OR LEPTONICA_FOUND)
+if (LEPTONICA_FOUND)
   set(Leptonica_FOUND TRUE)
+endif ()
+
+if (Leptonica_FOUND)
   set(Leptonica_INCLUDE_DIRS ${Leptonica_INCLUDE_DIR})
   set(Leptonica_LIBRARIES "${Leptonica_LIBRARY}")
 endif()
 
 if (Leptonica_FOUND AND NOT TARGET Leptonica::Leptonica)
-  add_library(Leptonica::Leptonica INTERFACE IMPORTED)
-  set_property(TARGET Leptonica::Leptonica PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${Leptonica_INCLUDE_DIR}")
-  set_property(TARGET Leptonica::Leptonica PROPERTY INTERFACE_LINK_LIBRARIES "${Leptonica_LIBRARY}")
+  add_library(Leptonica::Leptonica UNKNOWN IMPORTED)
+  set_target_properties(Leptonica::Leptonica PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${Leptonica_INCLUDE_DIR}")
+  set_target_properties(Leptonica::Leptonica PROPERTIES IMPORTED_LOCATION "${Leptonica_LIBRARY}")
 endif ()

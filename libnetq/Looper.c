@@ -38,7 +38,7 @@ static void onInitialize(void)
 static int64_t NQLooper_timerTimeout(NQLooper* looper)
 {
   int64_t timeout;
-  NQTime now = NQGetTime();
+  NQTimeMs now = NQGetTimeMs();
 
   NQMutex_lock(&looper->mutex);
   timeout = NQTimerQueue_timeout(looper->timerQueue, now);
@@ -77,7 +77,7 @@ static void NQLooper_poolAll(NQLooper* looper)
   while (!looper->stopLoop && !s_stopLoop) {
     timeout = NQLooper_timerTimeout(looper);
     result = looper->ops.poll(looper, timeout);
-    looper->poolTime = NQGetTime();
+    looper->poolTime = NQGetTimeMs();
 
     if (result == NQ_LOOPER_POLL_ERROR)
       break;
@@ -117,7 +117,7 @@ void NQLooper_init(NQLooper* looper, const struct NQLooperOperations* ops)
   looper->tid = NQThreadId();
   looper->timerQueue = NQTimerQueue_create(1000);
   looper->dispatchQueue = NQDispatchQueue_create(0);
-  looper->poolTime = NQGetTime();
+  looper->poolTime = NQGetTimeMs();
 
   if (looper->ops.init)
     looper->ops.init(looper);
@@ -303,7 +303,7 @@ static NQTimerIdentifier NQLooper_startTimer(NQLooper* looper, int64_t timeout, 
 {
   int64_t timeoutPrev, timeoutCur;
 
-  NQTime now = NQGetTime();
+  NQTimeMs now = NQGetTimeMs();
 
   NQTimerData data;
   NQTimerIdentifier id;

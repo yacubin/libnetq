@@ -477,7 +477,7 @@ bool NQSocketSetNoDelay(NQSocketHandle handle, bool value)
   return NQSocketSetBoolOpt(handle, NQ_SOCKOPT_TCPNODELAY, value);
 }
 
-bool NQSocketConnect(NQSocketHandle handle, const NQEndPoint* ep)
+int NQSocketConnect(NQSocketHandle handle, const NQEndPoint* ep)
 {
   if (ep->family == NQ_AF_INET4)
     return NQSocketConnect4(handle, &ep->ip4ep);
@@ -489,20 +489,24 @@ bool NQSocketConnect(NQSocketHandle handle, const NQEndPoint* ep)
   return false;
 }
 
-bool NQSocketConnect4(NQSocketHandle handle, const NQIPv4EndPoint* ep)
+int NQSocketConnect4(NQSocketHandle handle, const NQIPv4EndPoint* ep)
 {
   NQ_ASSERT(ep);
   struct sockaddr_in addr;
   socklen_t size = NQIPv4EndPoint_toInet4(ep, &addr);
-  return NQSocketConnectImpl(handle, (struct sockaddr*)&addr, size) == 0;
+  if (NQSocketConnectImpl(handle, (struct sockaddr*)&addr, size) != 0)
+    return -NQSocketGetLastError();
+  return 0;
 }
 
-bool NQSocketConnect6(NQSocketHandle handle, const NQIPv6EndPoint* ep)
+int NQSocketConnect6(NQSocketHandle handle, const NQIPv6EndPoint* ep)
 {
   NQ_ASSERT(ep);
   struct sockaddr_in6 addr;
   socklen_t size = NQIPv6EndPoint_toInet6(ep, &addr);
-  return NQSocketConnectImpl(handle, (struct sockaddr*)&addr, size) == 0;
+  if (NQSocketConnectImpl(handle, (struct sockaddr*)&addr, size) != 0)
+    return -NQSocketGetLastError();
+  return 0;
 }
 
 NQSocketHandle NQSocketAccept(NQSocketHandle handle, NQEndPoint* ep)

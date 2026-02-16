@@ -8,9 +8,8 @@
 #
 
 if (TARGET LibNetQ::LibNetQ)
-    set(LibNetQ_FIND_QUIETLY TRUE)
-    set(LibNetQ_FOUND TRUE)
-    set(LibNetQ_FOUND TRUE)
+  set(LibNetQ_FIND_QUIETLY TRUE)
+  set(LibNetQ_FOUND TRUE)
   return ()
 endif ()
 
@@ -18,11 +17,11 @@ if (LibNetQ_INCLUDE_DIR AND LibNetQ_LIBRARY)
   set(LibNetQ_FIND_QUIETLY TRUE)
 endif ()
 
-if (NOT WIN32)
-  find_package(PkgConfig)
+find_package(PkgConfig QUIET)
+if (PKGCONFIG_FOUND)
   pkg_check_modules(PC_Netq Netq)
   set(LibNetQ_DEFINITIONS ${PC_LibNetQ_CFLAGS_OTHER})
-endif (NOT WIN32)
+endif ()
 
 find_path(LibNetQ_INCLUDE_DIR
   NAMES
@@ -47,20 +46,18 @@ find_library(LibNetQ_LIBRARY
 set(LibNetQ_DEFINITIONS
   )
 
-include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibNetQ DEFAULT_MSG LibNetQ_INCLUDE_DIR LibNetQ_LIBRARY)
-
 mark_as_advanced(LibNetQ_INCLUDE_DIR LibNetQ_LIBRARY)
 
-if (LIBNETQ_FOUND OR LibNetQ_FOUND)
-  set(LibNetQ_FOUND 1)
+include(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibNetQ DEFAULT_MSG LibNetQ_INCLUDE_DIR LibNetQ_LIBRARY)
+if (LIBNETQ_FOUND)
+  set(LibNetQ_FOUND TRUE)
+endif ()
+
+if (LibNetQ_FOUND)
   set(LibNetQ_INCLUDE_DIRS "${LibNetQ_INCLUDE_DIR}")
   set(LibNetQ_LIBRARIES "${LibNetQ_LIBRARY}")
 endif()
-
-if (CMAKE_SYSTEM_NAME MATCHES "Windows")
-  list(APPEND LibNetQ_LIBRARIES ws2_32 wsock32)
-endif ()
 
 if (LibNetQ_FOUND AND NOT TARGET LibNetQ::LibNetQ)
   add_library(LibNetQ::LibNetQ UNKNOWN IMPORTED)
@@ -68,7 +65,4 @@ if (LibNetQ_FOUND AND NOT TARGET LibNetQ::LibNetQ)
   set_target_properties(LibNetQ::LibNetQ PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${LibNetQ_INCLUDE_DIRS}")
   set_target_properties(LibNetQ::LibNetQ PROPERTIES IMPORTED_LOCATION "${LibNetQ_LIBRARY}")
   set_target_properties(LibNetQ::LibNetQ PROPERTIES IMPORTED_LINK_INTERFACE_LANGUAGES "C")
-  if (CMAKE_SYSTEM_NAME MATCHES "Windows")
-    set_target_properties(LibNetQ::LibNetQ PROPERTIES INTERFACE_LINK_LIBRARIES "ws2_32;wsock32")
-  endif ()
 endif ()

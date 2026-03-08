@@ -31,6 +31,9 @@
 /* Define if you have PCRE2 */
 #cmakedefine01 WITH_PCRE2
 
+/* Define if you have Expat */
+#cmakedefine01 WITH_EXPAT
+
 /* Define if you have CivetWeb */
 #cmakedefine01 WITH_CIVETWEB
 
@@ -148,6 +151,15 @@
 /* Use Regex implementation from the PCRE2 library */
 #cmakedefine01 USE_PCRE2_REGEX
 
+/* Use XMLParser implementation from the Expat library */
+#cmakedefine01 USE_EXPAT_XMLPARSER
+
+/* Use Atomic implementation from the AtomicOps library */
+#cmakedefine01 USE_ATOMICOPS_ATOMIC
+
+/* Use Atomic implementation from the LibNetQ library */
+#cmakedefine01 USE_LNQ_ATOMIC
+
 /* Use stub for MD5 */
 #cmakedefine01 USE_STUB_MD5
 
@@ -162,6 +174,9 @@
 
 /* Use stub for Regex */
 #cmakedefine01 USE_STUB_REGEX
+
+/* Use stub for XMLParser */
+#cmakedefine01 USE_STUB_XMLPARSER
 
 /* Define to 2 if the system does not provide POSIX.1 features except with
 this defined. */

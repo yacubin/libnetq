@@ -18,7 +18,7 @@ if (WebP_INCLUDE_DIR AND WebP_webp_LIBRARY AND WebP_webpdecoder_LIBRARY AND WebP
 endif ()
 
 find_package(PkgConfig QUIET)
-if (PKGCONFIG_FOUND)
+if (PkgConfig_FOUND)
   pkg_check_modules(PC_WebP libwebp)
 endif ()
 

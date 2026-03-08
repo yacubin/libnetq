@@ -15,6 +15,7 @@
 #include <libnetq/Math.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Assert.h>
+#include <libnetq/Malloc.h>
 
 enum {
   kEnvInitState,
@@ -23,6 +24,20 @@ enum {
   kEnvValueState,
   kEnvErrorState,
 };
+
+NQNsVarWriter* NQNsVarWriter_create(const struct NQNsVarWriterEntry* entries, NQWriteCallback writer, void* userdata)
+{
+  NQNsVarWriter* thiz = (NQNsVarWriter*)NQMalloc(sizeof(NQNsVarWriter));
+  if (thiz)
+    NQNsVarWriter_init(thiz, entries, writer, userdata);
+  return thiz;
+}
+
+void NQNsVarWriter_release(NQNsVarWriter* thiz)
+{
+  NQNsVarWriter_finalize(thiz);
+  NQFree(thiz);
+}
 
 void NQNsVarWriter_init(NQNsVarWriter* thiz, const struct NQNsVarWriterEntry* entries, NQWriteCallback writer, void* userdata)
 {

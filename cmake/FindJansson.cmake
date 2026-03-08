@@ -18,7 +18,7 @@ if (Jansson_INCLUDE_DIR AND Jansson_LIBRARY)
 endif ()
 
 find_package(PkgConfig QUIET)
-if (PKGCONFIG_FOUND)
+if (PkgConfig_FOUND)
   pkg_check_modules(PC_JANSSON Jansson)
   set(Jansson_DEFINITIONS ${PC_JANSSON_CFLAGS_OTHER})
 endif ()

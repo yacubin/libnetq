@@ -37,6 +37,9 @@ struct NQNsVarWriter {
   char buffer[128];
 };
 
+NQ_EXPORT NQNsVarWriter* NQNsVarWriter_create(const struct NQNsVarWriterEntry* entries, NQWriteCallback writer, void* userdata);
+NQ_EXPORT void NQNsVarWriter_release(NQNsVarWriter*);
+
 NQ_EXPORT void NQNsVarWriter_init(NQNsVarWriter*, const struct NQNsVarWriterEntry* entries, NQWriteCallback writer, void* userdata);
 static inline void NQNsVarWriter_finalize(NQNsVarWriter* thiz)
 {

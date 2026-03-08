@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.9
+project(libnetq VERSION 1.0.10
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -129,11 +129,8 @@ LNQ_ADD_LIBRARY(PCRE2)
 LNQ_ADD_LIBRARY(CivetWeb)
 LNQ_ADD_LIBRARY(LibEvent)
 LNQ_ADD_LIBRARY(LibUV)
-
-if (WITH_ZLIB)
-  list(APPEND CMAKE_REQUIRED_INCLUDES "${ZLIB_INCLUDE_DIR}")
-  list(APPEND CMAKE_REQUIRED_LIBRARIES "${ZLIB_LIBRARY}")
-endif ()
+LNQ_ADD_LIBRARY(Expat)
+LNQ_ADD_LIBRARY(AtomicOps)
 
 check_include_file(stddef.h HAVE_STDDEF_H)
 check_include_file(stdio.h HAVE_STDIO_H)
@@ -376,6 +373,7 @@ set(libnetq_HEADERS
   libnetq/json/JSONTypes.h
   libnetq/json/JSONWriter.h
 
+  libnetq/net/ChunkBuffer.h
   libnetq/net/NetBufferQueue.h
 
   libnetq/regex/Regex.h
@@ -389,6 +387,8 @@ set(libnetq_HEADERS
   libnetq/wasm/Opcodes.def
   libnetq/wasm/Module.h
   libnetq/wasm/ModuleTypes.h
+
+  libnetq/xml/XMLParser.h
 
   libnetq/Abort.h
   libnetq/Allocator.h
@@ -561,6 +561,7 @@ set(libnetq_SOURCES
   libnetq/json/JSONStub.c
   libnetq/json/JSONWriter.c
 
+  libnetq/net/ChunkBuffer.c
   libnetq/net/NetBufferQueue.c
 
   libnetq/regex/RegexPcre2.c
@@ -571,6 +572,9 @@ set(libnetq_SOURCES
 
   libnetq/web/HttpStatistics.c
   libnetq/web/UrlHost.c
+
+  libnetq/xml/XMLParserExpat.c
+  libnetq/xml/XMLParserStub.c
 
   libnetq/Abort.c
   libnetq/Application.c
@@ -684,9 +688,13 @@ set(libnetq_SOURCES
 
 set(libnetq_CMAKEFILES
   cmake/FindAmiVideo.cmake
+  cmake/FindApr.cmake
+  cmake/FindAtomicOps.cmake
+  cmake/FindBZip2.cmake
   cmake/FindCivetWeb.cmake
   cmake/FindCJSON.cmake
   cmake/FindDBC.cmake
+  cmake/FindExpat.cmake
   cmake/FindGIF.cmake
   cmake/FindIFF.cmake
   cmake/FindILBM.cmake
@@ -733,6 +741,68 @@ set(libnetq_DEFINITIONS
   )
 
 set_source_files_properties(${libnetq_HEADERS} PROPERTIES HEADER_FILE_ONLY TRUE)
+
+if (WITH_OPENSSL)
+  set(USE_OPENSSL_MD5 1)
+  configure_file(libnetq/crypto/MD5OpenSSL.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
+elseif (WITH_ADVAPI32)
+  set(USE_ADVAPI32_MD5 1)
+  configure_file(libnetq/crypto/MD5Advapi32.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
+else ()
+  set(USE_STUB_MD5 1)
+  configure_file(libnetq/crypto/MD5Stub.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
+  message("! MD5 has no implementation")
+endif ()
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/crypto")
+
+if (WITH_OPENSSL)
+  set(USE_OPENSSL_SHA1 1)
+  configure_file(libnetq/crypto/SHA1OpenSSL.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
+elseif (WITH_ADVAPI32)
+  set(USE_ADVAPI32_SHA1 1)
+  configure_file(libnetq/crypto/SHA1Advapi32.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
+else ()
+  set(USE_STUB_SHA1 1)
+  configure_file(libnetq/crypto/SHA1Stub.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
+  message("! SHA1 has no implementation")
+endif ()
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/crypto")
+
+if (WITH_ZLIB)
+  set(USE_ZLIB_CRC32 1)
+else ()
+  set(USE_STUB_CRC32 1)
+  message("! CRC32 has no implementation")
+endif ()
+
+if (WITH_JANSSON)
+  set(USE_JANSSON_JSON 1)
+elseif (WITH_CJSON)
+  set(USE_CJSON_JSON 1)
+else ()
+  set(USE_STUB_JSON 1)
+  message("! JSON has no implementation")
+endif ()
+
+if (WITH_PCRE2)
+  set(USE_PCRE2_REGEX 1)
+else ()
+  set(USE_STUB_REGEX 1)
+  message("! Regex has no implementation")
+endif ()
+
+if (WITH_EXPAT)
+  set(USE_EXPAT_XMLPARSER 1)
+else ()
+  set(USE_STUB_XMLPARSER 1)
+  message("! XMLParser has no implementation")
+endif ()
+
+if (WITH_ATOMICOPS)
+  set(USE_ATOMICOPS_ATOMIC 1)
+else ()
+  set(USE_LNQ_ATOMIC 1)
+endif ()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Android")
   list(APPEND libnetq_LIBRARIES android log)
@@ -784,57 +854,16 @@ if (WITH_PCRE2)
   list(APPEND libnetq_LIBRARIES PCRE2::PCRE2)
 endif ()
 
+if (WITH_EXPAT)
+  list(APPEND libnetq_LIBRARIES Expat::Expat)
+endif ()
+
+if (WITH_ATOMICOPS)
+  list(APPEND libnetq_LIBRARIES AtomicOps::AtomicOps)
+endif ()
+
 if (WITH_CIVETWEB)
   list(APPEND libnetq_LIBRARIES CivetWeb::CivetWeb)
-endif ()
-
-if (WITH_OPENSSL)
-  set(USE_OPENSSL_MD5 1)
-  configure_file(libnetq/crypto/MD5OpenSSL.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
-elseif (WITH_ADVAPI32)
-  set(USE_ADVAPI32_MD5 1)
-  configure_file(libnetq/crypto/MD5Advapi32.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
-else ()
-  set(USE_STUB_MD5 1)
-  configure_file(libnetq/crypto/MD5Stub.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
-  message("! MD5 has no implementation")
-endif ()
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/crypto")
-
-if (WITH_OPENSSL)
-  set(USE_OPENSSL_SHA1 1)
-  configure_file(libnetq/crypto/SHA1OpenSSL.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
-elseif (WITH_ADVAPI32)
-  set(USE_ADVAPI32_SHA1 1)
-  configure_file(libnetq/crypto/SHA1Advapi32.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
-else ()
-  set(USE_STUB_SHA1 1)
-  configure_file(libnetq/crypto/SHA1Stub.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
-  message("! SHA1 has no implementation")
-endif ()
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/crypto")
-
-if (WITH_ZLIB)
-  set(USE_ZLIB_CRC32 1)
-else ()
-  set(USE_STUB_CRC32 1)
-  message("! CRC32 has no implementation")
-endif ()
-
-if (WITH_JANSSON)
-  set(USE_JANSSON_JSON 1)
-elseif (WITH_CJSON)
-  set(USE_CJSON_JSON 1)
-else ()
-  set(USE_STUB_JSON 1)
-  message("! JSON has no implementation")
-endif ()
-
-if (WITH_PCRE2)
-  set(USE_PCRE2_REGEX 1)
-else ()
-  set(USE_STUB_REGEX 1)
-  message("! Regex has no implementation")
 endif ()
 
 configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/config.h" @ONLY)
@@ -878,3 +907,5 @@ message(STATUS "PCRE2  . . . . . . . . . . . . . . . . . . . ${WITH_PCRE2} (HAVE
 message(STATUS "CivetWeb . . . . . . . . . . . . . . . . . . ${WITH_CIVETWEB} (HAVE ${HAVE_CIVETWEB})")
 message(STATUS "LibEvent . . . . . . . . . . . . . . . . . . ${WITH_LIBEVENT} (HAVE ${HAVE_LIBEVENT})")
 message(STATUS "LibUV  . . . . . . . . . . . . . . . . . . . ${WITH_LIBUV} (HAVE ${HAVE_LIBUV})")
+message(STATUS "Expat  . . . . . . . . . . . . . . . . . . . ${WITH_EXPAT} (HAVE ${HAVE_EXPAT})")
+message(STATUS "AtomicOps  . . . . . . . . . . . . . . . . . ${WITH_ATOMICOPS} (HAVE ${HAVE_ATOMICOPS})")

@@ -18,7 +18,7 @@ if (JSONC_INCLUDE_DIR AND JSONC_LIBRARY)
 endif ()
 
 find_package(PkgConfig QUIET)
-if (PKGCONFIG_FOUND)
+if (PkgConfig_FOUND)
   pkg_check_modules(PC_JSONC json-c)
   set(JSONC_DEFINITIONS ${PC_JSONC_CFLAGS_OTHER})
 endif ()

@@ -18,7 +18,7 @@ if (LibNetQ_INCLUDE_DIR AND LibNetQ_LIBRARY)
 endif ()
 
 find_package(PkgConfig QUIET)
-if (PKGCONFIG_FOUND)
+if (PkgConfig_FOUND)
   pkg_check_modules(PC_Netq Netq)
   set(LibNetQ_DEFINITIONS ${PC_LibNetQ_CFLAGS_OTHER})
 endif ()

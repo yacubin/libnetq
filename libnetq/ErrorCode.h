@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -31,12 +31,14 @@ typedef int NQErrorCode;
 #define NQ_ERROR (-1)
 
 #ifdef NQ_OS_WINDOWS
+# define NQ_ENOMEM           ERROR_NOT_ENOUGH_MEMORY
 # define NQ_ENOSYS           ERROR_NOT_SUPPORTED
 # define NQ_EINPROGRESS      WSAEINPROGRESS
 # define NQ_EWOULDBLOCK      WSAEWOULDBLOCK
 #endif
 
 #if defined(NQ_SYS_LINUX) || defined(NQ_OS_UNIX)
+# define NQ_ENOMEM           ENOMEM
 # define NQ_ENOSYS           ENOSYS
 # define NQ_EINPROGRESS      EINPROGRESS
 # define NQ_EWOULDBLOCK      EWOULDBLOCK

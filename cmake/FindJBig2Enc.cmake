@@ -18,7 +18,7 @@ if (JBig2Enc_INCLUDE_DIR AND JBig2Enc_LIBRARY)
 endif ()
 
 find_package(PkgConfig QUIET)
-if (PKGCONFIG_FOUND)
+if (PkgConfig_FOUND)
   pkg_check_modules(PC_JBig2Enc JBig2Enc)
 endif ()
 

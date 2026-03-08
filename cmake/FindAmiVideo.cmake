@@ -18,7 +18,7 @@ if (AmiVideo_INCLUDE_DIR AND AmiVideo_LIBRARY)
 endif ()
 
 find_package(PkgConfig QUIET)
-if (PKGCONFIG_FOUND)
+if (PkgConfig_FOUND)
   pkg_check_modules(PC_AmiVideo libamivideo)
 endif ()
 

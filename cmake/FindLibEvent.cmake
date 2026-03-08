@@ -19,11 +19,11 @@ if (TARGET LibEvent::LibEvent)
 endif ()
 
 if (LibEvent_INCLUDE_DIR AND LibEvent_LIBRARY)
-  set(LibArchive_FIND_QUIETLY TRUE)
+  set(LibEvent_FIND_QUIETLY TRUE)
 endif ()
 
 find_package(PkgConfig QUIET)
-if (PKGCONFIG_FOUND)
+if (PkgConfig_FOUND)
   pkg_check_modules(PC_LibEvent LibEvent)
   set(LibEvent_DEFINITIONS ${PC_LibEvent_CFLAGS_OTHER})
 endif ()
@@ -35,27 +35,27 @@ find_path(LibEvent_INCLUDE_DIR
     ${PC_LibEvent_INCLUDE_DIR}
   PATH_SUFFIXES
     libevent
-)
+  )
 
 find_library(LibEvent_LIBRARY
   NAMES event
   PATHS
     ${PC_LibEvent_LIBDIR}
     ${PC_LibEvent_LIBRARY_DIRS}
-)
+  )
 
 mark_as_advanced(LibEvent_INCLUDE_DIR LibEvent_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibEvent DEFAULT_MSG LibEvent_INCLUDE_DIR LibEvent_LIBRARY)
-if(LIBEVENT_FOUND)
+if (LIBEVENT_FOUND)
   set(LibEvent_FOUND TRUE)
-endif()
+endif ()
 
-if(LibEvent_FOUND)
+if (LibEvent_FOUND)
   set(LibEvent_LIBRARIES ${LibEvent_LIBRARY})
   set(LibEvent_INCLUDE_DIRS ${LibEvent_INCLUDE_DIR})
-endif()
+endif ()
 
 if (LibEvent_FOUND AND NOT TARGET LibEvent::LibEvent)
   add_library(LibEvent::LibEvent UNKNOWN IMPORTED)

@@ -18,7 +18,7 @@ if (CivetWeb_INCLUDE_DIR AND CivetWeb_LIBRARY)
 endif ()
 
 find_package(PkgConfig QUIET)
-if (PKGCONFIG_FOUND)
+if (PkgConfig_FOUND)
   pkg_check_modules(PC_CivetWeb civetweb)
   set(CivetWeb_DEFINITIONS ${PC_CivetWeb_CFLAGS_OTHER})
 endif ()

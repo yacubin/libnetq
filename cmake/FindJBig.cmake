@@ -18,7 +18,7 @@ if (JBig_INCLUDE_DIR AND JBig_LIBRARY)
 endif ()
 
 find_package(PkgConfig QUIET)
-if (PKGCONFIG_FOUND)
+if (PkgConfig_FOUND)
   pkg_check_modules(PC_JBig JBig)
 endif ()
 

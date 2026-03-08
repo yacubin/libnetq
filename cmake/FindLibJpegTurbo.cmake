@@ -18,7 +18,7 @@ if (LibJpegTurbo_LIBRARIES AND LibJpegTurbo_INCLUDE_DIRS)
 endif ()
 
 find_package(PkgConfig QUIET)
-if (PKGCONFIG_FOUND)
+if (PkgConfig_FOUND)
   pkg_check_modules(PC_LibJpegTurbo LibJpegTurbo)
   set(LibJpegTurbo_DEFINITIONS ${PC_LibJpegTurbo_CFLAGS_OTHER})
 endif ()
@@ -55,14 +55,14 @@ mark_as_advanced(LibJpegTurbo_INCLUDE_DIR LibJpegTurbo_TurboJpeg_LIBRARY LibJpeg
 
 include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibJpegTurbo DEFAULT_MSG LibJpegTurbo_INCLUDE_DIR LibJpegTurbo_TurboJpeg_LIBRARY LibJpegTurbo_Jpeg_LIBRARY)
-if(LIBJPEGTURBO_FOUND)
+if (LIBJPEGTURBO_FOUND)
   set(LibJpegTurbo_FOUND TRUE)
 endif ()
 
-if(LibJpegTurbo_FOUND)
+if (LibJpegTurbo_FOUND)
   set(LibJpegTurbo_INCLUDE_DIRS ${LibJpegTurbo_INCLUDE_DIR})
   set(LibJpegTurbo_LIBRARIES ${LibJpegTurbo_TurboJpeg_LIBRARY} ${LibJpegTurbo_Jpeg_LIBRARY})
-endif()
+endif ()
 
 if (LibJpegTurbo_FOUND AND NOT TARGET LibJpegTurbo::LibJpegTurbo)
   add_library(LibJpegTurbo::jpeg UNKNOWN IMPORTED)

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2021-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -13,7 +13,6 @@
 #include "config.h"
 #include "libnetq/DispatchQueue.h"
 
-#include <libnetq/ObjectClass.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Math.h>
 #include <libnetq/Malloc.h>

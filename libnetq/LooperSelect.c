@@ -16,13 +16,13 @@
 #include <sys/select.h>
 #endif
 
+#include <libnetq/LooperSource.h>
 #include <libnetq/String.h>
 #include <libnetq/Math.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/EventWakeup.h>
 #include <libnetq/Time.h>
 #include <libnetq/Assert.h>
-#include <libnetq/LooperSource.h>
 
 struct Source {
   NQLooperSource* addr;

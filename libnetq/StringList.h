@@ -36,11 +36,11 @@ NQ_EXPORT bool NQStringList_append(NQStringList*, const char* characters);
 NQ_EXPORT bool NQStringList_append2(NQStringList*, const char* characters, size_t length);
 NQ_EXPORT bool NQStringList_split(NQStringList*, const char* str, char separator);
 
-NQ_EXPORT const struct NQStringListIter* NQStringList_firstIter(const NQStringList*);
-NQ_EXPORT const struct NQStringListIter* NQStringList_nextIter(const NQStringList*, const struct NQStringListIter* iter);
+NQ_EXPORT const NQStringListIter* NQStringList_firstIter(const NQStringList*);
+NQ_EXPORT const NQStringListIter* NQStringList_nextIter(const NQStringList*, const NQStringListIter* iter);
 
-NQ_EXPORT uint32_t NQStringListIter_length(const struct NQStringListIter*);
-NQ_EXPORT const char* NQStringListIter_characters(const struct NQStringListIter*);
+NQ_EXPORT uint32_t NQStringListIter_length(const NQStringListIter*);
+NQ_EXPORT const char* NQStringListIter_characters(const NQStringListIter*);
 
 static inline bool NQStringList_isEmpty(const NQStringList* thiz)
 {

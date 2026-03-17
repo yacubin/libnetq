@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -98,6 +98,33 @@ void NQAtomic32_dec(NQAtomic32* thiz)
 
 #elif defined(NQ_OS_WINDOWS)
   InterlockedDecrement(&thiz->counter);
+
+#endif
+}
+
+bool NQAtomic32_compareExchange(NQAtomic32* thiz, int32_t* expected, int32_t desired)
+{
+#if defined(HAVE_ATOMIC_BUILTINS)
+  return __atomic_compare_exchange_n(&thiz->counter, expected, desired, true, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+
+#elif defined(HAVE_SYNC_BUILTINS)
+  int32_t old = __sync_val_compare_and_swap(&thiz->counter, *expected, desired);
+  if (old == *expected)
+    return true;
+  else {
+    *expected = old;
+    return false;
+  }
+
+#else
+  if (thiz->counter == *expected) {
+    thiz->counter = desired;
+    return true;
+  }
+  else {
+    *expected = thiz->counter;
+    return false;
+  }
 
 #endif
 }

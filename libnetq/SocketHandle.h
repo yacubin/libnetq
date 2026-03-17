@@ -79,7 +79,7 @@ NQ_EXPORT bool NQSocketSetNoDelay(NQSocketHandle handle, bool value);
 NQ_EXPORT int NQSocketConnect(NQSocketHandle handle, const NQEndPoint* ep);
 NQ_EXPORT int NQSocketConnect4(NQSocketHandle handle, const NQIPv4EndPoint* ep);
 NQ_EXPORT int NQSocketConnect6(NQSocketHandle handle, const NQIPv6EndPoint* ep);
-NQ_EXPORT NQSocketHandle NQSocketAccept(NQSocketHandle handle, NQEndPoint* ep);
+NQ_EXPORT int NQSocketAccept(NQSocketHandle handle, NQEndPoint* ep, NQSocketHandle* result);
 NQ_EXPORT int NQSocketBind(NQSocketHandle handle, const NQEndPoint* ep);
 NQ_EXPORT int NQSocketBind4(NQSocketHandle handle, const NQIPv4EndPoint* ep);
 NQ_EXPORT int NQSocketBind6(NQSocketHandle handle, const NQIPv6EndPoint* ep);

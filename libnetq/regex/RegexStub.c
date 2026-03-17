@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/regex/Regex.h"
 
-#if USE_STUB_REGEX
+#ifdef NQ_USE_STUB_REGEX
 
 const char* NQRegex_package(void)
 {

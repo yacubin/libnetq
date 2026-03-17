@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2022-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -21,6 +21,9 @@ typedef struct NQKeyValIter NQKeyValIter;
 
 NQ_EXPORT NQKeyVal* NQKeyVal_create(void);
 NQ_EXPORT void NQKeyVal_destroy(NQKeyVal*);
+
+NQ_EXPORT NQKeyVal* NQKeyVal_retain(NQKeyVal*);
+NQ_EXPORT void NQKeyVal_release(NQKeyVal*);
 
 NQ_EXPORT const char* NQKeyVal_get(NQKeyVal*, const char* key);
 NQ_EXPORT bool NQKeyVal_set(NQKeyVal*, const char* key, const char* val);

@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/checksum/CRC32.h"
 
-#if USE_STUB_CRC32
+#ifdef NQ_USE_STUB_CRC32
 
 uint32_t NQCRC32Calc(uint32_t crc, const uint8_t* data, size_t size)
 {

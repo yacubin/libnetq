@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/xml/XMLParser.h"
 
-#if USE_EXPAT_XMLPARSER
+#ifdef NQ_USE_EXPAT_XMLPARSER
 
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>

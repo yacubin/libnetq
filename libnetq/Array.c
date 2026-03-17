@@ -14,7 +14,6 @@
 #include "libnetq/Array.h"
 
 #include <libnetq/String.h>
-#include <libnetq/ObjectClass.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
 #include <libnetq/FileHandle.h>

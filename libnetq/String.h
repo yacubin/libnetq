@@ -12,16 +12,13 @@
 
 #include <libnetq/CStrBase.h>
 #include <libnetq/RefCount.h>
+#include <libnetq/string/StringStorage.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct NQStringParams NQStringParams;
-struct NQStringParams {
-  const char* characters;
-  uint32_t length;
-};
+// NQStringView
 
 typedef struct NQString NQString;
 struct NQString {

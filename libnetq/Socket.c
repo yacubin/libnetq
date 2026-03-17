@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -13,8 +13,11 @@
 #include "config.h"
 #include "libnetq/Socket.h"
 
-#include <libnetq/CStrBase.h>
-#include <libnetq/ObjectClass.h>
+#ifdef NQ_OS_WINDOWS
+#include <windows.h>
+#endif
+
+#include <libnetq/String.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/ErrorCode.h>
 #include <libnetq/SocketHandle.h>
@@ -22,8 +25,6 @@
 #include <libnetq/LooperSource.h>
 #include <libnetq/Assert.h>
 #include <libnetq/Log.h>
-
-extern const NQObjectClass __NQSocketClass;
 
 enum State {
   MODE_NONE,
@@ -33,8 +34,6 @@ enum State {
 };
 
 struct NQSocket {
-  const NQObjectClass* class;
-
   NQLooper* looper;
   NQLooperSource looperSource;
 
@@ -66,8 +65,6 @@ NQSocket* NQSocket_create(void* userdata, const NQStreamCallbacks* callbacks)
   NQSocket* thiz = (NQSocket*)NQMalloc(sizeof(NQSocket));
   if (thiz == NULL)
     return NULL;
-
-  thiz->class = &__NQSocketClass;
 
   thiz->looperSource.type = NQ_SOURCE_SOCKET;
   thiz->looperSource.userdata = thiz;
@@ -232,10 +229,3 @@ bool NQSocket_detachLooper(NQSocket* thiz)
   thiz->looper = NULL;
   return true;
 }
-
-const NQObjectClass __NQSocketClass = {
-  NQSocketObjectType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQSocket_destroy,
-};

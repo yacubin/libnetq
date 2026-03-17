@@ -11,6 +11,7 @@
 #define _LIBNETQ_NET_NETETBUFFER_H
 
 #include <libnetq/List.h>
+#include <libnetq/Network.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,19 +19,18 @@ extern "C" {
 
 typedef struct NQNetBufferEntry NQNetBufferEntry;
 
-#define SPY_BUFFER_MAX 4096 // ? 1600
-#define SPY_ENTRY_MAX 16
+#define NQ_NETBUFFERENTRIES_MAX 16
 
 struct NQNetBufferEntry {
   NQListHead list;
   uint16_t size;
-  uint8_t bytes[SPY_BUFFER_MAX];
+  uint8_t bytes[NQ_ETHERNET_MTU];
 };
 
 typedef struct NQNetBufferQueue {
   NQListHead usedList;
   NQListHead freeList;
-  NQNetBufferEntry entries[SPY_ENTRY_MAX];
+  NQNetBufferEntry entries[NQ_NETBUFFERENTRIES_MAX];
 } NQNetBufferQueue;
 
 NQ_EXPORT void NQNetBufferQueue_init(NQNetBufferQueue*);

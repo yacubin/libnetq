@@ -47,8 +47,8 @@ if (OPENJP2_FOUND)
 endif()
 
 if (OpenJP2_FOUND)
-  set(OpenJP2_INCLUDE_DIRS ${})
-  set(OpenJP2_LIBRARIES ${})
+  set(OpenJP2_INCLUDE_DIRS ${OpenJP2_INCLUDE_DIR})
+  set(OpenJP2_LIBRARIES ${OpenJP2_LIBRARY})
 endif()
 
 if (OpenJP2_FOUND AND NOT TARGET OpenJP2::OpenJP2)

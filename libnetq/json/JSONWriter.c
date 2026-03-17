@@ -17,6 +17,7 @@
 #include <libnetq/String.h>
 #include <libnetq/Sprintf.h>
 #include <libnetq/Assert.h>
+#include <libnetq/json/JSON.h>
 #include <libnetq/Log.h>
 
 static const char kObjectBegin = '{';
@@ -580,6 +581,43 @@ bool NQJSONWriter_writeBool(NQJSONWriter* thiz, bool val)
     thiz->hasError = true;
   }
   return false;
+}
+
+bool NQJSONWriter_writeJSON(NQJSONWriter* writer, NQJSON* json)
+{
+  bool success;
+  if (NQJSON_isObject(json)) {
+    success = NQJSONWriter_writeObjectBegin(writer);
+    NQJSON_ObjectIter* iter = NQJSON_objectIterFirst(json);
+    while (iter != NULL) {
+      success &= NQJSONWriter_writeKey(writer, NQJSON_objectIterKey(iter));
+      success &= NQJSONWriter_writeJSON(writer, NQJSON_objectIterValue(iter));
+      iter = NQJSON_objectIterNext(json, iter);
+    }
+    success &= NQJSONWriter_writeObjectEnd(writer);
+  }
+  else if (NQJSON_isArray(json)) {
+    success = NQJSONWriter_writeArrayBegin(writer);
+    size_t size = NQJSON_arraySize(json);
+    for (size_t index = 0; index < size; index++)
+      success &= NQJSONWriter_writeJSON(writer, NQJSON_arrayAt(json, index));
+    success &= NQJSONWriter_writeArrayEnd(writer);
+  }
+  else if (NQJSON_isString(json))
+    success = NQJSONWriter_writeString(writer, NQJSON_asString(json));
+  else if (NQJSON_isInt64(json))
+    success = NQJSONWriter_writeInt64(writer, NQJSON_asInt64(json));
+#ifdef NQ_HAS_COMPILER_SSE
+  else if (NQJSON_isDouble(json))
+    success = NQJSONWriter_writeDouble(writer, NQJSON_asDouble(json));
+#endif
+  else if (NQJSON_isBool(json))
+    success = NQJSONWriter_writeBool(writer, NQJSON_asBool(json));
+  else {
+    NQ_ASSERT(NQJSON_isNull(json));
+    success = NQJSONWriter_writeNull(writer);
+  }
+  return success;
 }
 
 bool NQJSONWriter_writeKey(NQJSONWriter* thiz, const char* key)

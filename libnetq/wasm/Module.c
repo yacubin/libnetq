@@ -66,7 +66,7 @@ static bool readLeb128Uint64(NQDataReader* reader, uint64_t* value)
   return true;
 }
 
-static bool readString(NQDataReader* thiz, NQStringParams* value)
+static bool readString(NQDataReader* thiz, NQStringStorage* value)
 {
   if (!readLeb128Uint32(thiz, &value->length))
     return false;
@@ -144,7 +144,7 @@ static int writeByteBuffer(void* userdata, const void* data, size_t size)
   return NQByteBuffer_append(buffer, (const uint8_t*)data, n) ? n : -1;
 }
 
-static struct NQWasmImportItem* createImportItem(uint8_t importId, const NQStringParams* moduleName, const NQStringParams* itemName)
+static struct NQWasmImportItem* createImportItem(uint8_t importId, const NQStringStorage* moduleName, const NQStringStorage* itemName)
 {
   struct NQWasmImportItem* thiz = (struct NQWasmImportItem*)NQMalloc(sizeof(*thiz) + moduleName->length + itemName->length + 2);
   if (thiz == NULL) {
@@ -168,7 +168,7 @@ static struct NQWasmImportItem* createImportItem(uint8_t importId, const NQStrin
   return thiz;
 }
 
-static struct NQWasmImportItem* createImportFunction(const NQStringParams* moduleName, const NQStringParams* itemName, uint32_t typeidx)
+static struct NQWasmImportItem* createImportFunction(const NQStringStorage* moduleName, const NQStringStorage* itemName, uint32_t typeidx)
 {
   struct NQWasmImportItem* thiz = createImportItem(NQ_WASM_IMPORT_FUNC_ID, moduleName, itemName);
   if (thiz == NULL)
@@ -179,7 +179,7 @@ static struct NQWasmImportItem* createImportFunction(const NQStringParams* modul
   return thiz;
 }
 
-static struct NQWasmImportItem* readImportFunction(const NQStringParams* moduleName, const NQStringParams* itemName, NQDataReader* reader)
+static struct NQWasmImportItem* readImportFunction(const NQStringStorage* moduleName, const NQStringStorage* itemName, NQDataReader* reader)
 {
   uint32_t typeidx;
   if (!readLeb128Uint32(reader, &typeidx)) {
@@ -189,7 +189,7 @@ static struct NQWasmImportItem* readImportFunction(const NQStringParams* moduleN
   return createImportFunction(moduleName, itemName, typeidx);
 }
 
-static struct NQWasmImportItem* createImportTable(const NQStringParams* moduleName, const NQStringParams* itemName, uint8_t elemtype, uint32_t minValue, uint32_t maxValue)
+static struct NQWasmImportItem* createImportTable(const NQStringStorage* moduleName, const NQStringStorage* itemName, uint8_t elemtype, uint32_t minValue, uint32_t maxValue)
 {
   struct NQWasmImportItem* thiz = createImportItem(NQ_WASM_IMPORT_TABLE_ID, moduleName, itemName);
   if (thiz == NULL)
@@ -202,7 +202,7 @@ static struct NQWasmImportItem* createImportTable(const NQStringParams* moduleNa
   return thiz;
 }
 
-static struct NQWasmImportItem* readImportTable(const NQStringParams* moduleName, const NQStringParams* itemName, NQDataReader* reader)
+static struct NQWasmImportItem* readImportTable(const NQStringStorage* moduleName, const NQStringStorage* itemName, NQDataReader* reader)
 {
   uint8_t elemtype;
   uint32_t minValue;
@@ -228,7 +228,7 @@ static struct NQWasmImportItem* readImportTable(const NQStringParams* moduleName
   return createImportTable(moduleName, itemName, elemtype, minValue, maxValue);
 }
 
-static struct NQWasmImportItem* createImportMemory(const NQStringParams* moduleName, const NQStringParams* itemName, uint8_t memtype, uint64_t minValue, uint64_t maxValue)
+static struct NQWasmImportItem* createImportMemory(const NQStringStorage* moduleName, const NQStringStorage* itemName, uint8_t memtype, uint64_t minValue, uint64_t maxValue)
 {
   struct NQWasmImportItem* thiz = createImportItem(NQ_WASM_IMPORT_MEM_ID, moduleName, itemName);
   if (thiz == NULL)
@@ -241,7 +241,7 @@ static struct NQWasmImportItem* createImportMemory(const NQStringParams* moduleN
   return thiz;
 }
 
-static struct NQWasmImportItem* readImportMemory(const NQStringParams* moduleName, const NQStringParams* itemName, NQDataReader* reader)
+static struct NQWasmImportItem* readImportMemory(const NQStringStorage* moduleName, const NQStringStorage* itemName, NQDataReader* reader)
 {
   uint8_t memtype;
   uint64_t minValue;
@@ -272,7 +272,7 @@ static struct NQWasmImportItem* readImportMemory(const NQStringParams* moduleNam
   return createImportMemory(moduleName, itemName, memtype, minValue, maxValue);
 }
 
-static struct NQWasmImportItem* createImportGlobal(const NQStringParams* moduleName, const NQStringParams* itemName, uint8_t valtype, uint8_t mut)
+static struct NQWasmImportItem* createImportGlobal(const NQStringStorage* moduleName, const NQStringStorage* itemName, uint8_t valtype, uint8_t mut)
 {
   struct NQWasmImportItem* thiz = createImportItem(NQ_WASM_IMPORT_GLOBAL_ID, moduleName, itemName);
   if (thiz == NULL)
@@ -284,7 +284,7 @@ static struct NQWasmImportItem* createImportGlobal(const NQStringParams* moduleN
   return thiz;
 }
 
-static struct NQWasmImportItem* readImportGlobal(const NQStringParams* moduleName, const NQStringParams* itemName, NQDataReader* reader)
+static struct NQWasmImportItem* readImportGlobal(const NQStringStorage* moduleName, const NQStringStorage* itemName, NQDataReader* reader)
 {
   uint8_t valtype;
   uint8_t mut;
@@ -342,13 +342,13 @@ NQWasmImportSection* NQWasmImportSection_fromMemory(const void* data, size_t siz
   while (itemIndex < itemCount) {
     struct NQWasmImportItem* item = NULL;
 
-    NQStringParams moduleName;
+    NQStringStorage moduleName;
     if (!readString(&reader, &moduleName)) {
       NQ_LOGE("Import module name is wrong");
       break;
     }
 
-    NQStringParams itemName;
+    NQStringStorage itemName;
     if (!readString(&reader, &itemName)) {
       NQ_LOGE("Import item name is wrong");
       break;
@@ -513,11 +513,11 @@ bool NQWasmImportSection_writeTo(const NQWasmImportSection* thiz, NQWasmWriteCal
 
 bool NQWasmImportSection_addMemory(NQWasmImportSection* thiz, const char* module, const char* name, uint8_t memtype, uint64_t minValue, uint64_t maxValue)
 {
-  NQStringParams moduleName;
+  NQStringStorage moduleName;
   moduleName.characters = module;
   moduleName.length = strlen(module);
 
-  NQStringParams itemName;
+  NQStringStorage itemName;
   itemName.characters = name;
   itemName.length = strlen(name);
 

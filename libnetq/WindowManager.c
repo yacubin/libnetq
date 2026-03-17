@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2021-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -12,7 +12,7 @@
 
 #include <libnetq/Malloc.h>
 #include <libnetq/Mutex.h>
-#include <libnetq/UnlimitedRandom.h>
+#include <libnetq/Random.h>
 #include <libnetq/String.h>
 #include <libnetq/Assert.h>
 

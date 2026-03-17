@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -13,7 +13,6 @@
 #include "config.h"
 #include "libnetq/Dir.h"
 
-#include <libnetq/ObjectClass.h>
 #include <libnetq/OS.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Path.h>
@@ -36,10 +35,7 @@ enum {
 #include <dirent.h>
 #endif
 
-extern const NQObjectClass __NQDirClass;
-
 struct NQDir {
-  const NQObjectClass* class;
 
 #ifdef NQ_SYS_LINUX
   struct path path;
@@ -96,7 +92,6 @@ NQDir* NQDir_open(const char* pathname)
 
   dir = (NQDir*)NQMalloc(sizeof(NQDir));
   if (dir != NULL) {
-    dir->class = &__NQDirClass;
     dir->path = path;
     dir->iter = first;
     return dir;
@@ -120,7 +115,6 @@ NQDir* NQDir_open(const char* pathname)
   if (dir == NULL)
     return NULL;
 
-  dir->class = &__NQDirClass;
   dir->handle = FindFirstFileW(winpath, &dir->data);
   if (dir->handle != INVALID_HANDLE_VALUE) {
     dir->mode = NQ_DIR_OPEN_MODE;
@@ -140,7 +134,6 @@ NQDir* NQDir_open(const char* pathname)
   if (dp != NULL) {
     dir = (NQDir*)NQMalloc(sizeof(NQDir));
     if (dir != NULL) {
-      dir->class = &__NQDirClass;
       dir->handle = handle;
       dir->dp = dp;
       return dir;
@@ -284,10 +277,3 @@ bool NQDir_isDirectory(NQDir* dir)
 
   return false;
 }
-
-const NQObjectClass __NQDirClass = {
-  NQDirObjectType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQDir_close,
-};

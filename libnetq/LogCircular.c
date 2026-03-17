@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -13,7 +13,6 @@
 #include "config.h"
 #include "libnetq/LogCircular.h"
 
-#include <libnetq/ObjectClass.h>
 #include <libnetq/OS.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
@@ -25,8 +24,6 @@
 
 // TODO: Add time and level
 
-extern const NQObjectClass __NQLogCircularClass;
-
 #define NQ_LOGC_IS_FULL (1 << 0)
 
 typedef struct NQLogCircularItem {
@@ -35,8 +32,6 @@ typedef struct NQLogCircularItem {
 } NQLogCircularItem;
 
 struct NQLogCircular {
-  const NQObjectClass* class;
-
   NQLogCircularItem** items;
   uint32_t flags;
   uint16_t capacity;
@@ -86,7 +81,6 @@ NQLogCircular* NQLogCircular_create(size_t capacity)
   if (log == NULL)
     return NULL;
 
-  log->class = &__NQLogCircularClass;
   log->items = (NQLogCircularItem**)NQZeroMalloc(sizeof(NQLogCircularItem**) * capacity);
   if (log->items == NULL) {
     NQFree((void*)log);
@@ -188,10 +182,3 @@ size_t NQLogCircular_lengthAt(const NQLogCircular* log, size_t index)
 {
   return NQLogCircular_at(log, index)->length;
 }
-
-const NQObjectClass __NQLogCircularClass = {
-  NQLogCircularObjectType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQLogCircular_destroy,
-};

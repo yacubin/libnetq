@@ -1,16 +1,17 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
  */
 
 #include "config.h"
-#include "libnetq/UnlimitedRandom.h"
+#include "libnetq/random/UnlimitedRandom.h"
 
 #include <libnetq/Assert.h>
+#include <libnetq/ErrorCode.h>
 
 #if defined(NQ_SYS_LINUX)
 # include <linux/random.h>
@@ -28,21 +29,27 @@
 # error "This configuration doesn't have a strong source of randomness."
 #endif
 
-void NQGetUnlimitedRandom(uint8_t* buffer, size_t size)
+int NQGetUnlimitedRandom(void* data, size_t size)
 {
 #if defined(NQ_SYS_LINUX)
-  get_random_bytes(buffer, size);
+  get_random_bytes(data, size);
+  return 0;
 
 #elif defined(NQ_OS_WINDOWS)
   HCRYPTPROV hCryptProv = 0;
   if (!CryptAcquireContextW(&hCryptProv, 0, MS_DEF_PROV_W, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
-    NQ_ASSERT_NOT_REACHED();
-  if (!CryptGenRandom(hCryptProv, (DWORD)size, buffer))
-    NQ_ASSERT_NOT_REACHED();
+    return -(int)GetLastError();
+
+  int res = 0;
+  if (!CryptGenRandom(hCryptProv, (DWORD)size, (BYTE*)data))
+    res = -(int)GetLastError();
   CryptReleaseContext(hCryptProv, 0);
+  return res;
 
 #elif defined(NQ_OS_DARWIN)
-  NQ_ALWAYS_ASSERT(CCRandomGenerateBytes(buffer, size) != kCCSuccess);
+  if (CCRandomGenerateBytes(data, size) != kCCSuccess)
+    return -NQ_ENOTSUP;
+  return 0;
 
 #elif defined(NQ_OS_UNIX)
   int fd = open("/dev/urandom", O_RDONLY, 0);
@@ -50,7 +57,7 @@ void NQGetUnlimitedRandom(uint8_t* buffer, size_t size)
     NQ_ASSERT_NOT_REACHED();
   ssize_t amountRead = 0;
   while ((size_t)(amountRead) < size) {
-    ssize_t currentRead = read(fd, buffer + amountRead, size - (size_t)amountRead);
+    ssize_t currentRead = read(fd, (char*)data + amountRead, size - (size_t)amountRead);
     if (currentRead != -1)
       amountRead += currentRead;
     else {
@@ -59,6 +66,7 @@ void NQGetUnlimitedRandom(uint8_t* buffer, size_t size)
     }
   }
   close(fd);
+  return 0;
 
 #endif
 }

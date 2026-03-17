@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -48,12 +48,12 @@ void NQFileClose(NQFileHandle handle)
     filp_close(handle, NULL);
 }
 
-int NQFileRead(NQFileHandle handle, uint8_t* data, size_t size)
+int NQFileRead(NQFileHandle handle, void* data, size_t size)
 {
   return kernel_read(handle, data, size, &handle->f_pos);
 }
 
-int NQFileWrite(NQFileHandle handle, const uint8_t* data, size_t size)
+int NQFileWrite(NQFileHandle handle, const void* data, size_t size)
 {
   return kernel_write(handle, data, size, &handle->f_pos);
 }

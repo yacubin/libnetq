@@ -13,6 +13,8 @@
 #include "config.h"
 #include "libnetq/json/JSON.h"
 
+#include <libnetq/json/JSONWriter.h>
+
 const char* NQJSON_objectGetString(NQJSON* json, const char* key)
 {
   NQJSON* item = NQJSON_objectGet(json, key);

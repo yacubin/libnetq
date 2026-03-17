@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -17,6 +17,15 @@
 #else
 #include <stdlib.h>
 #endif
+
+static inline long NQSimpleStrtol(const char* str, char** endstr, unsigned base)
+{
+#ifdef NQ_SYS_LINUX
+  return simple_strtol(str, endstr, base);
+#else
+  return strtol(str, endstr, (int)base);
+#endif
+}
 
 static inline unsigned long NQSimpleStrtoul(const char* str, char** endstr, unsigned base)
 {

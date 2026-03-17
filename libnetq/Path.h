@@ -46,9 +46,11 @@ struct NQPathBuilder {
 };
 
 NQ_EXPORT void NQPathBuilder_init(NQPathBuilder*);
-NQ_EXPORT bool NQPathBuilder_initJoin1(NQPathBuilder*, const char* path1);
+NQ_EXPORT bool NQPathBuilder_initPath(NQPathBuilder*, const char* path1);
 NQ_EXPORT bool NQPathBuilder_initJoin2(NQPathBuilder*, const char* path1, const char* path2);
 NQ_EXPORT bool NQPathBuilder_initJoin3(NQPathBuilder*, const char* path1, const char* path2, const char* path3);
+NQ_EXPORT bool NQPathBuilder_initResolve2(NQPathBuilder*, const char* path1, const char* path2);
+NQ_EXPORT bool NQPathBuilder_initResolve3(NQPathBuilder*, const char* path1, const char* path2, const char* path3);
 NQ_EXPORT void NQPathBuilder_finalize(NQPathBuilder*);
 
 #define NQPathBuilder_characters(thiz) (thiz)->characters

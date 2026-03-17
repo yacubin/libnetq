@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -17,7 +17,7 @@ void NQNetBufferQueue_init(NQNetBufferQueue* thiz)
   NQListHead_init(&thiz->usedList);
   NQListHead_init(&thiz->freeList);
 
-  for (size_t i = 0; i < SPY_ENTRY_MAX; i++) {
+  for (size_t i = 0; i < NQ_NETBUFFERENTRIES_MAX; i++) {
     thiz->entries[i].size = 0;
     NQListHead_init(&thiz->entries[i].list);
     NQListHead_addBack(&thiz->freeList, &thiz->entries[i].list);

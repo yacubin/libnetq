@@ -10,7 +10,7 @@
 #ifndef _LIBNETQ_JSON_JSONWRITER_H
 #define _LIBNETQ_JSON_JSONWRITER_H
 
-#include <libnetq/Basic.h>
+#include <libnetq/json/JSON.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,6 +59,7 @@ NQ_EXPORT bool NQJSONWriter_writeUint8(NQJSONWriter*, uint8_t val);
 NQ_EXPORT bool NQJSONWriter_writeFloat(NQJSONWriter*, float val);
 NQ_EXPORT bool NQJSONWriter_writeDouble(NQJSONWriter*, double val);
 NQ_EXPORT bool NQJSONWriter_writeBool(NQJSONWriter*, bool val);
+NQ_EXPORT bool NQJSONWriter_writeJSON(NQJSONWriter* writer, NQJSON* json);
 
 NQ_EXPORT bool NQJSONWriter_writeKey(NQJSONWriter*, const char* key);
 NQ_EXPORT bool NQJSONWriter_writeKeyObjectBegin(NQJSONWriter*, const char* key);
@@ -78,6 +79,15 @@ NQ_EXPORT bool NQJSONWriter_writeKeyUint8(NQJSONWriter*, const char* key, uint8_
 NQ_EXPORT bool NQJSONWriter_writeKeyFloat(NQJSONWriter*, const char* key, float val);
 NQ_EXPORT bool NQJSONWriter_writeKeyDouble(NQJSONWriter*, const char* key, double val);
 NQ_EXPORT bool NQJSONWriter_writeKeyBool(NQJSONWriter*, const char* key, bool val);
+
+static inline bool NQJSONWriter_writeKeyJSON(NQJSONWriter* writer, const char* key, NQJSON* json)
+{
+  if (!NQJSONWriter_writeKey(writer, key))
+    return false;
+  if (!NQJSONWriter_writeJSON(writer, json))
+    return false;
+  return true;
+}
 
 #ifdef __cplusplus
 }

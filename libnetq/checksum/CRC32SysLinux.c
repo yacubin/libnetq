@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/checksum/CRC32.h"
 
-#if defined(NQ_SYS_LINUX)
+#ifdef NQ_SYS_LINUX
 
 #include <linux/crc32.h>
 

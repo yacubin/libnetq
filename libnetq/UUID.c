@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -19,7 +19,7 @@
 #elif defined(NQ_SYS_LINUX)
 # include <linux/uuid.h>
 #else
-# include <libnetq/UnlimitedRandom.h>
+# include <libnetq/Random.h>
 #endif
 
 static char kURNNIDUUIDString[] = "uuid";
@@ -182,7 +182,7 @@ bool NQUUID_parse(NQUUID* uuid, const char* str)
   return (str[NQ_UUID_STRING_SIZE] == NQ_NIL) ? true : false;
 }
 
-bool NQUUID_parseWithLength(NQUUID* uuid, const char* str, size_t len)
+bool NQUUID_parse2(NQUUID* uuid, const char* str, size_t len)
 {
   if (len != NQ_UUID_STRING_SIZE)
     return false;

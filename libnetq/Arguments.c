@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -13,31 +13,25 @@
 #include "config.h"
 #include "libnetq/Arguments.h"
 
-#include <libnetq/ObjectClass.h>
-#include <libnetq/CStrBase.h>
+#include <libnetq/String.h>
 #include <libnetq/Strtox.h>
 #include <libnetq/PrimitiveType.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/UTF.h>
 #include <libnetq/Log.h>
+#include <libnetq/CType.h>
 #include <libnetq/Assert.h>
 
 #define NQ_ARG_MAX 4096
 
-#define isArgSpace(c) ((c) == ' ' || (c) == '\t' || (c) == '\r' || (c) == '\n')
+NQ_STATIC_ASSERT(sizeof(NQArguments) % sizeof(void*) == 0, "NQArguments is not aligned");
 
-extern const NQObjectClass __NQArgumentsClass;
-
-struct NQArguments {
-  const NQObjectClass* class;
-  NQArgs args;
-};
-
-static const char* s_argvEmpty[] = { NULL };
-static NQArguments s_argumentsEmpty = {
-  &__NQArgumentsClass,
-  { 0, s_argvEmpty }
+static char* s_argvEmpty[] = { NULL };
+static NQArguments s_argumentsEmpty =
+{
+  .argc = 0,
+  .argv = s_argvEmpty,
 };
 
 #ifdef NQ_OS_WINDOWS
@@ -232,75 +226,6 @@ bool NQArgGetBoolOr(const char* arg, const char* key, bool defval)
   return defval;
 }
 
-size_t NQArgs_count(NQArgs* thiz)
-{
-  return (size_t)thiz->argc;
-}
-
-const char** NQArgs_items(NQArgs* thiz)
-{
-  return thiz->argv;
-}
-
-const char* NQArgs_at(NQArgs* thiz, size_t index)
-{
-  if (index <= NQ_INT_MAX && (int)index < thiz->argc)
-    return thiz->argv[index];
-  return NULL;
-}
-
-bool NQArgs_has(NQArgs* thiz, const char* value)
-{
-  int i;
-
-  for (i = 0; i < thiz->argc; i++) {
-    if (!strcmp(thiz->argv[i], value))
-      return true;
-  }
-
-  return false;
-}
-
-bool NQArgs_hasLKey(NQArgs* thiz, const char* value)
-{
-  int i;
-
-  for (i = 0; i < thiz->argc; i++) {
-    const char* p1 = thiz->argv[i];
-
-    if (*p1 != '-')
-      continue;
-    p1++;
-
-    if (*p1 != '-')
-      continue;
-    p1++;
-
-    if (*p1 == '=' || *p1 == '\0')
-      continue;
-
-    const char* p2 = value;
-    if (*p1 != *p2)
-      continue;
-
-    for(;;) {
-      p1++;
-      p2++;
-
-      if (*p1 != *p2) {
-        if (*p1 == '=' && *p2 == '\0')
-          return true;
-        break;
-      }
-
-      if (*p1 == '\0')
-        return true;
-    }
-  }
-
-  return false;
-}
-
 static size_t parseCommandLineUTF16(const uint16_t* str, char* buffer, char** argv, int* argc)
 {
   const uint16_t* start = str;
@@ -377,7 +302,7 @@ static size_t parseCommandLineUTF16(const uint16_t* str, char* buffer, char** ar
       continue;
     }
 
-    if (isArgSpace(ch)) {
+    if (NQIsSpace(ch)) {
       if (isText) {
         if (p != NULL)
           *p++ = '\0';
@@ -425,10 +350,10 @@ NQArguments* NQArguments_create(int argc, const char* argv[])
   if (thiz == NULL)
     return NULL;
 
-  const char** pargv = (const char**)(void*)((char*)thiz + classSize);
+  char** pargv = (char**)(void*)((char*)thiz + classSize);
   char* pchar = (char*)((char*)pargv + argvSize);
 
-  const char** pargvStart = pargv;
+  char** pargvStart = pargv;
   char* pcharStart = pchar;
   for (i = 0; i < argc; i++) {
     const char* arg = argv[i];
@@ -445,16 +370,138 @@ NQArguments* NQArguments_create(int argc, const char* argv[])
   NQ_ASSERT((char*)pargvStart == (char*)pchar);
   NQ_ASSERT(((char*)thiz + classSize + argvSize + charSize) == pcharStart);
 
-  thiz->class = &__NQArgumentsClass;
-  thiz->args.argc = argc;
-  thiz->args.argv = pargv;
+  thiz->argc = argc;
+  thiz->argv = pargv;
 
   return thiz;
 }
 
+struct ParseInfo {
+  int argc;
+};
+
+static NQ_ALWAYS_INLINE size_t argumentsParase(NQArguments* thiz, const char* str, size_t len, struct ParseInfo* info)
+{
+  char* ptr;
+
+  if (thiz) {
+    ptr = (char*)thiz + sizeof(*thiz);
+    thiz->argv = (char**)ptr;
+    ptr += sizeof(char*) * (info->argc + 1);
+    thiz->argv[0] = ptr;
+  }
+
+  size_t bytes = sizeof(*thiz);
+
+  char qch;
+  bool escape = false;
+  unsigned quoted = 0;
+  unsigned length = 0;
+  int argc = 0;
+
+  for (size_t i = 0; i < len; i++) {
+    char ch = str[i];
+
+    if (escape) {
+      if (thiz)
+        *ptr++ = ch;
+      length++;
+      escape = false;
+      continue;
+    }
+
+    if (ch == '\\') {
+      escape = true;
+      continue;
+    }
+
+    if (quoted % 2) {
+      if (ch == qch)
+        quoted++;
+      else {
+        if (thiz)
+          *ptr++ = ch;
+        length++;
+      }
+      continue;
+    }
+
+    if (ch == '"' || ch == '\'') {
+      qch = ch;
+      quoted++;
+      continue;
+    }
+
+    if (NQIsSpace(ch)) {
+      if (quoted == 0 && length == 0)
+        continue;
+      argc++;
+      if (thiz) {
+        *ptr++ = '\0';
+        thiz->argv[argc] = ptr;
+      }
+      bytes += length + 1;
+      length = 0;
+      continue;
+    }
+
+    if (thiz)
+      *ptr++ = ch;
+    length++;
+  }
+
+  if (escape) {
+    NQ_LOGW("Incomplete escape");
+    if (thiz)
+      *ptr++ = '\\';
+    length++;
+  }
+
+  if (quoted % 2) {
+    NQ_LOGW("Unmatched quote");
+  }
+
+  if (quoted || length) {
+    argc++;
+    if (thiz)
+      *ptr++ = '\0';
+    bytes += length + 1;
+  }
+
+  bytes += sizeof(char*) * (argc + 1);
+
+  if (thiz) {
+    thiz->argc = argc;
+    thiz->argv[argc] = NULL;
+    NQ_ASSERT(info->argc == argc);
+    NQ_ASSERT((char*)thiz + bytes == ptr);
+  }
+  else {
+    info->argc = argc;
+  }
+
+  return bytes;
+}
+
 NQArguments* NQArguments_parse(const char* s)
 {
-  return NULL;
+  return NQArguments_parse2(s, strlen(s));
+}
+
+NQArguments* NQArguments_parse2(const char* str, size_t len)
+{
+  struct ParseInfo info;
+
+  size_t sizeInBytes = argumentsParase(NULL, str, len, &info);
+  if (info.argc == 0)
+    return &s_argumentsEmpty;
+
+  NQArguments* thiz = (NQArguments*)NQMalloc(sizeInBytes);
+  if (thiz == NULL)
+    return NULL;
+
+  argumentsParase(thiz, str, len, &info);
+  return thiz;
 }
 
 NQArguments* NQArguments_parseUTF16(const uint16_t* str)
@@ -469,19 +516,17 @@ NQArguments* NQArguments_parseUTF16(const uint16_t* str)
   if (thiz == NULL)
     return NULL;
 
-  thiz->class = &__NQArgumentsClass;
-
   if (argcSave == 0) {
-    thiz->args.argc = 0;
-    thiz->args.argv = s_argvEmpty;
+    thiz->argc = 0;
+    thiz->argv = s_argvEmpty;
   }
   else {
-    thiz->args.argv = (const char**)((char*)thiz + classSize);
-    char* buffer = (char*)thiz->args.argv + argvSizeInBytes;
-    size_t size = parseCommandLineUTF16(str, buffer, (char**)thiz->args.argv, &thiz->args.argc);
-    NQ_ASSERT(thiz->args.argc == argcSave);
+    thiz->argv = (char**)((char*)thiz + classSize);
+    char* buffer = (char*)thiz->argv + argvSizeInBytes;
+    size_t size = parseCommandLineUTF16(str, buffer, (char**)thiz->argv, &thiz->argc);
+    NQ_ASSERT(thiz->argc == argcSave);
     NQ_ASSERT_UNUSED(size, size == sizeSave);
-    thiz->args.argv[thiz->args.argc] = NULL;
+    thiz->argv[thiz->argc] = NULL;
   }
 
   return thiz;
@@ -495,27 +540,66 @@ void NQArguments_destroy(NQArguments* thiz)
 
 size_t NQArguments_count(NQArguments* thiz)
 {
-  return NQArgs_count(&thiz->args);
+  return (size_t)thiz->argc;
 }
 
 const char** NQArguments_items(NQArguments* thiz)
 {
-  return NQArgs_items(&thiz->args);
+  return (const char**)thiz->argv;
 }
 
 const char* NQArguments_at(NQArguments* thiz, size_t index)
 {
-  return NQArgs_at(&thiz->args, index);
+  if (index <= NQ_INT_MAX && (int)index < thiz->argc)
+    return thiz->argv[index];
+  return NULL;
 }
 
 bool NQArguments_has(NQArguments* thiz, const char* value)
 {
-  return NQArgs_has(&thiz->args, value);
+  for (int i = 0; i < thiz->argc; i++) {
+    if (!strcmp(thiz->argv[i], value))
+      return true;
+  }
+  return false;
 }
 
 bool NQArguments_hasLKey(NQArguments* thiz, const char* value)
 {
-  return NQArgs_hasLKey(&thiz->args, value);
+  for (int i = 0; i < thiz->argc; i++) {
+    const char* p1 = thiz->argv[i];
+
+    if (*p1 != '-')
+      continue;
+    p1++;
+
+    if (*p1 != '-')
+      continue;
+    p1++;
+
+    if (*p1 == '=' || *p1 == '\0')
+      continue;
+
+    const char* p2 = value;
+    if (*p1 != *p2)
+      continue;
+
+    for(;;) {
+      p1++;
+      p2++;
+
+      if (*p1 != *p2) {
+        if (*p1 == '=' && *p2 == '\0')
+          return true;
+        break;
+      }
+
+      if (*p1 == '\0')
+        return true;
+    }
+  }
+
+  return false;
 }
 
 void NQMainArgumentsInit(int argc, const char* argv[])
@@ -594,10 +678,3 @@ NQArguments* NQArgumentsGetMain(void)
 {
   return s_arguments;
 }
-
-const NQObjectClass __NQArgumentsClass = {
-  NQArgumentsObjectType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQArguments_destroy,
-};

@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/regex/Regex.h"
 
-#if USE_PCRE2_REGEX
+#ifdef NQ_USE_PCRE2_REGEX
 
 #include <libnetq/String.h>
 #include <libnetq/Log.h>
@@ -130,7 +130,7 @@ bool NQRegex_exec2(NQRegex* thiz, const char* str, size_t len, NQRegexMatch* mat
     }
     return false;
   }
-  
+
   return true;
 }
 

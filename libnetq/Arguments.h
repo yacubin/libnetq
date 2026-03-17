@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -27,22 +27,15 @@ typedef struct NQArgDescriptor {
   const char* desc;
 } NQArgDescriptor;
 
-typedef struct NQArgs {
-  int argc;
-  const char** argv;
-} NQArgs;
-
-NQ_EXPORT size_t NQArgs_count(NQArgs*);
-NQ_EXPORT const char** NQArgs_items(NQArgs*);
-NQ_EXPORT const char* NQArgs_at(NQArgs*, size_t index);
-
-NQ_EXPORT bool NQArgs_has(NQArgs*, const char* value);
-NQ_EXPORT bool NQArgs_hasLKey(NQArgs*, const char* value);
-
 typedef struct NQArguments NQArguments;
+struct NQArguments {
+  int argc;
+  char** argv;
+};
 
 NQ_EXPORT NQArguments* NQArguments_create(int argc, const char* argv[]);
 NQ_EXPORT NQArguments* NQArguments_parse(const char*);
+NQ_EXPORT NQArguments* NQArguments_parse2(const char* str, size_t len);
 NQ_EXPORT NQArguments* NQArguments_parseUTF16(const uint16_t*);
 
 NQ_EXPORT void NQArguments_destroy(NQArguments*);

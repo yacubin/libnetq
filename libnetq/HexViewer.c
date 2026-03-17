@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -13,7 +13,6 @@
 #include "config.h"
 #include "libnetq/HexViewer.h"
 
-#include <libnetq/ObjectClass.h>
 #include <libnetq/CStrBase.h>
 #include <libnetq/Sprintf.h>
 #include <libnetq/Malloc.h>
@@ -21,10 +20,7 @@
 
 #define NQ_HEXVIEWER_HAS_OFFSET (1 << 1)
 
-extern const NQObjectClass __NQHexViewerClass;
-
 struct NQHexViewer {
-  const NQObjectClass* class;
   int flags;
   uint32_t position;
   uint32_t size;
@@ -69,7 +65,6 @@ static size_t sprintLine(char* start, char** end, uint32_t offset, const void* d
 
 static void NQHexViewer_init(NQHexViewer* viewer, int mode)
 {
-  viewer->class = &__NQHexViewerClass;
   viewer->flags = mode & NQ_HEXVIEWER_LOWERCASTE;
   viewer->position = 0;
   viewer->offset = 0;
@@ -144,10 +139,3 @@ size_t NQHexViewer_length(const NQHexViewer* viewer)
 {
   return viewer->size;
 }
-
-const NQObjectClass __NQHexViewerClass = {
-  NQHexViewerObjectType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQHexViewer_destroy,
-};

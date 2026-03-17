@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/checksum/CRC32.h"
 
-#if USE_ZLIB_CRC32
+#ifdef NQ_USE_ZLIB_CRC32
 
 #include <libnetq/Math.h>
 #include <libnetq/Limits.h>
@@ -31,4 +31,4 @@ uint32_t NQCRC32Calc(uint32_t crc, const uint8_t* data, size_t size)
 #endif
 }
 
-#endif /* USE_ZLIB_CRC32 */
+#endif /* NQ_USE_ZLIB_CRC32 */

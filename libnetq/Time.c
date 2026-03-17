@@ -77,7 +77,7 @@ static inline NQTimeMs timeSpecToTimeMs(const NQTimeSpec* ts)
   if (ts == NULL)
     return -1; /* infinitely for select or poll */
 
-  return (NQTimeMs)(ts->tv_sec * NQ_MSECS_PER_SEC + ts->tv_nsec / NQ_NSECS_PER_MSEC);
+  return (NQTimeMs)ts->tv_sec * NQ_MSECS_PER_SEC + ts->tv_nsec / NQ_NSECS_PER_MSEC;
 }
 
 static inline NQTimeMs winFileTimeToTimeMs(uint32_t highDateTime, uint32_t lowDateTime)

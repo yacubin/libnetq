@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2023-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -25,6 +25,8 @@
 #define WS_OPCODE_MASK (0x0f)
 #define WS_MASK_MASK (0x80)
 #define WS_LEN1_MASK (0x7f)
+#define WS_LEN16_MARKER 126
+#define WS_LEN64_MARKER 127
 
 #define NQ_WEBSOCKET_BUFFER_MAX (NQ_UINT64_MAX - NQ_WEBSOCKET_HEADER_MAX)
 #define NQ_WEBSOCKET_LENGTH1_MAX 125
@@ -49,7 +51,7 @@ int NQWebSocketHeaderParse(const uint8_t* data, size_t size, NQWebSocketHeader* 
   uint64_t payloadSize = flags2 & WS_LEN1_MASK;
   bool masked = (flags2 & WS_MASK_MASK) ? true : false;
 
-  if (payloadSize == 126) {
+  if (payloadSize == WS_LEN16_MARKER) {
     if (size < 2) {
       return 0;
     }
@@ -292,18 +294,18 @@ void NQWebSocketBuffer_complete(NQWebSocketBuffer* thiz, uint8_t opcode, bool fi
 
   thiz->headerSize = sizeof(flag1) + sizeof(flag2);
 
-  if (thiz->payloadLen < 126) {
+  if (thiz->payloadLen <= NQ_WEBSOCKET_LENGTH1_MAX) {
     flag2 = (WS_LEN1_MASK & thiz->payloadLen);
     len2 = len8 = 0;
   }
   else if (thiz->payloadLen <= NQ_UINT16_MAX) {
-    flag2 = (WS_LEN1_MASK & 126);
+    flag2 = (WS_LEN1_MASK & WS_LEN16_MARKER);
     len2 = (uint16_t)thiz->payloadLen;
     len8 = 0;
     thiz->headerSize += sizeof(len2);
   }
   else {
-    flag2 = (WS_LEN1_MASK & 127);
+    flag2 = (WS_LEN1_MASK & WS_LEN64_MARKER);
     len2 = 0;
     len8 = (uint64_t)thiz->payloadLen;
     thiz->headerSize += sizeof(len2);

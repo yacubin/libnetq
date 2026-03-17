@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -16,6 +16,8 @@
 extern "C" {
 #endif
 
+#define NQ_ETHERNET_MTU 1500
+
 typedef struct NQIPv4Address {
   uint8_t data[4];
 } NQIPv4Address;
@@ -23,7 +25,7 @@ typedef struct NQIPv4Address {
 NQ_EXPORT void NQIPv4Address_init(NQIPv4Address* ip4, uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4);
 NQ_EXPORT int NQIPv4Address_sprintf(const NQIPv4Address* ip4, char* s, size_t n);
 NQ_EXPORT bool NQIPv4Address_parse(NQIPv4Address* ip4, const char* s);
-NQ_EXPORT bool NQIPv4Address_parseWithLength(NQIPv4Address* ip4, const char* s, size_t len);
+NQ_EXPORT bool NQIPv4Address_parse2(NQIPv4Address* ip4, const char* s, size_t len);
 NQ_EXPORT bool NQIPv4Address_isBroadcast(const NQIPv4Address* ip4);
 NQ_EXPORT bool NQIPv4Address_isAny(const NQIPv4Address* ip4);
 NQ_EXPORT bool NQIPv4Address_isUnicast(const NQIPv4Address* ip4);
@@ -41,7 +43,7 @@ typedef struct NQIPv4EndPoint {
 NQ_EXPORT void NQIPv4EndPoint_init(NQIPv4EndPoint* ep4, const NQIPv4Address* address, uint16_t port);
 NQ_EXPORT int NQIPv4EndPoint_sprintf(const NQIPv4EndPoint* ep4, char* s, size_t n);
 NQ_EXPORT bool NQIPv4EndPoint_parse(NQIPv4EndPoint* ep4, const char* s);
-NQ_EXPORT bool NQIPv4EndPoint_parseWithLength(NQIPv4EndPoint* ep4, const char* s, size_t len);
+NQ_EXPORT bool NQIPv4EndPoint_parse2(NQIPv4EndPoint* ep4, const char* s, size_t len);
 
 
 typedef struct NQIPv6Address {
@@ -72,7 +74,7 @@ NQ_EXPORT void NQEndPoint_init4(NQEndPoint* ep, const uint8_t data[4], uint16_t 
 NQ_EXPORT void NQEndPoint_init6(NQEndPoint* ep, const uint8_t data[16], uint16_t port);
 NQ_EXPORT int NQEndPoint_sprintf(const NQEndPoint* ep, char* s, size_t n);
 NQ_EXPORT bool NQEndPoint_parse(NQEndPoint* ep, const char* s);
-NQ_EXPORT bool NQEndPoint_parseWithLength(NQEndPoint* ep, const char* s, size_t len);
+NQ_EXPORT bool NQEndPoint_parse2(NQEndPoint* ep, const char* s, size_t len);
 
 #define NQ_MACADDRESS_SIZE (6)
 
@@ -96,7 +98,7 @@ static inline bool NQMACAddress_isZero(const NQMACAddress* thiz)
 }
 
 NQ_EXPORT void NQMACAddress_reset(NQMACAddress* mac);
-NQ_EXPORT bool NQMACAddress_parse(NQMACAddress* mac, const char* s, size_t n);
+NQ_EXPORT bool NQMACAddress_parse2(NQMACAddress* mac, const char* s, size_t n);
 NQ_EXPORT int NQMACAddress_sprintf(const NQMACAddress* mac, char* s, size_t n);
 
 #ifdef __cplusplus

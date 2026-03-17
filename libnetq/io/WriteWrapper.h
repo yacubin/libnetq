@@ -53,6 +53,12 @@ static inline bool NQWriteWrapper_writeUint32LE(NQWriteWrapper* thiz, uint32_t v
   return NQWriteWrapper_writeAll(thiz, &value, sizeof(value));
 }
 
+static inline bool NQWriteWrapper_writeUint32BE(NQWriteWrapper* thiz, uint32_t value)
+{
+  value = NQHostToBE32(value);
+  return NQWriteWrapper_writeAll(thiz, &value, sizeof(value));
+}
+
 #ifdef __cplusplus
 }
 #endif

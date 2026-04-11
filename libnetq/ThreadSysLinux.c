@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -16,23 +16,19 @@
 #ifdef NQ_SYS_LINUX
 
 #include <libnetq/Malloc.h>
-#include <libnetq/CStrBase.h>
+#include <libnetq/String.h>
 #include <libnetq/Math.h>
-#include <libnetq/ObjectClass.h>
 
 #include <linux/kthread.h>
 #include <linux/delay.h>
 
 struct NQThread {
-  const NQObjectClass* class;
   uint32_t flags;
   struct task_struct* handle;
   void* data;
   NQThreadCallback callback;
   char name[1];
 };
-
-extern const NQObjectClass __NQThreadClass;
 
 static int threadWork(void* data)
 {
@@ -51,7 +47,6 @@ NQThread* NQThread_create(NQThreadCallback callback, void* data, const char* nam
   if (thiz == NULL)
     return NULL;
 
-  thiz->class = &__NQThreadClass;
   thiz->data = data;
   thiz->callback = callback;
 
@@ -121,12 +116,5 @@ void NQThreadSleep(int32_t ms)
 {
   msleep(ms);
 }
-
-const NQObjectClass __NQThreadClass = {
-  NQThreadObjectType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQThread_destroy,
-};
 
 #endif

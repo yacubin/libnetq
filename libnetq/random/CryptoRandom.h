@@ -1,14 +1,14 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
  */
 
-#ifndef _LIBNETQ_UNLIMITEDRANDOM_H
-#define _LIBNETQ_UNLIMITEDRANDOM_H
+#ifndef _LIBNETQ_RANDOM_CRYPTORANDOM_H
+#define _LIBNETQ_RANDOM_CRYPTORANDOM_H
 
 #include <libnetq/Basic.h>
 
@@ -16,10 +16,10 @@
 extern "C" {
 #endif
 
-NQ_EXPORT void NQGetUnlimitedRandom(uint8_t* buffer, size_t size);
+NQ_EXPORT int NQGetCryptoRandom(void* data, size_t size);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _LIBNETQ_UNLIMITEDRANDOM_H */
+#endif /* _LIBNETQ_RANDOM_CRYPTORANDOM_H */

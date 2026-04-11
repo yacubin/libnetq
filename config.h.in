@@ -1,41 +1,14 @@
 /* Network Queue Library */
 #define NQ_INTERNAL 1
 
-/* Library Version Code */
-#define NQ_VERSION_CODE @NQ_VERSION_CODE@
-
 /* Enable symbol export as a shared library */
 #cmakedefine NQ_USE_EXPORT 1
 
 /* Runtime check in debug mode only */
 #define NQ_CHECK_LEVEL @NQ_CHECK_LEVEL@
 
-/* Define if you have ZLIB */
-#cmakedefine01 WITH_ZLIB
-
-/* Define if you have OLE32 */
-#cmakedefine01 WITH_OLE32
-
-/* Define if you have ADVAPI32 */
-#cmakedefine01 WITH_ADVAPI32
-
-/* Define if you have OpenSSL */
-#cmakedefine01 WITH_OPENSSL
-
-/* Define if you have Jansson */
-#cmakedefine01 WITH_JANSSON
-
-/* Define if you have cJSON */
-#cmakedefine01 WITH_CJSON
-
-/* Define if you have PCRE2 */
-#cmakedefine01 WITH_PCRE2
-
-/* Define if you have Expat */
-#cmakedefine01 WITH_EXPAT
-
-/* Define if you have CivetWeb */
-#cmakedefine01 WITH_CIVETWEB
+/* File descriptor name used for logging output */
+#cmakedefine NQ_ENV_LOGFD "@NQ_ENV_LOGFD@"
 
 /* Define to 1 if you have the <stddef.h> header file. */
 #cmakedefine HAVE_STDDEF_H 1
@@ -127,56 +100,35 @@
 /* Have Intel __sync_* atomic primitives */
 #cmakedefine HAVE_SYNC_BUILTINS 1
 
-/* Use MD5 implementation from the Advapi32 library */
-#cmakedefine01 USE_ADVAPI32_MD5
+/* Define if you have ZLIB */
+#cmakedefine01 WITH_ZLIB
 
-/* Use SHA1 implementation from the Advapi32 library */
-#cmakedefine01 USE_ADVAPI32_SHA1
+/* Define if you have OLE32 */
+#cmakedefine01 WITH_OLE32
 
-/* Use MD5 implementation from the OpenSSL library */
-#cmakedefine01 USE_OPENSSL_MD5
+/* Define if you have ADVAPI32 */
+#cmakedefine01 WITH_ADVAPI32
 
-/* Use SHA1 implementation from the OpenSSL library */
-#cmakedefine01 USE_OPENSSL_SHA1
+/* Define if you have OpenSSL */
+#cmakedefine01 WITH_OPENSSL
 
-/* Use CRC32 implementation from the ZLib library */
-#cmakedefine01 USE_ZLIB_CRC32
+/* Define if you have Jansson */
+#cmakedefine01 WITH_JANSSON
 
-/* Use JSON implementation from the Jansson library */
-#cmakedefine01 USE_JANSSON_JSON
+/* Define if you have cJSON */
+#cmakedefine01 WITH_CJSON
 
-/* Use JSON implementation from the cJSON library */
-#cmakedefine01 USE_CJSON_JSON
+/* Define if you have PCRE2 */
+#cmakedefine01 WITH_PCRE2
 
-/* Use Regex implementation from the PCRE2 library */
-#cmakedefine01 USE_PCRE2_REGEX
+/* Define if you have Expat */
+#cmakedefine01 WITH_EXPAT
 
-/* Use XMLParser implementation from the Expat library */
-#cmakedefine01 USE_EXPAT_XMLPARSER
+/* Define if you have CivetWeb */
+#cmakedefine01 WITH_CIVETWEB
 
-/* Use Atomic implementation from the AtomicOps library */
-#cmakedefine01 USE_ATOMICOPS_ATOMIC
-
-/* Use Atomic implementation from the LibNetQ library */
-#cmakedefine01 USE_LNQ_ATOMIC
-
-/* Use stub for MD5 */
-#cmakedefine01 USE_STUB_MD5
-
-/* Use stub for SHA1 */
-#cmakedefine01 USE_STUB_SHA1
-
-/* Use stub for CRC32 */
-#cmakedefine01 USE_STUB_CRC32
-
-/* Use stub for JSON */
-#cmakedefine01 USE_STUB_JSON
-
-/* Use stub for Regex */
-#cmakedefine01 USE_STUB_REGEX
-
-/* Use stub for XMLParser */
-#cmakedefine01 USE_STUB_XMLPARSER
+/* Define if you have LibBase58 */
+#cmakedefine01 WITH_LIBBASE58
 
 /* Define to 2 if the system does not provide POSIX.1 features except with
 this defined. */

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -29,7 +29,10 @@ typedef void (*NQDispatchActionHandler) (void* userdata);
 typedef void (*NQDispatchDestroyHandler) (void* userdata);
 
 NQ_EXPORT NQNetworkLooper* NQNetworkLooper_create(uint32_t timerLimit, uint32_t socketLimit, uint32_t dispatchLimit);
+NQ_EXPORT NQNetworkLooper* NQNetworkLooper_retain(NQNetworkLooper*);
+NQ_EXPORT void NQNetworkLooper_release(NQNetworkLooper*);
 NQ_EXPORT void NQNetworkLooper_destroy(NQNetworkLooper*);
+
 NQ_EXPORT bool NQNetworkLooper_wakeup(NQNetworkLooper*);
 NQ_EXPORT bool NQNetworkLooper_performOnce(NQNetworkLooper*);
 NQ_EXPORT bool NQNetworkLooper_performOnceWithTime(NQNetworkLooper*, int64_t currentTimeMs);

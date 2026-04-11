@@ -23,8 +23,17 @@ static inline size_t NQGetBytes(const void* buffer, uint8_t* data, size_t size)
   return size;
 }
 
-NQ_EXPORT size_t NQGetInt8(const void* buffer, int8_t* value);
-NQ_EXPORT size_t NQGetUint8(const void* buffer, uint8_t* value);
+static inline size_t NQGetInt8(const void* buffer, int8_t* value)
+{
+  *value = *((int8_t*)buffer);
+  return sizeof(*value);
+}
+
+static inline size_t NQGetUint8(const void* buffer, uint8_t* value)
+{
+  *value = *((uint8_t*)buffer);
+  return sizeof(*value);
+}
 
 NQ_EXPORT size_t NQGetInt16(const void* buffer, int16_t* value);
 NQ_EXPORT size_t NQGetInt16LE(const void* buffer, int16_t* value);

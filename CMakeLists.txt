@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.10
+project(libnetq VERSION 1.0.11
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -8,7 +8,7 @@ project(libnetq VERSION 1.0.10
 message(STATUS "Project ${PROJECT_NAME}/${PROJECT_VERSION} (${PROJECT_DESCRIPTION})")
 message(STATUS "URL: ${PROJECT_HOMEPAGE_URL}")
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 include(GNUInstallDirs)
 include(CheckIncludeFile)
@@ -51,6 +51,7 @@ endmacro ()
 
 LNQ_OPTION_DEFINE(LIBRARY_TYPE "Choose the library type: SHARED, STATIC, OBJECT" ENUM SHARED STATIC OBJECT)
 LNQ_OPTION_DEFINE(CHECK_LEVEL "Runtime check in debug mode only" NUMBER 0)
+LNQ_OPTION_DEFINE(ENV_LOGFD "File descriptor name used for logging output" STRING "")
 LNQ_FEATURE_DEFINE(USE_EXPORT "Enable symbol export as a shared library")
 
 if (NOT LNQ_USE_EXPORT STREQUAL AUTO)
@@ -62,6 +63,7 @@ else ()
 endif ()
 
 set(NQ_CHECK_LEVEL ${LNQ_CHECK_LEVEL})
+set(NQ_ENV_LOGFD ${LNQ_ENV_LOGFD})
 
 math(EXPR NQ_VERSION_CODE "${PROJECT_VERSION_MAJOR} * 10000000 + ${PROJECT_VERSION_MINOR} * 100000 + ${PROJECT_VERSION_PATCH} * 1000")
 
@@ -131,6 +133,8 @@ LNQ_ADD_LIBRARY(LibEvent)
 LNQ_ADD_LIBRARY(LibUV)
 LNQ_ADD_LIBRARY(Expat)
 LNQ_ADD_LIBRARY(AtomicOps)
+LNQ_ADD_LIBRARY(LibBase58)
+LNQ_ADD_LIBRARY(Secp256k1)
 
 check_include_file(stddef.h HAVE_STDDEF_H)
 check_include_file(stdio.h HAVE_STDIO_H)
@@ -355,7 +359,18 @@ set(libnetq_HEADERS
   libnetq/cpu/x86.h
   libnetq/cpu/z.h
 
+  libnetq/crypto/CryptoAlgorithm.h
+  libnetq/crypto/CryptoHash.h
+  libnetq/crypto/CryptoHashAdvapi32.h
+  libnetq/crypto/CryptoHashOpenSSL.h
+  libnetq/crypto/CryptoHashStub.h
+  libnetq/crypto/CryptoHashSysLinux.h
   libnetq/crypto/HMAC_SHA1.h
+  libnetq/crypto/MD5.h
+  libnetq/crypto/Secp256k1.h
+  libnetq/crypto/SecureErase.h
+  libnetq/crypto/SHA1.h
+  libnetq/crypto/SHA256.h
 
   libnetq/fs/Stat.h
 
@@ -375,12 +390,25 @@ set(libnetq_HEADERS
 
   libnetq/net/ChunkBuffer.h
   libnetq/net/NetBufferQueue.h
+  libnetq/net/SpyModule.h
+  libnetq/net/SpyModuleList.h
+  libnetq/net/SpyServer.h
+
+  libnetq/random/CryptoRandom.h
+  libnetq/random/UnlimitedRandom.h
 
   libnetq/regex/Regex.h
+
+  libnetq/string/StringStorage.h
 
   libnetq/web/HttpStatistics.h
   libnetq/web/JsonRpcTypes.h
   libnetq/web/UrlHost.h
+  libnetq/web/WebRequest.h
+  libnetq/web/WebResponse.h
+  libnetq/web/WebServer.h
+  libnetq/web/WebSocket.h
+  libnetq/web/WebWriter.h
 
   libnetq/tls/CipherSuite.h
 
@@ -404,6 +432,7 @@ set(libnetq_HEADERS
   libnetq/Atomic.h
   libnetq/AutoReleaseCF.h
   libnetq/Base16.h
+  libnetq/Base58.h
   libnetq/Base64.h
   libnetq/Basic.h
   libnetq/BitOps.h
@@ -464,23 +493,24 @@ set(libnetq_HEADERS
   libnetq/Math.h
   libnetq/MediaType.h
   libnetq/MimeTypes.def
+  libnetq/Module.h
   libnetq/MotionEvent.h
   libnetq/MouseEvent.h
   libnetq/Mutex.h
   libnetq/Network.h
   libnetq/NetworkLooper.h
-  libnetq/Object.h
-  libnetq/ObjectClass.h
-  libnetq/ObjectType.h
+  libnetq/Notifier.h
   libnetq/Once.h
   libnetq/OS.h
   libnetq/Path.h
   libnetq/PlatformLooper.h
   libnetq/PlatformPoll.h
+  libnetq/PlatformSocket.h
   libnetq/Poll.h
   libnetq/PollVector.h
   libnetq/PrimitiveStorage.h
   libnetq/PrimitiveType.h
+  libnetq/Random.h
   libnetq/Rect.h
   libnetq/RefCount.h
   libnetq/Regex.h
@@ -500,14 +530,12 @@ set(libnetq_HEADERS
   libnetq/Time.h
   libnetq/TimerQueue.h
   libnetq/Types.h
-  libnetq/UnlimitedRandom.h
   libnetq/URL.h
   libnetq/UrlPath.h
   libnetq/UrlQuery.h
   libnetq/UTF.h
   libnetq/UUID.h
   libnetq/VA.h
-  libnetq/Version.h
   libnetq/WakeOnLan.h
   libnetq/WebSocketCalcAccept.h
   libnetq/WebSocketFrame.h
@@ -527,23 +555,15 @@ set(libnetq_SOURCES
   libnetq/checksum/CRC32SysLinux.c
   libnetq/checksum/CRC32ZLib.c
 
+  libnetq/crypto/CryptoHashAdvapi32.c
+  libnetq/crypto/CryptoHashOpenSSL.c
+  libnetq/crypto/CryptoHashSysLinux.c
   libnetq/crypto/HMAC_SHA1.c
-  libnetq/crypto/MD5.h
-  libnetq/crypto/MD5Advapi32.c
-  libnetq/crypto/MD5Advapi32.h
   libnetq/crypto/MD5OpenSSL.c
-  libnetq/crypto/MD5OpenSSL.h
-  libnetq/crypto/MD5Stub.h
-  libnetq/crypto/MD5SysLinux.c
-  libnetq/crypto/MD5SysLinux.h
-  libnetq/crypto/SHA1.h
-  libnetq/crypto/SHA1Advapi32.c
-  libnetq/crypto/SHA1Advapi32.h
+  libnetq/crypto/Secp256k1.c
+  libnetq/crypto/Secp256k1Stub.c
   libnetq/crypto/SHA1OpenSSL.c
-  libnetq/crypto/SHA1OpenSSL.h
-  libnetq/crypto/SHA1Stub.h
-  libnetq/crypto/SHA1SysLinux.c
-  libnetq/crypto/SHA1SysLinux.h
+  libnetq/crypto/SHA256OpenSSL.c
 
   libnetq/fs/Stat.c
 
@@ -563,15 +583,25 @@ set(libnetq_SOURCES
 
   libnetq/net/ChunkBuffer.c
   libnetq/net/NetBufferQueue.c
+  libnetq/net/SpyModuleList.c
+  libnetq/net/SpyServer.c
+
+  libnetq/random/CryptoRandomOpenSSL.c
+  libnetq/random/CryptoRandomPlatform.c
+  libnetq/random/UnlimitedRandom.c
 
   libnetq/regex/RegexPcre2.c
   libnetq/regex/RegexStub.c
+
+  libnetq/string/StringStorage.c
 
   libnetq/wasm/Module.c
   libnetq/wasm/ModuleTypes.c
 
   libnetq/web/HttpStatistics.c
   libnetq/web/UrlHost.c
+  libnetq/web/WebResponse.c
+  libnetq/web/WebServer.c
 
   libnetq/xml/XMLParserExpat.c
   libnetq/xml/XMLParserStub.c
@@ -584,6 +614,8 @@ set(libnetq_SOURCES
   libnetq/Asset.c
   libnetq/Atomic.c
   libnetq/Base16.c
+  libnetq/Base58LibBase58.c
+  libnetq/Base58Stub.c
   libnetq/Base64.c
   libnetq/BufferBuilder.c
   libnetq/BuildInfo.c
@@ -638,7 +670,6 @@ set(libnetq_SOURCES
   libnetq/MutexWin.c
   libnetq/Network.c
   libnetq/NetworkLooper.c
-  libnetq/Object.c
   libnetq/OncePosix.c
   libnetq/OnceSysLinux.c
   libnetq/OnceWin.c
@@ -671,7 +702,6 @@ set(libnetq_SOURCES
   libnetq/ThreadWin.c
   libnetq/Time.c
   libnetq/TimerQueue.c
-  libnetq/UnlimitedRandom.c
   libnetq/URL.c
   libnetq/UrlPath.c
   libnetq/UrlQuery.c
@@ -704,6 +734,7 @@ set(libnetq_CMAKEFILES
   cmake/FindJSONC.cmake
   cmake/FindLeptonica.cmake
   cmake/FindLibArchive.cmake
+  cmake/FindLibBase58.cmake
   cmake/FindLibEvent.cmake
   cmake/FindLibHeif.cmake
   cmake/FindLibJpegTurbo.cmake
@@ -716,6 +747,7 @@ set(libnetq_CMAKEFILES
   cmake/FindOpenJP2.cmake
   cmake/FindPCRE2.cmake
   cmake/FindQuickJS.cmake
+  cmake/FindSecp256k1.cmake
   cmake/FindTidy.cmake
   cmake/FindTIFF.cmake
   cmake/FindWebP.cmake
@@ -724,12 +756,14 @@ set(libnetq_CMAKEFILES
 
 set(libnetq_DATAFILES
   config.h.in
+  libnetq/Features.h.in
+  libnetq/Version.h.in
   LICENSE
   README.md
   )
 
 set(libnetq_INCLUDES
-  "${CMAKE_CURRENT_BINARY_DIR}/include"
+  "${CMAKE_CURRENT_BINARY_DIR}/generated"
   "${CMAKE_CURRENT_SOURCE_DIR}"
   )
 
@@ -740,68 +774,92 @@ set(libnetq_LIBRARIES
 set(libnetq_DEFINITIONS
   )
 
+set(libnetq_GENERATED
+  )
+
 set_source_files_properties(${libnetq_HEADERS} PROPERTIES HEADER_FILE_ONLY TRUE)
 
 if (WITH_OPENSSL)
-  set(USE_OPENSSL_MD5 1)
-  configure_file(libnetq/crypto/MD5OpenSSL.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
+  set(NQ_USE_OPENSSL_CRYPTOHASH 1)
 elseif (WITH_ADVAPI32)
-  set(USE_ADVAPI32_MD5 1)
-  configure_file(libnetq/crypto/MD5Advapi32.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
+  set(NQ_USE_ADVAPI32_CRYPTOHASH 1)
 else ()
-  set(USE_STUB_MD5 1)
-  configure_file(libnetq/crypto/MD5Stub.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" COPYONLY)
-  message("! MD5 has no implementation")
+  set(NQ_USE_STUB_CRYPTOHASH 1)
+  message("! CryptoHash has no implementation")
 endif ()
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/MD5.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/crypto")
 
 if (WITH_OPENSSL)
-  set(USE_OPENSSL_SHA1 1)
-  configure_file(libnetq/crypto/SHA1OpenSSL.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
-elseif (WITH_ADVAPI32)
-  set(USE_ADVAPI32_SHA1 1)
-  configure_file(libnetq/crypto/SHA1Advapi32.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
-else ()
-  set(USE_STUB_SHA1 1)
-  configure_file(libnetq/crypto/SHA1Stub.h "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" COPYONLY)
+  set(NQ_USE_OPENSSL_MD5 1)
+elseif (NQ_USE_STUB_CRYPTOHASH)
+  message("! MD5 has no implementation")
+endif ()
+
+if (WITH_OPENSSL)
+  set(NQ_USE_OPENSSL_SHA1 1)
+elseif (NQ_USE_STUB_CRYPTOHASH)
   message("! SHA1 has no implementation")
 endif ()
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libnetq/crypto/SHA1.h" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libnetq/crypto")
+
+if (WITH_OPENSSL)
+  set(NQ_USE_OPENSSL_SHA256 1)
+elseif (NQ_USE_STUB_CRYPTOHASH)
+  message("! SHA256 has no implementation")
+endif ()
+
+if (WITH_OPENSSL)
+  set(NQ_USE_OPENSSL_CRYPTORAND 1)
+else ()
+  set(NQ_USE_PLATFORM_CRYPTORAND 1)
+endif ()
 
 if (WITH_ZLIB)
-  set(USE_ZLIB_CRC32 1)
+  set(NQ_USE_ZLIB_CRC32 1)
 else ()
-  set(USE_STUB_CRC32 1)
+  set(NQ_USE_STUB_CRC32 1)
   message("! CRC32 has no implementation")
 endif ()
 
 if (WITH_JANSSON)
-  set(USE_JANSSON_JSON 1)
+  set(NQ_USE_JANSSON_JSON 1)
 elseif (WITH_CJSON)
-  set(USE_CJSON_JSON 1)
+  set(NQ_USE_CJSON_JSON 1)
 else ()
-  set(USE_STUB_JSON 1)
+  set(NQ_USE_STUB_JSON 1)
   message("! JSON has no implementation")
 endif ()
 
 if (WITH_PCRE2)
-  set(USE_PCRE2_REGEX 1)
+  set(NQ_USE_PCRE2_REGEX 1)
 else ()
-  set(USE_STUB_REGEX 1)
+  set(NQ_USE_STUB_REGEX 1)
   message("! Regex has no implementation")
 endif ()
 
 if (WITH_EXPAT)
-  set(USE_EXPAT_XMLPARSER 1)
+  set(NQ_USE_EXPAT_XMLPARSER 1)
 else ()
-  set(USE_STUB_XMLPARSER 1)
+  set(NQ_USE_STUB_XMLPARSER 1)
   message("! XMLParser has no implementation")
 endif ()
 
 if (WITH_ATOMICOPS)
-  set(USE_ATOMICOPS_ATOMIC 1)
+  set(NQ_USE_ATOMICOPS_ATOMIC 1)
 else ()
-  set(USE_LNQ_ATOMIC 1)
+  set(NQ_USE_NATIVE_ATOMIC 1)
+endif ()
+
+if (WITH_LIBBASE58)
+  set(NQ_USE_LIBBASE58_BASE58 1)
+else ()
+  set(NQ_USE_STUB_BASE58 1)
+  message("! Base58 has no implementation")
+endif ()
+
+if (WITH_SECP256K1)
+  set(NQ_USE_SECP256K1_SECP256K1 1)
+else ()
+  set(NQ_USE_STUB_SECP256K1 1)
+  message("! Secp256k1 has no implementation")
 endif ()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Android")
@@ -866,12 +924,29 @@ if (WITH_CIVETWEB)
   list(APPEND libnetq_LIBRARIES CivetWeb::CivetWeb)
 endif ()
 
-configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/config.h" @ONLY)
+if (WITH_LIBBASE58)
+  list(APPEND libnetq_LIBRARIES Bitcoin::LibBase58)
+endif ()
 
+if (WITH_SECP256K1)
+  list(APPEND libnetq_LIBRARIES Bitcoin::Secp256k1)
+endif ()
+
+configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/config.h" @ONLY)
+configure_file(libnetq/Version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/Version.h" @ONLY)
+configure_file(libnetq/Features.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/Features.h" @ONLY)
+
+list(APPEND libnetq_GENERATED
+  "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+  "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/Version.h"
+  "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/Features.h"
+  )
+
+source_group(TREE "${CMAKE_CURRENT_BINARY_DIR}" FILES ${libnetq_GENERATED})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_CMAKEFILES} ${libnetq_DATAFILES})
-add_library(libnetq ${LNQ_LIBRARY_TYPE} "${CMAKE_CURRENT_BINARY_DIR}/generated/config.h" ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_CMAKEFILES} ${libnetq_DATAFILES})
+add_library(libnetq ${LNQ_LIBRARY_TYPE} ${libnetq_GENERATED} ${libnetq_HEADERS} ${libnetq_SOURCES} ${libnetq_CMAKEFILES} ${libnetq_DATAFILES})
 target_include_directories(libnetq PUBLIC "$<BUILD_INTERFACE:${libnetq_INCLUDES}>")
-target_include_directories(libnetq PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
+target_include_directories(libnetq PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 target_compile_definitions(libnetq PUBLIC "${libnetq_DEFINITIONS}")
 target_link_libraries(libnetq PUBLIC ${libnetq_LIBRARIES})
 set_target_properties(libnetq PROPERTIES LINKER_LANGUAGE "C")
@@ -880,6 +955,14 @@ set_target_properties(libnetq PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${
 set_target_properties(libnetq PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 add_library(LibNetQ::LibNetQ ALIAS libnetq)
+
+install(
+  FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/Version.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/Features.h"
+  DESTINATION
+    "${CMAKE_INSTALL_INCLUDEDIR}/libnetq"
+  )
 
 foreach (_header ${libnetq_HEADERS})
   get_filename_component(_directory "${_header}" DIRECTORY)
@@ -909,3 +992,5 @@ message(STATUS "LibEvent . . . . . . . . . . . . . . . . . . ${WITH_LIBEVENT} (H
 message(STATUS "LibUV  . . . . . . . . . . . . . . . . . . . ${WITH_LIBUV} (HAVE ${HAVE_LIBUV})")
 message(STATUS "Expat  . . . . . . . . . . . . . . . . . . . ${WITH_EXPAT} (HAVE ${HAVE_EXPAT})")
 message(STATUS "AtomicOps  . . . . . . . . . . . . . . . . . ${WITH_ATOMICOPS} (HAVE ${HAVE_ATOMICOPS})")
+message(STATUS "LibBase58  . . . . . . . . . . . . . . . . . ${WITH_LIBBASE58} (HAVE ${HAVE_LIBBASE58})")
+message(STATUS "Secp256k1  . . . . . . . . . . . . . . . . . ${WITH_SECP256K1} (HAVE ${HAVE_SECP256K1})")

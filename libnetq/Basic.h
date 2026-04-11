@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -10,6 +10,7 @@
 #ifndef _LIBNETQ_BASIC_H
 #define _LIBNETQ_BASIC_H
 
+#include <libnetq/Features.h>
 #include <libnetq/Export.h>
 #include <libnetq/Types.h>
 #include <libnetq/Compiler.h>
@@ -47,5 +48,8 @@ template<typename T> char(&getArrayLength(T(&)[0]))[0];
 #define NQ_EXIT_SUCCESS EXIT_SUCCESS
 
 #define NQ_ALIGN_UP(num, align) (((num) + ((align) - 1)) & ~((align) - 1))
+
+#define NQ_CONCAT2(a, b) a ## b
+#define NQ_CONCAT(a, b) NQ_CONCAT2(a, b)
 
 #endif /* _LIBNETQ_BASIC_H */

@@ -12,18 +12,6 @@
 
 #include <libnetq/Assert.h>
 
-size_t NQGetInt8(const void* buffer, int8_t* value)
-{
-  *value = *((int8_t*)buffer);
-  return sizeof(*value);
-}
-
-size_t NQGetUint8(const void* buffer, uint8_t* value)
-{
-  *value = *((uint8_t*)buffer);
-  return sizeof(*value);
-}
-
 size_t NQGetInt16(const void* buffer, int16_t* value)
 {
   memcpy(value, buffer, sizeof(*value));

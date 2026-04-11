@@ -12,14 +12,61 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_SYS_LINUX
-# include <libnetq/crypto/MD5SysLinux.h>
-#elif USE_OPENSSL_MD5
-# include <libnetq/crypto/MD5OpenSSL.h>
-#elif USE_ADVAPI32_MD5
-# include <libnetq/crypto/MD5Advapi32.h>
+#if defined(NQ_USE_OPENSSL_MD5)
+# include <openssl/md5.h>
 #else
-# include <libnetq/crypto/MD5Stub.h>
+# include <libnetq/crypto/CryptoHash.h>
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define NQMD5_DIGEST_SIZE 16
+typedef uint8_t NQMD5Digest[NQMD5_DIGEST_SIZE];
+
+#if defined(NQ_USE_OPENSSL_MD5)
+
+#define NQMD5 MD5_CTX
+
+NQ_EXPORT bool NQMD5_init(NQMD5*);
+static inline void NQMD5_finalize(NQMD5* thiz)
+{
+  NQ_UNUSED_PARAM(thiz);
+}
+
+NQ_EXPORT bool NQMD5_update(NQMD5*, const uint8_t* data, size_t size);
+NQ_EXPORT bool NQMD5_final(NQMD5*, uint8_t digest[NQMD5_DIGEST_SIZE]);
+
+#else
+
+typedef struct NQCryptoHash NQMD5;
+
+static inline bool NQMD5_init(NQMD5* thiz)
+{
+  // TODO: Check digestSize
+  return NQCryptoHash_init(thiz, NQ_CRYPTOALGORITHM_MD5);
+}
+
+static inline void NQMD5_finalize(NQMD5* thiz)
+{
+  NQCryptoHash_finalize(thiz);
+}
+
+static inline bool NQMD5_update(NQMD5* thiz, const uint8_t* data, size_t size)
+{
+  return NQCryptoHash_update(thiz, data, size);
+}
+
+static inline bool NQMD5_final(NQMD5* thiz, uint8_t* digest)
+{
+  return NQCryptoHash_final(thiz, digest);
+}
+
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
 
 #endif /* _LIBNETQ_CRYPTO_MD5_H */

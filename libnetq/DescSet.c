@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -13,14 +13,11 @@
 #include "config.h"
 #include "libnetq/DescSet.h"
 
-#include <libnetq/ObjectClass.h>
-#include <libnetq/CStrBase.h>
-#include <libnetq/UnlimitedRandom.h>
+#include <libnetq/String.h>
+#include <libnetq/Random.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Assert.h>
-
-extern const NQObjectClass __NQDescSetClass;
 
 struct NQDescEntry {
   NQDescEntry* next;
@@ -36,7 +33,6 @@ struct NQDescList {
 };
 
 struct NQDescSet {
-  const NQObjectClass* class;
   NQDescIdentifier maxId;
   size_t maxCount;
   size_t entrySize;
@@ -187,8 +183,7 @@ NQDescSet* NQDescSet_create(size_t num, size_t size)
   NQDescSet* descset = (NQDescSet*)NQMalloc(allocSize);
   if (descset == NULL)
     return NULL;
-  
-  descset->class = &__NQDescSetClass;
+
   descset->maxId = NQ_UINTPTR_MAX;
   descset->maxCount = num;
   descset->entrySize = entrySize;
@@ -317,10 +312,3 @@ void* NQDescEntry_data(NQDescEntry* entry)
 {
   return (entry + 1);
 }
-
-const NQObjectClass __NQDescSetClass = {
-  NQDescSetObjectType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQDescSet_destroy,
-};

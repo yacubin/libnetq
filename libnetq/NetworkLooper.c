@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026 Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -22,6 +22,7 @@
 #include <libnetq/Time.h>
 #include <libnetq/Assert.h>
 #include <libnetq/Math.h>
+#include <libnetq/RefCount.h>
 
 enum {
   kTimerInFreeState,
@@ -91,6 +92,8 @@ struct DispatchEntry {
 };
 
 struct NQNetworkLooper {
+  NQRefCount refCount;
+
   uint32_t timerLimit;
   uint32_t socketLimit;
   uint32_t dispatchLimit;
@@ -224,6 +227,8 @@ NQNetworkLooper* NQNetworkLooper_create(uint32_t timerLimit, uint32_t socketLimi
   if (thiz == NULL)
     return NULL;
 
+  NQRefCount_init(&thiz->refCount);
+
   if (!NQEventWakeup_init(&thiz->wakeup)) {
     NQFree(thiz);
     return NULL;
@@ -276,6 +281,17 @@ NQNetworkLooper* NQNetworkLooper_create(uint32_t timerLimit, uint32_t socketLimi
   NQNetworkLooper_addSocket(thiz, NQEventWakeup_handle(&thiz->wakeup), wakeupAction, NULL, thiz);
 
   return thiz;
+}
+
+NQNetworkLooper* NQNetworkLooper_retain(NQNetworkLooper* thiz)
+{
+  NQRefCount_ref(&thiz->refCount);
+  return thiz;
+}
+
+void NQNetworkLooper_release(NQNetworkLooper* thiz)
+{
+  NQRefCount_unref(&thiz->refCount, NQNetworkLooper_destroy, thiz);
 }
 
 void NQNetworkLooper_destroy(NQNetworkLooper* thiz)
@@ -356,9 +372,6 @@ static void insertTimer(NQNetworkLooper* thiz, struct TimerEntry* entry)
 
 static inline struct BaseEntry* nextEvent(NQNetworkLooper* thiz, int64_t now, int* event)
 {
-  if (thiz->pollTimeout != 0)
-    return NULL;
-
   if (NQListHead_isEmpty(&thiz->usedTimerList))
     thiz->pollTimeout = -1;
   else {

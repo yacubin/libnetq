@@ -13,8 +13,7 @@
 #include "config.h"
 #include "libnetq/PrimitiveStorage.h"
 
-#include <libnetq/ObjectClass.h>
-#include <libnetq/CStrBase.h>
+#include <libnetq/String.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Math.h>
 #include <libnetq/Limits.h>

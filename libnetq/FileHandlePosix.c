@@ -54,7 +54,7 @@ void NQFileClose(NQFileHandle handle)
   close(handle);
 }
 
-int NQFileRead(NQFileHandle handle, uint8_t* data, size_t size)
+int NQFileRead(NQFileHandle handle, void* data, size_t size)
 {
   int bytesRead;
 
@@ -72,7 +72,7 @@ int NQFileRead(NQFileHandle handle, uint8_t* data, size_t size)
   return -1;
 }
 
-int NQFileWrite(NQFileHandle handle, const uint8_t* data, size_t size)
+int NQFileWrite(NQFileHandle handle, const void* data, size_t size)
 {
   int bytesWritten;
 

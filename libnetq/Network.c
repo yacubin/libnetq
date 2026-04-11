@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -70,10 +70,10 @@ static bool parseIPDigits(const char* start, const char* end, const char** token
 
 bool NQIPv4Address_parse(NQIPv4Address* ip4, const char* s)
 {
-  return NQIPv4Address_parseWithLength(ip4, s, strlen(s));
+  return NQIPv4Address_parse2(ip4, s, strlen(s));
 }
 
-bool NQIPv4Address_parseWithLength(NQIPv4Address* ip4, const char* s, size_t n)
+bool NQIPv4Address_parse2(NQIPv4Address* ip4, const char* s, size_t n)
 {
   size_t index;
   uint8_t bytes[4];
@@ -148,10 +148,10 @@ int NQIPv4EndPoint_sprintf(const NQIPv4EndPoint* ep4, char* s, size_t n)
 
 bool NQIPv4EndPoint_parse(NQIPv4EndPoint* ep4, const char* s)
 {
-  return NQIPv4EndPoint_parseWithLength(ep4, s, strlen(s));
+  return NQIPv4EndPoint_parse2(ep4, s, strlen(s));
 }
 
-bool NQIPv4EndPoint_parseWithLength(NQIPv4EndPoint* ep4, const char* s, size_t n)
+bool NQIPv4EndPoint_parse2(NQIPv4EndPoint* ep4, const char* s, size_t n)
 {
   size_t pos;
   for (pos = 0; pos < n; pos++) {
@@ -167,7 +167,7 @@ bool NQIPv4EndPoint_parseWithLength(NQIPv4EndPoint* ep4, const char* s, size_t n
   if (end != (s + n) || port > NQ_UINT16_MAX)
     return false;
 
-  if (!NQIPv4Address_parseWithLength(&ep4->address, s, pos))
+  if (!NQIPv4Address_parse2(&ep4->address, s, pos))
     return false;
 
   ep4->port = (uint16_t)port;
@@ -190,12 +190,12 @@ void NQEndPoint_init6(NQEndPoint* ep, const uint8_t data[16], uint16_t port)
 
 bool NQEndPoint_parse(NQEndPoint* ep, const char* s)
 {
-  return NQEndPoint_parseWithLength(ep, s, strlen(s));
+  return NQEndPoint_parse2(ep, s, strlen(s));
 }
 
-bool NQEndPoint_parseWithLength(NQEndPoint* ep, const char* s, size_t len)
+bool NQEndPoint_parse2(NQEndPoint* ep, const char* s, size_t len)
 {
-  if (NQIPv4EndPoint_parseWithLength(&ep->ip4ep, s, len)) {
+  if (NQIPv4EndPoint_parse2(&ep->ip4ep, s, len)) {
     ep->family = NQ_AF_INET4;
     return true;
   }
@@ -260,7 +260,7 @@ static bool parseMACAddress(const char* s, size_t n, const char* format, NQMACAd
   return true;
 }
 
-bool NQMACAddress_parse(NQMACAddress* mac, const char* s, size_t n)
+bool NQMACAddress_parse2(NQMACAddress* mac, const char* s, size_t n)
 {
   return parseMACAddress(s, n, "XX:XX:XX:XX:XX:XX", mac)
     || parseMACAddress(s, n, "XX-XX-XX-XX-XX-XX", mac);

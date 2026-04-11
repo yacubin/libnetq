@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -27,7 +27,6 @@
 #include <sched.h>
 #endif
 
-#include <libnetq/ObjectClass.h>
 #include <libnetq/Mutex.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/CStrBase.h>
@@ -37,10 +36,7 @@
 
 #define HAVE_USLEEP 1
 
-extern const NQObjectClass __NQThreadClass;
-
 struct NQThread {
-  const NQObjectClass* class;
   uint32_t flags;
   pthread_t handle;
   void* data;
@@ -109,7 +105,6 @@ NQThread* NQThread_create(NQThreadCallback callback, void* data, const char* nam
   if (thread == NULL)
     return NULL;
 
-  thread->class = &__NQThreadClass;
   thread->data = data;
   thread->callback = callback;
   NQMutex_init(&thread->mutex);
@@ -233,12 +228,5 @@ void NQThreadSleep(int32_t ms)
 {
   NQSleep(ms);
 }
-
-const NQObjectClass __NQThreadClass = {
-  NQThreadObjectType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQThread_destroy,
-};
 
 #endif

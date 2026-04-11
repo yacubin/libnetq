@@ -5,3 +5,9 @@
 /CMakeSettings.json
 /.vs/
 /.vscode/
+
+# Object files
+*.o
+
+# Build metadata
+*.o.cmd

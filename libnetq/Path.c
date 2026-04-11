@@ -161,7 +161,7 @@ void NQPathBuilder_init(NQPathBuilder* thiz)
   pathBuilderInit(thiz);
 }
 
-bool NQPathBuilder_initJoin1(NQPathBuilder* thiz, const char* path1)
+bool NQPathBuilder_initPath(NQPathBuilder* thiz, const char* path1)
 {
   pathBuilderInit(thiz);
   return pathBuilderAdd(thiz, path1, false);
@@ -187,6 +187,24 @@ bool NQPathBuilder_initJoin3(NQPathBuilder* thiz, const char* path1, const char*
     return true;
   pathBuilderFinalize(thiz);
   return false;
+}
+
+bool NQPathBuilder_initResolve2(NQPathBuilder* thiz, const char* path1, const char* path2)
+{
+  if (NQIsAbsolutePath(path2))
+    return NQPathBuilder_initPath(thiz, path2);
+  else
+    return NQPathBuilder_initJoin2(thiz, path1, path2);
+}
+
+bool NQPathBuilder_initResolve3(NQPathBuilder* thiz, const char* path1, const char* path2, const char* path3)
+{
+  if (NQIsAbsolutePath(path3))
+    return NQPathBuilder_initPath(thiz, path3);
+  else if (NQIsAbsolutePath(path2))
+    return NQPathBuilder_initJoin2(thiz, path2, path3);
+  else
+    return NQPathBuilder_initJoin3(thiz, path1, path2, path3);
 }
 
 void NQPathBuilder_finalize(NQPathBuilder* thiz)

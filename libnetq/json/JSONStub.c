@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/json/JSON.h"
 
-#if USE_STUB_JSON
+#ifdef NQ_USE_STUB_JSON
 
 const char* NQJSON_package(void)
 {
@@ -165,11 +165,13 @@ bool NQJSON_asBool(const NQJSON* json)
   return false;
 }
 
+#ifdef NQ_HAS_COMPILER_SSE
 double NQJSON_asDouble(const NQJSON* json)
 {
   NQ_UNUSED_PARAM(json);
   return 0;
 }
+#endif
 
 int64_t NQJSON_asInt64(const NQJSON* json)
 {

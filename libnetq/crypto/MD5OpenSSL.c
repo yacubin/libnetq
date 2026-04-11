@@ -10,9 +10,11 @@
 #include "config.h"
 #include "libnetq/crypto/MD5.h"
 
-#if USE_OPENSSL_MD5
+#ifdef NQ_USE_OPENSSL_MD5
 
 #include <libnetq/Assert.h>
+
+NQ_STATIC_ASSERT(NQMD5_DIGEST_SIZE == MD5_DIGEST_LENGTH, "");
 
 bool NQMD5_init(NQMD5* thiz)
 {

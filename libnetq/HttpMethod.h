@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2023-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -43,6 +43,16 @@ typedef enum NQHttpMethod NQHttpMethod;
 
 NQ_EXPORT NQHttpMethod NQHttpMethodParse(const char* str);
 NQ_EXPORT const char* NQHttpMethodToCStr(NQHttpMethod);
+
+NQ_EXPORT bool NQIsHttpGetMethod(const char* method);
+NQ_EXPORT bool NQIsHttpHeadMethod(const char* method);
+NQ_EXPORT bool NQIsHttpPostMethod(const char* method);
+NQ_EXPORT bool NQIsHttpPutMethod(const char* method);
+NQ_EXPORT bool NQIsHttpDeleteMethod(const char* method);
+NQ_EXPORT bool NQIsHttpConnectMethod(const char* method);
+NQ_EXPORT bool NQIsHttpOptionsMethod(const char* method);
+NQ_EXPORT bool NQIsHttpTraceMethod(const char* method);
+NQ_EXPORT bool NQIsHttpPatchMethod(const char* method);
 
 #ifdef __cplusplus
 }

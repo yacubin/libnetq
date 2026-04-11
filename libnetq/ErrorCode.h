@@ -31,17 +31,28 @@ typedef int NQErrorCode;
 #define NQ_ERROR (-1)
 
 #ifdef NQ_OS_WINDOWS
+# define NQ_EINVAL           ERROR_INVALID_PARAMETER
 # define NQ_ENOMEM           ERROR_NOT_ENOUGH_MEMORY
-# define NQ_ENOSYS           ERROR_NOT_SUPPORTED
+# define NQ_ENOSYS           ERROR_CALL_NOT_IMPLEMENTED
+# define NQ_ENOTSUP          ERROR_NOT_SUPPORTED
 # define NQ_EINPROGRESS      WSAEINPROGRESS
 # define NQ_EWOULDBLOCK      WSAEWOULDBLOCK
 #endif
 
 #if defined(NQ_SYS_LINUX) || defined(NQ_OS_UNIX)
+# define NQ_EINVAL           EINVAL
 # define NQ_ENOMEM           ENOMEM
 # define NQ_ENOSYS           ENOSYS
 # define NQ_EINPROGRESS      EINPROGRESS
 # define NQ_EWOULDBLOCK      EWOULDBLOCK
+#endif
+
+#ifdef NQ_SYS_LINUX
+# define NQ_ENOTSUP          ENOTSUPP
+#endif
+
+#ifdef NQ_OS_UNIX
+# define NQ_ENOTSUP          ENOTSUP
 #endif
 
 static inline NQErrorCode NQGetLastError(void)

@@ -10,9 +10,11 @@
 #include "config.h"
 #include "libnetq/crypto/SHA1.h"
 
-#if USE_OPENSSL_SHA1
+#ifdef NQ_USE_OPENSSL_SHA1
 
 #include <libnetq/Assert.h>
+
+NQ_STATIC_ASSERT(NQSHA1_DIGEST_SIZE == SHA_DIGEST_LENGTH, "");
 
 bool NQSHA1_init(NQSHA1* thiz)
 {

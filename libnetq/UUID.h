@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -41,7 +41,12 @@ NQ_EXPORT void NQUUID_initAsCanonical(NQUUID* uuid);
 NQ_EXPORT void NQUUID_initAsNil(NQUUID* uuid);
 NQ_EXPORT void NQUUID_initAsOmni(NQUUID* uuid);
 NQ_EXPORT bool NQUUID_parse(NQUUID* uuid, const char* str);
-NQ_EXPORT bool NQUUID_parseWithLength(NQUUID* uuid, const char* str, size_t len);
+NQ_EXPORT bool NQUUID_parse2(NQUUID* uuid, const char* str, size_t len);
+
+static inline void NQUUID_finalize(NQUUID* uuid)
+{
+  NQ_UNUSED_PARAM(uuid);
+}
 
 NQ_EXPORT bool NQUUID_isNil(const NQUUID* uuid);
 NQ_EXPORT bool NQUUID_isOmni(const NQUUID* uuid);

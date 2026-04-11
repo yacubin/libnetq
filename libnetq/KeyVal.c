@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2022-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -13,11 +13,11 @@
 #include "config.h"
 #include "libnetq/KeyVal.h"
 
-#include <libnetq/CStrBase.h>
-#include <libnetq/ObjectClass.h>
+#include <libnetq/String.h>
 #include <libnetq/Hash.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
+#include <libnetq/RefCount.h>
 #include <libnetq/Assert.h>
 
 struct NQKeyValIter {
@@ -27,15 +27,13 @@ struct NQKeyValIter {
 };
 
 struct NQKeyVal {
-  const NQObjectClass* class;
+  NQRefCount refCount;
   uint32_t mask;
   uint32_t count;
   NQKeyValIter data[1];
 };
 
 #define kNQKeyValDataCount (1 << 6)
-
-extern const NQObjectClass __NQKeyValClass;
 
 static inline char* iter2key(NQKeyValIter* iter)
 {
@@ -50,7 +48,7 @@ NQKeyVal* NQKeyVal_create(void)
   if (thiz == NULL)
     return NULL;
 
-  thiz->class = &__NQKeyValClass;
+  NQRefCount_init(&thiz->refCount);
   thiz->mask = kNQKeyValDataCount - 1;
   thiz->count = 0;
 
@@ -75,6 +73,17 @@ void NQKeyVal_destroy(NQKeyVal* thiz)
     iter = next;
   }
   NQFree(thiz);
+}
+
+NQKeyVal* NQKeyVal_retain(NQKeyVal* thiz)
+{
+  NQRefCount_ref(&thiz->refCount);
+  return thiz;
+}
+
+void NQKeyVal_release(NQKeyVal* thiz)
+{
+  NQRefCount_unref(&thiz->refCount, NQKeyVal_destroy, thiz);
 }
 
 const char* NQKeyVal_get(NQKeyVal* thiz, const char* key)
@@ -166,10 +175,3 @@ const char* NQKeyValIter_val(NQKeyValIter* iter)
 {
   return iter2key(iter) + iter->klenz;
 }
-
-const NQObjectClass __NQKeyValClass = {
-  kNQKeyValObjectType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQKeyVal_destroy,
-};

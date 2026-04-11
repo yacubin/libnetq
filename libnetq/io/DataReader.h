@@ -12,6 +12,7 @@
 
 #include <libnetq/Endian.h>
 #include <libnetq/Math.h>
+#include <libnetq/Limits.h>
 #include <libnetq/BufferBuilder.h>
 
 #ifdef __cplusplus
@@ -83,13 +84,13 @@ static inline bool NQDataReader_seekTo(NQDataReader* thiz, size_t position)
   return true;
 }
 
-static inline size_t NQDataReader_read(NQDataReader* thiz, uint8_t* data, size_t size)
+static inline int NQDataReader_read(NQDataReader* thiz, uint8_t* data, size_t size)
 {
-  size = NQGetMin(NQDataReader_availableSize(thiz), size);
+  size = NQGetMin(size, NQGetMin(NQDataReader_availableSize(thiz), NQ_INT32_MAX));
   if (data != NULL)
     memcpy(data, thiz->ptr, size);
   thiz->ptr += size;
-  return size;
+  return (int)size;
 }
 
 static inline bool NQDataReader_readAll(NQDataReader* thiz, uint8_t* data, size_t size)

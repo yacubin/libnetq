@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/Application.h"
 
-#include <libnetq/CStrBase.h>
+#include <libnetq/String.h>
 #include <libnetq/Looper.h>
 
 enum {

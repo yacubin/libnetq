@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2021-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -11,9 +11,6 @@
 #define _LIBNETQ_LOOPERSOURCE_H
 
 #include <libnetq/Basic.h>
-#include <libnetq/Event.h>
-#include <libnetq/SocketHandle.h>
-#include <libnetq/FileHandle.h>
 
 #ifdef NQ_OS_ANDROID
 #include <android/input.h>
@@ -22,6 +19,10 @@
 #ifdef NQ_OS_WINDOWS
 #include <windows.h>
 #endif
+
+#include <libnetq/Event.h>
+#include <libnetq/SocketHandle.h>
+#include <libnetq/FileHandle.h>
 
 #ifdef __cplusplus
 extern "C" {

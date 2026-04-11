@@ -14,7 +14,7 @@
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Hash.h>
-#include <libnetq/UnlimitedRandom.h>
+#include <libnetq/Random.h>
 
 #define kItemDataCount (1 << 6)
 

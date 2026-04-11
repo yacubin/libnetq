@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2023-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -76,7 +76,7 @@ static bool NQUrlHost_parse(NQUrlHost* thiz, const char* characters)
     thiz->flags |= HAS_PORT;
   }
 
-  if (NQIPv4Address_parseWithLength(&thiz->ipv4Addr, characters + thiz->hostIndex, thiz->hostLength)) {
+  if (NQIPv4Address_parse2(&thiz->ipv4Addr, characters + thiz->hostIndex, thiz->hostLength)) {
     thiz->flags |= HAS_IPV4ADDR;
   }
 

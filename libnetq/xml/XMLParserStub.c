@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/xml/XMLParser.h"
 
-#if USE_STUB_XMLPARSER
+#ifdef NQ_USE_STUB_XMLPARSER
 
 const char* NQXMLParser_package(void)
 {

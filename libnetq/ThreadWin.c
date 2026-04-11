@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -17,18 +17,14 @@
 
 #include <windows.h>
 
-#include <libnetq/ObjectClass.h>
 #include <libnetq/Mutex.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Compiler.h>
-#include <libnetq/CStrBase.h>
+#include <libnetq/String.h>
 #include <libnetq/Log.h>
 #include <libnetq/Assert.h>
 
-extern const NQObjectClass __NQThreadClass;
-
 struct NQThread {
-  const NQObjectClass* class;
   DWORD identifier;
   uint32_t flags;
   HANDLE handle;
@@ -119,7 +115,6 @@ NQThread* NQThread_create(NQThreadCallback callback, void* data, const char* nam
   if (thread == NULL)
     return NULL;
 
-  thread->class = &__NQThreadClass;
   thread->data = data;
   thread->callback = callback;
   NQMutex_init(&thread->mutex);
@@ -224,12 +219,5 @@ void NQThreadSleep(int32_t ms)
   NQ_ASSERT(ms >= 0);
   Sleep((DWORD)ms);
 }
-
-const NQObjectClass __NQThreadClass = {
-  NQThreadObjectType,
-  NQ_CLASS_NAME,
-  NQ_VERSION_CODE,
-  (NQObjectReleaseCallback)NQThread_destroy,
-};
 
 #endif

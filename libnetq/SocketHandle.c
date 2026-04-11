@@ -10,9 +10,11 @@
 #include "config.h"
 #include "libnetq/SocketHandle.h"
 
+#include <libnetq/PlatformSocket.h>
 #include <libnetq/Malloc.h>
-#include <libnetq/CStrBase.h> // for memset
+#include <libnetq/String.h> // for memset
 #include <libnetq/Limits.h>
+#include <libnetq/ErrorCode.h>
 #include <libnetq/Assert.h>
 
 #ifdef NQ_SYS_LINUX
@@ -509,23 +511,22 @@ int NQSocketConnect6(NQSocketHandle handle, const NQIPv6EndPoint* ep)
   return 0;
 }
 
-NQSocketHandle NQSocketAccept(NQSocketHandle handle, NQEndPoint* ep)
+int NQSocketAccept(NQSocketHandle handle, NQEndPoint* ep, NQSocketHandle* result)
 {
-  NQSocketHandle result;
   NQSockAddr addr;
-  socklen_t len;
+  socklen_t len = sizeof(addr);
+  NQSocketHandle acceptHandle = NQSocketAcceptImpl(handle, &addr.sa, &len);
+  if (acceptHandle == NQ_INVALID_SOCKET)
+    return -NQSocketGetLastError();
 
-  len = sizeof(addr);
-  result = NQSocketAcceptImpl(handle, &addr.sa, &len);
-  if (result != NQ_INVALID_SOCKET && ep != NULL) {
-    if (!NQEndPoint_initWithInet(ep, &addr.sa, len)) {
-      NQ_ASSERT_NOT_REACHED();
-      NQSocketCloseImpl(result);
-      result = NQ_INVALID_SOCKET;
-    }
+  if (ep != NULL && !NQEndPoint_initWithInet(ep, &addr.sa, len)) {
+    NQ_ASSERT_NOT_REACHED();
+    NQSocketCloseImpl(acceptHandle);
+    return -NQ_EINVAL;
   }
 
-  return result;
+  *result = acceptHandle;
+  return 0;
 }
 
 int NQSocketBind(NQSocketHandle handle, const NQEndPoint* ep)

@@ -40,7 +40,7 @@ bool NQStringStorage_setCharacters2(NQStringStorage* thiz, const char* character
     return true;
   }
 
-  if (length == NQ_UINT32_MAX) {
+  if (length >= NQ_UINT32_MAX) {
     NQ_LOGE("String length exceeded");
     return false;
   }

@@ -20,6 +20,9 @@ bool NQCryptoHash_init(NQCryptoHash* thiz, uint32_t algId)
 
   ALG_ID platformAlgId;
   switch (algId) {
+  case NQ_CRYPTOALGORITHM_MD4:
+    platformAlgId = CALG_MD4;
+    break;
   case NQ_CRYPTOALGORITHM_MD5:
     platformAlgId = CALG_MD5;
     break;

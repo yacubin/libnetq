@@ -15,8 +15,10 @@
 
 #ifdef NQ_SYS_LINUX
 #include <linux/string.h>
+#define NQ_HAVE_ARCH_STRRCHR 1
 #else
 #include <string.h>
+#define NQ_HAVE_ARCH_STRRCHR 1
 #endif
 
 #ifdef __cplusplus
@@ -56,6 +58,12 @@ static inline bool NQIsCStrNullOrEmpty(const char* str)
 {
   return str == NULL || NQIsCStrEmpty(str);
 }
+
+#ifndef NQ_HAVE_ARCH_STRRCHR
+NQ_EXPORT char* strrchr(const char* s, int c);
+#endif
+
+#define NQStrrchr strrchr
 
 #ifdef __cplusplus
 }

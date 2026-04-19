@@ -10,21 +10,13 @@
 #ifndef _LIBNETQ_ATOMIC_H
 #define _LIBNETQ_ATOMIC_H
 
-#include <libnetq/Basic.h>
+#include <libnetq/atomic/AtomicTypes.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #define NQ_ATOMIC32_INIT(counter) { counter }
-
-typedef struct NQAtomic32 {
-  int32_t counter;
-} NQAtomic32;
-
-typedef struct NQAtomic64 {
-  int64_t counter;
-} NQAtomic64;
 
 static NQ_ALWAYS_INLINE void NQAtomic32_init(NQAtomic32* thiz, int32_t counter)
 {

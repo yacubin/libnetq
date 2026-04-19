@@ -1,13 +1,16 @@
-# Ignore QtCreator Project file
+# Qt Creator
 /CMakeLists.txt.user*
 
-# Ignore Visual Studio
+# Visual Studio
 /CMakeSettings.json
 /.vs/
 /.vscode/
 
-# Object files
+# Compiled objects
 *.o
 
 # Build metadata
 *.o.cmd
+
+# Auto-generated dependency files
+*.o.d

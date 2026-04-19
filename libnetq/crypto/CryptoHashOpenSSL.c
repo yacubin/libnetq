@@ -20,6 +20,14 @@ bool NQCryptoHash_init(NQCryptoHash* thiz, uint32_t algId)
 
   const EVP_MD* type;
   switch (algId) {
+  case NQ_CRYPTOALGORITHM_MD4:
+#ifdef OPENSSL_NO_MD4
+    NQ_LOGE("There is no MD4 in the OPensSL library");
+    return false;
+#else
+    type = EVP_md4();
+    break;
+#endif
   case NQ_CRYPTOALGORITHM_MD5:
     type = EVP_md5();
     break;

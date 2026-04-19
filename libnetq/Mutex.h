@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -20,10 +20,11 @@ typedef SRWLOCK NQMutex;
 #define NQ_MUTEX_DEFINE(mutexname) NQMutex mutexname = NQ_MUTEX_INIT
 #define HAVE_SRWLOCK 1
 #else
-typedef struct NQMutex {
+typedef struct NQMutex NQMutex;
+struct NQMutex {
   CRITICAL_SECTION internalMutex;
   size_t recursionCount;
-} NQMutex;
+};
 #endif
 #endif
 
@@ -45,7 +46,7 @@ extern "C" {
 #endif
 
 NQ_EXPORT void NQMutex_init(NQMutex* mutex);
-NQ_EXPORT void NQMutex_destroy(NQMutex* mutex);
+NQ_EXPORT void NQMutex_destroy(NQMutex* mutex); // NQMutex_finalize
 NQ_EXPORT void NQMutex_lock(NQMutex* mutex);
 NQ_EXPORT bool NQMutex_trylock(NQMutex* mutex);
 NQ_EXPORT void NQMutex_unlock(NQMutex* mutex);

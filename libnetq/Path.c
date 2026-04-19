@@ -30,20 +30,15 @@ static inline char normalizeCharacter(char ch)
 
 NQPath* NQPath_create(const char* path)
 {
-  size_t len = strlen(path);
-  if (len > NQ_UINT16_MAX)
-    return NULL;
-
-  NQPath* thiz = (NQPath*)NQMalloc(sizeof(*thiz) + len);
+  size_t length = strlen(path);
+  NQPath* thiz = NQStringArray16_alloc(length);
   if (thiz == NULL)
     return NULL;
 
-  thiz->length = len;
   char* ptr = thiz->characters;
-  for (size_t i = 0; i < len; i++) {
+  for (size_t i = 0; i < length; i++) {
     *ptr++ = normalizeCharacter(path[i]);
   }
-  *ptr++ = '\0';
 
   return thiz;
 }
@@ -52,15 +47,15 @@ NQPath* NQPath_fromJoin2(const char* path1, const char* path2)
 {
   size_t len1 = strlen(path1);
   size_t len2 = strlen(path2);
+
   size_t length = len1 + 1 + len2;
-  if (length > NQ_UINT16_MAX || length < len1 || length < len2)
+  if (length < len1 || length < len2)
     return NULL;
 
-  NQPath* thiz = (NQPath*)NQMalloc(sizeof(*thiz) + length);
+  NQPath* thiz = NQStringArray16_alloc(length);
   if (thiz == NULL)
     return NULL;
 
-  thiz->length = length;
   char* ptr = thiz->characters;
   for (size_t i = 0; i < len1; i++) {
     *ptr++ = normalizeCharacter(path1[i]);
@@ -72,14 +67,7 @@ NQPath* NQPath_fromJoin2(const char* path1, const char* path2)
     *ptr++ = normalizeCharacter(path2[i]);
   }
 
-  *ptr++ = '\0';
-
   return thiz;
-}
-
-void NQPath_destroy(NQPath* thiz)
-{
-  NQFree(thiz);
 }
 
 static inline void pathBuilderInit(NQPathBuilder* thiz)
@@ -357,4 +345,9 @@ const char* NQGetFilename(const char* path)
     }
   }
   return filename;
+}
+
+const char* NQGetExtname(const char* path)
+{
+  return NQStrrchr(path, '.');
 }

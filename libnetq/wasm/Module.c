@@ -89,7 +89,7 @@ static bool writeLeb128Uint32(NQWriteWrapper* thiz, uint32_t value)
   return NQWriteWrapper_writeAll(thiz, buffer, size);
 }
 
-static bool writeLeb128Uint64(NQWriteWrapper* thiz, uint32_t value)
+static bool writeLeb128Uint64(NQWriteWrapper* thiz, uint64_t value)
 {
   NQLeb128Buffer buffer;
   size_t size = NQLeb128EncodeUint64(buffer, sizeof(buffer), value);

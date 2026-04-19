@@ -4,6 +4,9 @@
 /* Use CryptoHash implementation from the OpenSSL library */
 #cmakedefine NQ_USE_OPENSSL_CRYPTOHASH
 
+/* Use MD4 implementation from the OpenSSL library */
+#cmakedefine NQ_USE_OPENSSL_MD4
+
 /* Use MD5 implementation from the OpenSSL library */
 #cmakedefine NQ_USE_OPENSSL_MD5
 

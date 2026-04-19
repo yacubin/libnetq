@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.11
+project(libnetq VERSION 1.0.12
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -333,6 +333,8 @@ set(libnetq_HEADERS
   libnetq/asset/FileSystemAsset.h
   libnetq/asset/PlatformAsset.h
 
+  libnetq/atomic/AtomicTypes.h
+
   libnetq/checksum/CRC32.h
 
   libnetq/cpu/alpha.h
@@ -362,15 +364,28 @@ set(libnetq_HEADERS
   libnetq/crypto/CryptoAlgorithm.h
   libnetq/crypto/CryptoHash.h
   libnetq/crypto/CryptoHashAdvapi32.h
+  libnetq/crypto/CryptoHashKernel.h
   libnetq/crypto/CryptoHashOpenSSL.h
   libnetq/crypto/CryptoHashStub.h
-  libnetq/crypto/CryptoHashSysLinux.h
   libnetq/crypto/HMAC_SHA1.h
+  libnetq/crypto/MD4.h
   libnetq/crypto/MD5.h
   libnetq/crypto/Secp256k1.h
   libnetq/crypto/SecureErase.h
   libnetq/crypto/SHA1.h
   libnetq/crypto/SHA256.h
+
+  libnetq/dbc/DBCAlloc.h
+  libnetq/dbc/DBCDocBuilder.h
+  libnetq/dbc/DBCDocToJSONWriter.h
+  libnetq/dbc/DBCDocument.h
+  libnetq/dbc/DBCDocWriter.h
+  libnetq/dbc/DBCParser.h
+  libnetq/dbc/DBCID.h
+  libnetq/dbc/DBCJ1939.h
+  libnetq/dbc/DBCKeywords.h
+  libnetq/dbc/DBCErrorCode.h
+  libnetq/dbc/DBCTypes.h
 
   libnetq/fs/Stat.h
 
@@ -399,6 +414,7 @@ set(libnetq_HEADERS
 
   libnetq/regex/Regex.h
 
+  libnetq/string/StringArray.h
   libnetq/string/StringStorage.h
 
   libnetq/web/HttpStatistics.h
@@ -551,19 +567,30 @@ set(libnetq_SOURCES
   libnetq/asset/FileSystemAsset.c
   libnetq/asset/PlatformAsset.c
 
+  libnetq/checksum/CRC32Kernel.c
   libnetq/checksum/CRC32Stub.c
-  libnetq/checksum/CRC32SysLinux.c
   libnetq/checksum/CRC32ZLib.c
 
   libnetq/crypto/CryptoHashAdvapi32.c
+  libnetq/crypto/CryptoHashKernel.c
   libnetq/crypto/CryptoHashOpenSSL.c
-  libnetq/crypto/CryptoHashSysLinux.c
   libnetq/crypto/HMAC_SHA1.c
+  libnetq/crypto/MD4OpenSSL.c
   libnetq/crypto/MD5OpenSSL.c
   libnetq/crypto/Secp256k1.c
   libnetq/crypto/Secp256k1Stub.c
   libnetq/crypto/SHA1OpenSSL.c
   libnetq/crypto/SHA256OpenSSL.c
+
+  libnetq/dbc/DBCAlloc.c
+  libnetq/dbc/DBCDocBuilder.c
+  libnetq/dbc/DBCDocToJSONWriter.c
+  libnetq/dbc/DBCDocument.c
+  libnetq/dbc/DBCDocWriter.c
+  libnetq/dbc/DBCParser.c
+  libnetq/dbc/DBCID.c
+  libnetq/dbc/DBCJ1939.c
+  libnetq/dbc/DBCTypes.c
 
   libnetq/fs/Stat.c
 
@@ -593,6 +620,7 @@ set(libnetq_SOURCES
   libnetq/regex/RegexPcre2.c
   libnetq/regex/RegexStub.c
 
+  libnetq/string/StringArray.c
   libnetq/string/StringStorage.c
 
   libnetq/wasm/Module.c
@@ -621,8 +649,8 @@ set(libnetq_SOURCES
   libnetq/BuildInfo.c
   libnetq/ByteBuffer.c
   libnetq/CoherentLooper.c
+  libnetq/CondKernel.c
   libnetq/CondPosix.c
-  libnetq/CondSysLinux.c
   libnetq/CondWin.c
   libnetq/CPU.c
   libnetq/CStrBase.c
@@ -636,8 +664,8 @@ set(libnetq_SOURCES
   libnetq/EventWakeup.c
   libnetq/Executable.c
   libnetq/FileHandle.c
+  libnetq/FileHandleKernel.c
   libnetq/FileHandlePosix.c
-  libnetq/FileHandleSysLinux.c
   libnetq/FileHandleWin.c
   libnetq/FileSystem.c
   libnetq/GetComputerName.c
@@ -665,13 +693,13 @@ set(libnetq_SOURCES
   libnetq/LooperSource.c
   libnetq/Malloc.c
   libnetq/Math.c
+  libnetq/MutexKernel.c
   libnetq/MutexPosix.c
-  libnetq/MutexSysLinux.c
   libnetq/MutexWin.c
   libnetq/Network.c
   libnetq/NetworkLooper.c
+  libnetq/OnceKernel.c
   libnetq/OncePosix.c
-  libnetq/OnceSysLinux.c
   libnetq/OnceWin.c
   libnetq/Path.c
   libnetq/PlatformLooperCF.c
@@ -684,8 +712,8 @@ set(libnetq_SOURCES
   libnetq/PrimitiveType.c
   libnetq/Rect.c
   libnetq/RefCount.c
+  libnetq/RWLockKernel.c
   libnetq/RWLockPosix.c
-  libnetq/RWLockSysLinux.c
   libnetq/RWLockWin.c
   libnetq/Signal.c
   libnetq/Sleep.c
@@ -697,8 +725,8 @@ set(libnetq_SOURCES
   libnetq/Tarball.c
   libnetq/ThreadDataPosix.c
   libnetq/ThreadDataWin.c
+  libnetq/ThreadKernel.c
   libnetq/ThreadPosix.c
-  libnetq/ThreadSysLinux.c
   libnetq/ThreadWin.c
   libnetq/Time.c
   libnetq/TimerQueue.c
@@ -786,6 +814,12 @@ elseif (WITH_ADVAPI32)
 else ()
   set(NQ_USE_STUB_CRYPTOHASH 1)
   message("! CryptoHash has no implementation")
+endif ()
+
+if (WITH_OPENSSL)
+  set(NQ_USE_OPENSSL_MD4 1)
+elseif (NQ_USE_STUB_CRYPTOHASH)
+  message("! MD4 has no implementation")
 endif ()
 
 if (WITH_OPENSSL)

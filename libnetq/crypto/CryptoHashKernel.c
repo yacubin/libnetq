@@ -18,6 +18,9 @@ bool NQCryptoHash_init(NQCryptoHash* thiz, uint32_t algId)
 {
   const char* algName;
   switch (algId) {
+  case NQ_CRYPTOALGORITHM_MD4:
+    algName = "md4";
+    break;
   case NQ_CRYPTOALGORITHM_MD5:
     algName = "md5";
     break;

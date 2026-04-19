@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2022-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2022-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -122,3 +122,16 @@ char* NQCStrFormat(const char* format, ...)
   return buffer;
 }
 
+#ifndef NQ_HAVE_ARCH_STRRCHR
+char* strrchr(const char* s, int c)
+{
+  const char* res = NULL;
+  const char* p = s;
+  while (*p) {
+    if (*p++ == c) {
+      res = p;
+    }
+  }
+  return res;
+}
+#endif

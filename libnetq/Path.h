@@ -11,6 +11,7 @@
 #define _LIBNETQ_PATH_H
 
 #include <libnetq/Basic.h>
+#include <libnetq/string/StringArray.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,20 +22,21 @@ extern "C" {
 
 #define NQIsPathDelimiter(c) ((c) == NQ_PATH_DELIMITER)
 
-typedef struct NQPath NQPath;
-struct NQPath {
-  uint16_t length;
-  char characters[1];
-};
+typedef struct NQStringArray16 NQPath;
 
 NQ_EXPORT NQPath* NQPath_create(const char* path);
 NQ_EXPORT NQPath* NQPath_fromJoin2(const char* path1, const char* path2);
-NQ_EXPORT void NQPath_destroy(NQPath*);
 
-#define NQPath_characters(thiz) (thiz)->characters
-static inline size_t NQPath_length(NQPath* thiz)
+static inline void NQPath_destroy(NQPath* thiz)
 {
-  return thiz->length;
+  NQStringArray16_destroy(thiz);
+}
+
+#define NQPath_characters(thiz) NQStringArray16_characters(thiz)
+
+static inline size_t NQPath_length(const NQPath* thiz)
+{
+  return NQStringArray16_length(thiz);
 }
 
 typedef struct NQPathBuilder NQPathBuilder;
@@ -70,6 +72,7 @@ NQ_EXPORT size_t NQWinPathFrom(NQWChar* buffer, size_t n, const char* path);
 NQ_EXPORT size_t NQGetAbsoluteWinPath(NQWChar* buffer, size_t n, const char* path);
 NQ_EXPORT bool NQIsAbsolutePath(const char* path);
 NQ_EXPORT const char* NQGetFilename(const char* path);
+NQ_EXPORT const char* NQGetExtname(const char* path);
 
 #ifdef __cplusplus
 }

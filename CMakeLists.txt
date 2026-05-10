@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.12
+project(libnetq VERSION 1.0.13
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -34,11 +34,15 @@ endmacro ()
 macro (LNQ_ADD_LIBRARY _name)
   string(TOUPPER ${_name} _library_upper_name)
   set(HAVE_${_library_upper_name} FALSE)
-  set(WITH_${_library_upper_name} OFF)
-  find_package(${_name})
+  if ("${LNQ_WITH_${_library_upper_name}}" MATCHES "ON|TRUE|1")
+    find_package(${_name} REQUIRED)
+  else ()
+    find_package(${_name})
+  endif ()
   if (${_name}_FOUND)
     set(HAVE_${_library_upper_name} TRUE)
   endif ()
+  set(WITH_${_library_upper_name} OFF)
   if (LNQ_WITH_${_library_upper_name} OR HAVE_${_library_upper_name})
     LNQ_FEATURE_DEFINE(WITH_${_library_upper_name} "Allow compilation with ${_name} library")
     if (NOT LNQ_WITH_${_library_upper_name} STREQUAL "AUTO")
@@ -83,12 +87,10 @@ set(WITH_PTHREAD OFF)
 find_package(Threads)
 if(Threads_FOUND)
   set(HAVE_PTHREAD TRUE)
-endif ()
-if (HAVE_PTHREAD)
   set(WITH_PTHREAD ON)
-  if (CMAKE_USE_PTHREADS_INIT AND NOT APPLE)
+  if (COMPILER_SUPPORTS_PTHREAD)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
-  endif ()
+  endif()
 endif ()
 
 set(HAVE_OLE32 FALSE)
@@ -135,7 +137,9 @@ LNQ_ADD_LIBRARY(Expat)
 LNQ_ADD_LIBRARY(AtomicOps)
 LNQ_ADD_LIBRARY(LibBase58)
 LNQ_ADD_LIBRARY(Secp256k1)
+LNQ_ADD_LIBRARY(SQLite3)
 
+check_include_file(errno.h HAVE_ERRNO_H)
 check_include_file(stddef.h HAVE_STDDEF_H)
 check_include_file(stdio.h HAVE_STDIO_H)
 check_include_file(stdint.h HAVE_STDINT_H)
@@ -333,8 +337,6 @@ set(libnetq_HEADERS
   libnetq/asset/FileSystemAsset.h
   libnetq/asset/PlatformAsset.h
 
-  libnetq/atomic/AtomicTypes.h
-
   libnetq/checksum/CRC32.h
 
   libnetq/cpu/alpha.h
@@ -361,12 +363,13 @@ set(libnetq_HEADERS
   libnetq/cpu/x86.h
   libnetq/cpu/z.h
 
+  libnetq/crypto/advapi32/CryptoHash.h
+  libnetq/crypto/kernel/CryptoHash.h
+  libnetq/crypto/openssl/CryptoHash.h
+  libnetq/crypto/stub/CryptoHash.h
+  libnetq/crypto/BCrypt.h
   libnetq/crypto/CryptoAlgorithm.h
   libnetq/crypto/CryptoHash.h
-  libnetq/crypto/CryptoHashAdvapi32.h
-  libnetq/crypto/CryptoHashKernel.h
-  libnetq/crypto/CryptoHashOpenSSL.h
-  libnetq/crypto/CryptoHashStub.h
   libnetq/crypto/HMAC_SHA1.h
   libnetq/crypto/MD4.h
   libnetq/crypto/MD5.h
@@ -387,8 +390,13 @@ set(libnetq_HEADERS
   libnetq/dbc/DBCErrorCode.h
   libnetq/dbc/DBCTypes.h
 
+  libnetq/fs/kernel/Stat.h
+  libnetq/fs/posix/Stat.h
+  libnetq/fs/win32/Stat.h
   libnetq/fs/Stat.h
 
+  libnetq/io/kernel/UIO.h
+  libnetq/io/unix/UIO.h
   libnetq/io/ByteBufferChannel.h
   libnetq/io/ByteBufferWriter.h
   libnetq/io/DataReader.h
@@ -398,6 +406,7 @@ set(libnetq_HEADERS
   libnetq/io/ReadWrapper.h
   libnetq/io/StreamCallbacks.h
   libnetq/io/WriteWrapper.h
+  libnetq/io/UIO.h
 
   libnetq/json/JSON.h
   libnetq/json/JSONTypes.h
@@ -414,9 +423,26 @@ set(libnetq_HEADERS
 
   libnetq/regex/Regex.h
 
-  libnetq/string/StringArray.h
-  libnetq/string/StringStorage.h
+  libnetq/sql/SQLite.h
+  libnetq/sql/UrlDataStore.h
+  libnetq/sql/UserDataStore.h
 
+  libnetq/string/CStrBase.h
+  libnetq/string/String.h
+  libnetq/string/StringArray.h
+  libnetq/string/StringRef.h
+  libnetq/string/StringVec.h
+
+  libnetq/sync/kernel/Cond.h
+  libnetq/sync/kernel/Mutex.h
+  libnetq/sync/posix/Cond.h
+  libnetq/sync/posix/Mutex.h
+  libnetq/sync/stub/Mutex.h
+  libnetq/sync/win32/Cond.h
+  libnetq/sync/win32/Mutex.h
+  libnetq/sync/AtomicTypes.h
+
+  libnetq/web/FileSytemGetRequest.h
   libnetq/web/HttpStatistics.h
   libnetq/web/JsonRpcTypes.h
   libnetq/web/UrlHost.h
@@ -458,11 +484,11 @@ set(libnetq_HEADERS
   libnetq/ByteOrder.h
   libnetq/CoherentLooper.h
   libnetq/ColorSpace.h
+  libnetq/ColorUtils.h
   libnetq/Compiler.h
   libnetq/Cond.h
   libnetq/ConstExpr.h
   libnetq/CPU.h
-  libnetq/CStrBase.h
   libnetq/CStrConverter.h
   libnetq/CType.h
   libnetq/DescSet.h
@@ -536,6 +562,7 @@ set(libnetq_HEADERS
   libnetq/Socket.h
   libnetq/SocketHandle.h
   libnetq/Sprintf.h
+  libnetq/SQL.h
   libnetq/String.h
   libnetq/StringList.h
   libnetq/StringPrint.h
@@ -546,6 +573,7 @@ set(libnetq_HEADERS
   libnetq/Time.h
   libnetq/TimerQueue.h
   libnetq/Types.h
+  libnetq/UIO.h
   libnetq/URL.h
   libnetq/UrlPath.h
   libnetq/UrlQuery.h
@@ -567,20 +595,22 @@ set(libnetq_SOURCES
   libnetq/asset/FileSystemAsset.c
   libnetq/asset/PlatformAsset.c
 
-  libnetq/checksum/CRC32Kernel.c
-  libnetq/checksum/CRC32Stub.c
-  libnetq/checksum/CRC32ZLib.c
+  libnetq/checksum/kernel/CRC32.c
+  libnetq/checksum/stub/CRC32.c
+  libnetq/checksum/zlib/CRC32.c
 
-  libnetq/crypto/CryptoHashAdvapi32.c
-  libnetq/crypto/CryptoHashKernel.c
-  libnetq/crypto/CryptoHashOpenSSL.c
+  libnetq/crypto/kernel/CryptoHash.c
+  libnetq/crypto/advapi32/CryptoHash.c
+  libnetq/crypto/openssl/BCrypt.c
+  libnetq/crypto/openssl/CryptoHash.c
+  libnetq/crypto/openssl/MD4.c
+  libnetq/crypto/openssl/MD5.c
+  libnetq/crypto/openssl/SHA1.c
+  libnetq/crypto/openssl/SHA256.c
+  libnetq/crypto/secp256k1/Secp256k1.c
+  libnetq/crypto/stub/BCrypt.c
+  libnetq/crypto/stub/Secp256k1.c
   libnetq/crypto/HMAC_SHA1.c
-  libnetq/crypto/MD4OpenSSL.c
-  libnetq/crypto/MD5OpenSSL.c
-  libnetq/crypto/Secp256k1.c
-  libnetq/crypto/Secp256k1Stub.c
-  libnetq/crypto/SHA1OpenSSL.c
-  libnetq/crypto/SHA256OpenSSL.c
 
   libnetq/dbc/DBCAlloc.c
   libnetq/dbc/DBCDocBuilder.c
@@ -592,7 +622,8 @@ set(libnetq_SOURCES
   libnetq/dbc/DBCJ1939.c
   libnetq/dbc/DBCTypes.c
 
-  libnetq/fs/Stat.c
+  libnetq/fs/kernel/Stat.c
+  libnetq/fs/win32/Stat.c
 
   libnetq/io/ByteBufferChannel.c
   libnetq/io/ByteBufferWriter.c
@@ -602,10 +633,10 @@ set(libnetq_SOURCES
   libnetq/io/ReadWrapper.c
   libnetq/io/WriteWrapper.c
 
+  libnetq/json/cjson/JSON.c
+  libnetq/json/jansson/JSON.c
+  libnetq/json/stub/JSON.c
   libnetq/json/JSON.c
-  libnetq/json/JSONCJSON.c
-  libnetq/json/JSONJansson.c
-  libnetq/json/JSONStub.c
   libnetq/json/JSONWriter.c
 
   libnetq/net/ChunkBuffer.c
@@ -617,22 +648,36 @@ set(libnetq_SOURCES
   libnetq/random/CryptoRandomPlatform.c
   libnetq/random/UnlimitedRandom.c
 
-  libnetq/regex/RegexPcre2.c
-  libnetq/regex/RegexStub.c
+  libnetq/regex/pcre2/Regex.c
+  libnetq/regex/stub/Regex.c
 
+  libnetq/sql/sqlite3/SQLite.c
+  libnetq/sql/stub/SQLite.c
+  libnetq/sql/UrlDataStore.c
+  libnetq/sql/UserDataStore.c
+
+  libnetq/string/CStrBase.c
+  libnetq/string/String.c
   libnetq/string/StringArray.c
-  libnetq/string/StringStorage.c
+  libnetq/string/StringRef.c
+  libnetq/string/StringVec.c
+
+  libnetq/sync/kernel/Cond.c
+  libnetq/sync/posix/Cond.c
+  libnetq/sync/win32/Cond.c
+  libnetq/sync/win32/Mutex.c
 
   libnetq/wasm/Module.c
   libnetq/wasm/ModuleTypes.c
 
+  libnetq/web/FileSytemGetRequest.c
   libnetq/web/HttpStatistics.c
   libnetq/web/UrlHost.c
   libnetq/web/WebResponse.c
   libnetq/web/WebServer.c
 
-  libnetq/xml/XMLParserExpat.c
-  libnetq/xml/XMLParserStub.c
+  libnetq/xml/expat/XMLParser.c
+  libnetq/xml/stub/XMLParser.c
 
   libnetq/Abort.c
   libnetq/Application.c
@@ -649,11 +694,8 @@ set(libnetq_SOURCES
   libnetq/BuildInfo.c
   libnetq/ByteBuffer.c
   libnetq/CoherentLooper.c
-  libnetq/CondKernel.c
-  libnetq/CondPosix.c
-  libnetq/CondWin.c
+  libnetq/ColorUtils.c
   libnetq/CPU.c
-  libnetq/CStrBase.c
   libnetq/CStrConverter.c
   libnetq/DescSet.c
   libnetq/Dir.c
@@ -693,9 +735,6 @@ set(libnetq_SOURCES
   libnetq/LooperSource.c
   libnetq/Malloc.c
   libnetq/Math.c
-  libnetq/MutexKernel.c
-  libnetq/MutexPosix.c
-  libnetq/MutexWin.c
   libnetq/Network.c
   libnetq/NetworkLooper.c
   libnetq/OnceKernel.c
@@ -719,7 +758,6 @@ set(libnetq_SOURCES
   libnetq/Sleep.c
   libnetq/Socket.c
   libnetq/SocketHandle.c
-  libnetq/String.c
   libnetq/StringList.c
   libnetq/StringPrint.c
   libnetq/Tarball.c
@@ -748,6 +786,7 @@ set(libnetq_CMAKEFILES
   cmake/FindAmiVideo.cmake
   cmake/FindApr.cmake
   cmake/FindAtomicOps.cmake
+  cmake/FindBCrypt.cmake
   cmake/FindBZip2.cmake
   cmake/FindCivetWeb.cmake
   cmake/FindCJSON.cmake
@@ -758,6 +797,7 @@ set(libnetq_CMAKEFILES
   cmake/FindILBM.cmake
   cmake/FindJansson.cmake
   cmake/FindJBig.cmake
+  cmake/FindJBig2.cmake
   cmake/FindJBig2Enc.cmake
   cmake/FindJSONC.cmake
   cmake/FindLeptonica.cmake
@@ -768,6 +808,7 @@ set(libnetq_CMAKEFILES
   cmake/FindLibJpegTurbo.cmake
   cmake/FindLibNetQ.cmake
   cmake/FindLibUV.cmake
+  cmake/FindLibXml2.cmake
   cmake/FindLZ4.cmake
   cmake/FindLZO.cmake
   cmake/FindMHD.cmake
@@ -775,10 +816,14 @@ set(libnetq_CMAKEFILES
   cmake/FindOpenJP2.cmake
   cmake/FindPCRE2.cmake
   cmake/FindQuickJS.cmake
+  cmake/FindSDL3.cmake
+  cmake/FindSDL3_ttf.cmake
   cmake/FindSecp256k1.cmake
+  cmake/FindSQLite3.cmake
   cmake/FindTidy.cmake
   cmake/FindTIFF.cmake
   cmake/FindWebP.cmake
+  cmake/FindXmlSec1.cmake
   cmake/FindZSTD.cmake
   )
 
@@ -817,27 +862,38 @@ else ()
 endif ()
 
 if (WITH_OPENSSL)
+  set(NQ_USE_OPENSSL_BCRYPT 1)
+else ()
+  message("! BCrypt has no implementation")
+  set(NQ_USE_STUB_BCRYPT 1)
+endif ()
+
+if (WITH_OPENSSL)
   set(NQ_USE_OPENSSL_MD4 1)
-elseif (NQ_USE_STUB_CRYPTOHASH)
+elseif (NOT WITH_ADVAPI32)
   message("! MD4 has no implementation")
+  set(NQ_USE_STUB_CRYPTOHASH 1)
 endif ()
 
 if (WITH_OPENSSL)
   set(NQ_USE_OPENSSL_MD5 1)
-elseif (NQ_USE_STUB_CRYPTOHASH)
+elseif (NOT WITH_ADVAPI32)
   message("! MD5 has no implementation")
+  set(NQ_USE_STUB_CRYPTOHASH 1)
 endif ()
 
 if (WITH_OPENSSL)
   set(NQ_USE_OPENSSL_SHA1 1)
-elseif (NQ_USE_STUB_CRYPTOHASH)
+elseif (NOT WITH_ADVAPI32)
   message("! SHA1 has no implementation")
+  set(NQ_USE_STUB_CRYPTOHASH 1)
 endif ()
 
 if (WITH_OPENSSL)
   set(NQ_USE_OPENSSL_SHA256 1)
-elseif (NQ_USE_STUB_CRYPTOHASH)
+elseif (NOT WITH_ADVAPI32)
   message("! SHA256 has no implementation")
+  set(NQ_USE_STUB_CRYPTOHASH 1)
 endif ()
 
 if (WITH_OPENSSL)
@@ -848,9 +904,11 @@ endif ()
 
 if (WITH_ZLIB)
   set(NQ_USE_ZLIB_CRC32 1)
+  set(NQ_USE_ZLIB_BINARYASSET 1)
 else ()
-  set(NQ_USE_STUB_CRC32 1)
   message("! CRC32 has no implementation")
+  set(NQ_USE_STUB_CRC32 1)
+  set(NQ_USE_STUB_BINARYASSET 1)
 endif ()
 
 if (WITH_JANSSON)
@@ -858,22 +916,22 @@ if (WITH_JANSSON)
 elseif (WITH_CJSON)
   set(NQ_USE_CJSON_JSON 1)
 else ()
-  set(NQ_USE_STUB_JSON 1)
   message("! JSON has no implementation")
+  set(NQ_USE_STUB_JSON 1)
 endif ()
 
 if (WITH_PCRE2)
   set(NQ_USE_PCRE2_REGEX 1)
 else ()
-  set(NQ_USE_STUB_REGEX 1)
   message("! Regex has no implementation")
+  set(NQ_USE_STUB_REGEX 1)
 endif ()
 
 if (WITH_EXPAT)
   set(NQ_USE_EXPAT_XMLPARSER 1)
 else ()
-  set(NQ_USE_STUB_XMLPARSER 1)
   message("! XMLParser has no implementation")
+  set(NQ_USE_STUB_XMLPARSER 1)
 endif ()
 
 if (WITH_ATOMICOPS)
@@ -885,15 +943,22 @@ endif ()
 if (WITH_LIBBASE58)
   set(NQ_USE_LIBBASE58_BASE58 1)
 else ()
-  set(NQ_USE_STUB_BASE58 1)
   message("! Base58 has no implementation")
+  set(NQ_USE_STUB_BASE58 1)
 endif ()
 
 if (WITH_SECP256K1)
   set(NQ_USE_SECP256K1_SECP256K1 1)
 else ()
-  set(NQ_USE_STUB_SECP256K1 1)
   message("! Secp256k1 has no implementation")
+  set(NQ_USE_STUB_SECP256K1 1)
+endif ()
+
+if (WITH_SQLITE3)
+  set(NQ_USE_SQLITE3_SQLITE 1)
+else ()
+  message("! SQLite has no implementation")
+  set(NQ_USE_STUB_SQLITE 1)
 endif ()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Android")
@@ -966,6 +1031,10 @@ if (WITH_SECP256K1)
   list(APPEND libnetq_LIBRARIES Bitcoin::Secp256k1)
 endif ()
 
+if (WITH_SQLITE3)
+  list(APPEND libnetq_LIBRARIES SQLite3::SQLite3)
+endif ()
+
 configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/config.h" @ONLY)
 configure_file(libnetq/Version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/Version.h" @ONLY)
 configure_file(libnetq/Features.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/Features.h" @ONLY)
@@ -1028,3 +1097,4 @@ message(STATUS "Expat  . . . . . . . . . . . . . . . . . . . ${WITH_EXPAT} (HAVE
 message(STATUS "AtomicOps  . . . . . . . . . . . . . . . . . ${WITH_ATOMICOPS} (HAVE ${HAVE_ATOMICOPS})")
 message(STATUS "LibBase58  . . . . . . . . . . . . . . . . . ${WITH_LIBBASE58} (HAVE ${HAVE_LIBBASE58})")
 message(STATUS "Secp256k1  . . . . . . . . . . . . . . . . . ${WITH_SECP256K1} (HAVE ${HAVE_SECP256K1})")
+message(STATUS "SQLite3  . . . . . . . . . . . . . . . . . . ${WITH_SQLITE3} (HAVE ${HAVE_SQLITE3})")

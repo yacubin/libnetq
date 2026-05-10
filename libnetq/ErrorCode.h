@@ -12,7 +12,7 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 # include <linux/errno.h>
 #endif
 
@@ -30,24 +30,28 @@ typedef int NQErrorCode;
 #define NQ_SUCCESS 0
 #define NQ_ERROR (-1)
 
-#ifdef NQ_OS_WINDOWS
-# define NQ_EINVAL           ERROR_INVALID_PARAMETER
+#if defined(NQ_OS_WINDOWS)
+# define NQ_ENOENT           ERROR_FILE_NOT_FOUND
 # define NQ_ENOMEM           ERROR_NOT_ENOUGH_MEMORY
+# define NQ_EBUSY            ERROR_BUSY
+# define NQ_EINVAL           ERROR_INVALID_PARAMETER
 # define NQ_ENOSYS           ERROR_CALL_NOT_IMPLEMENTED
+# define NQ_ETIMEDOUT        ERROR_TIMEOUT
 # define NQ_ENOTSUP          ERROR_NOT_SUPPORTED
 # define NQ_EINPROGRESS      WSAEINPROGRESS
 # define NQ_EWOULDBLOCK      WSAEWOULDBLOCK
-#endif
 
-#if defined(NQ_SYS_LINUX) || defined(NQ_OS_UNIX)
-# define NQ_EINVAL           EINVAL
+#elif defined(NQ_OS_KERNEL) || defined(NQ_OS_UNIX)
+# define NQ_ENOENT           ENOENT
 # define NQ_ENOMEM           ENOMEM
+# define NQ_EBUSY            EBUSY
+# define NQ_EINVAL           EINVAL
 # define NQ_ENOSYS           ENOSYS
+# define NQ_ETIMEDOUT        ETIMEDOUT
 # define NQ_EINPROGRESS      EINPROGRESS
 # define NQ_EWOULDBLOCK      EWOULDBLOCK
-#endif
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 # define NQ_ENOTSUP          ENOTSUPP
 #endif
 
@@ -55,11 +59,15 @@ typedef int NQErrorCode;
 # define NQ_ENOTSUP          ENOTSUP
 #endif
 
+#else
+# define NQ_ENOTSUP          524
+#endif
+
 static inline NQErrorCode NQGetLastError(void)
 {
   int ec;
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   ec = 0;
 #endif
 
@@ -76,7 +84,7 @@ static inline NQErrorCode NQGetLastError(void)
 
 static inline void NQSetLastError(NQErrorCode ec)
 {
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   NQ_UNUSED_PARAM(ec);
 #endif
 

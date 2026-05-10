@@ -12,13 +12,10 @@
 
 #include <libnetq/Network.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifdef NQ_SYS_LINUX
-typedef int NQSocketHandle;
-#define NQ_INVALID_SOCKET (-1)
+#ifdef NQ_OS_KERNEL
+#include <linux/net.h>
+typedef struct socket* NQSocketHandle;
+#define NQ_INVALID_SOCKET NULL
 #endif
   
 #ifdef NQ_OS_WINDOWS
@@ -29,6 +26,15 @@ typedef uintptr_t NQSocketHandle;
 #ifdef NQ_OS_UNIX
 typedef int NQSocketHandle;
 #define NQ_INVALID_SOCKET (-1)
+#endif
+
+#ifdef NQ_OS_UNKNOWN
+typedef void* NQSocketHandle;
+#define NQ_INVALID_SOCKET NULL
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 enum {

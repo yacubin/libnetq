@@ -98,17 +98,17 @@ bool NQWebServer_init(NQWebServer* thiz, const NQWebServerParams* params, const 
 {
   thiz->operations = operations;
 
-  NQStringStorage_init(&thiz->version);
-  NQStringStorage_setCharacters(&thiz->version, params->version);
+  NQStringVec_init(&thiz->version);
+  NQStringVec_setCharacters(&thiz->version, params->version);
 
-  NQStringStorage_init(&thiz->email);
-  NQStringStorage_setCharacters(&thiz->email, params->email);
+  NQStringVec_init(&thiz->email);
+  NQStringVec_setCharacters(&thiz->email, params->email);
 
-  NQStringStorage_init(&thiz->workDir);
-  NQStringStorage_setCharacters(&thiz->workDir, params->workDir);
+  NQStringVec_init(&thiz->workDir);
+  NQStringVec_setCharacters(&thiz->workDir, params->workDir);
 
-  NQStringStorage_init(&thiz->resourceDir);
-  NQStringStorage_setCharacters(&thiz->resourceDir, params->resourceDir);
+  NQStringVec_init(&thiz->resourceDir);
+  NQStringVec_setCharacters(&thiz->resourceDir, params->resourceDir);
 
   thiz->host = NQUrlHost_create(params->host);
 
@@ -175,10 +175,10 @@ void NQWebServer_finalize(NQWebServer* thiz)
   if (thiz->asset != NULL)
     NQAsset_destroy(thiz->asset);
 
-  NQStringStorage_finalize(&thiz->email);
-  NQStringStorage_finalize(&thiz->version);
-  NQStringStorage_finalize(&thiz->workDir);
-  NQStringStorage_finalize(&thiz->resourceDir);
+  NQStringVec_finalize(&thiz->email);
+  NQStringVec_finalize(&thiz->version);
+  NQStringVec_finalize(&thiz->workDir);
+  NQStringVec_finalize(&thiz->resourceDir);
 
   if (thiz->tlsKeyString != NULL)
     NQString_release(thiz->tlsKeyString);

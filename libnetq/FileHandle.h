@@ -12,7 +12,7 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 #include <linux/err.h>
 #endif
 
@@ -28,7 +28,7 @@
 extern "C" {
 #endif
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 typedef struct file* NQFileHandle;
 #define NQIsFileValid(handle) (!IS_ERR(handle))
 #define NQIsFileInvalid(handle) IS_ERR(handle)
@@ -62,6 +62,12 @@ static inline NQFileHandle NQGetStdHandle(int fileno)
   return fileno;
 }
 
+#endif
+
+#ifdef NQ_OS_UNKNOWN
+typedef int NQFileHandle;
+#define NQIsFileValid(handle) 0
+#define NQIsFileInvalid(handle) 1
 #endif
 
 #if defined(NQ_OS_WINDOWS) || defined(NQ_OS_UNIX)

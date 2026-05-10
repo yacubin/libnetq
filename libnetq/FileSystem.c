@@ -18,6 +18,7 @@
 #include <libnetq/Limits.h>
 #include <libnetq/Log.h>
 #include <libnetq/fs/Stat.h>
+#include <libnetq/ErrorCode.h>
 
 #ifdef NQ_OS_WINDOWS
 #include <windows.h>
@@ -33,7 +34,7 @@
 #include <unistd.h>
 #endif
 
-int64_t NQFileSystem_read(const char* path, uint8_t* data, int64_t size)
+int64_t NQReadFile(const char* path, uint8_t* data, int64_t size)
 {
   int64_t result;
   NQFileHandle handle;
@@ -48,7 +49,7 @@ int64_t NQFileSystem_read(const char* path, uint8_t* data, int64_t size)
   return result;
 }
 
-int64_t NQFileSystem_write(const char* path, const uint8_t* data, int64_t size)
+int64_t NQWriteFile(const char* path, const uint8_t* data, int64_t size)
 {
   int64_t result;
   NQFileHandle handle;
@@ -63,7 +64,7 @@ int64_t NQFileSystem_write(const char* path, const uint8_t* data, int64_t size)
   return result;
 }
 
-bool NQFileSystem_mkdir(const char* path, bool recursive)
+bool NQMakeDirectory(const char* path, bool recursive)
 {
   (void)recursive; // TODO
 
@@ -120,7 +121,7 @@ bool NQFileExists(const char* path)
   return NQStat_isFile(&stat);
 }
 
-NQ_EXPORT bool NQDirectoryExists(const char* path)
+bool NQDirectoryExists(const char* path)
 {
   NQStat stat;
   int err = NQGetStat(path, &stat);
@@ -129,12 +130,33 @@ NQ_EXPORT bool NQDirectoryExists(const char* path)
   return NQStat_isDirectory(&stat);
 }
 
+int NQRemoveFile(const char* path)
+{
+#if defined(NQ_OS_LINUX)
+  if (unlink(path) != 0)
+    return -errno;
+  return 0;
+#elif defined(NQ_OS_UNIX)
+  if (remove(path) != 0)
+    return -errno;
+  return 0;
+#elif defined(NQ_OS_WINDOWS)
+  WCHAR winpath[MAX_PATH];
+  NQWinPathFrom(winpath, MAX_PATH, path);
+  if (!DeleteFileW(winpath))
+    return -(int)GetLastError();
+  return 0;
+#else
+  return -NQ_ENOTSUP;
+#endif
+}
+
 int NQGetLogicalDrives(void)
 {
 #ifdef NQ_OS_WINDOWS
   DWORD ret = GetLogicalDrives();
   if (ret == 0)
-    return -GetLastError();
+    return -(int)GetLastError();
   return ret;
 #else
   return 0;

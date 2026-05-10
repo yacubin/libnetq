@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2023-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -10,33 +10,33 @@
 #include "config.h"
 #include "libnetq/PrimitiveType.h"
 
-#include <libnetq/CStrBase.h>
+#include <libnetq/string/String.h>
 
 bool NQIsFalse(const char* s)
 {
-  return NQCStrCaseCompare(s, NQ_FALSE_STRING) == 0;
+  return NQStrcasecmp(s, NQ_FALSE_STRING) == 0;
 }
 
 bool NQIsTrue(const char* s)
 {
-  return NQCStrCaseCompare(s, NQ_TRUE_STRING) == 0;
+  return NQStrcasecmp(s, NQ_TRUE_STRING) == 0;
 }
 
 bool NQIsOff(const char* s)
 {
-  return NQCStrCaseCompare(s, NQ_OFF_STRING) == 0;
+  return NQStrcasecmp(s, NQ_OFF_STRING) == 0;
 }
 
 bool NQIsOn(const char* s)
 {
-  return NQCStrCaseCompare(s, NQ_ON_STRING) == 0;
+  return NQStrcasecmp(s, NQ_ON_STRING) == 0;
 }
 
 bool NQIsEnabled(const char* s)
 {
   if (NQIsTrue(s) || NQIsOn(s))
     return true;
-  if (!NQCStrCaseCompare(s, NQ_ONE_STRING))
+  if (!NQStrcasecmp(s, NQ_ONE_STRING))
     return true;
 
   return false;
@@ -46,7 +46,7 @@ bool NQIsDisabled(const char* s)
 {
   if (NQIsFalse(s) || NQIsOff(s))
     return true;
-  if (!NQCStrCaseCompare(s, NQ_ZERO_STRING))
+  if (!NQStrcasecmp(s, NQ_ZERO_STRING))
     return true;
 
   return false;

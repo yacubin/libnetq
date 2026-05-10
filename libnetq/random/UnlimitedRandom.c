@@ -13,7 +13,7 @@
 #include <libnetq/Assert.h>
 #include <libnetq/ErrorCode.h>
 
-#if defined(NQ_SYS_LINUX)
+#if defined(NQ_OS_KERNEL)
 # include <linux/random.h>
 #elif defined(NQ_OS_WINDOWS)
 # include <windows.h>
@@ -31,7 +31,7 @@
 
 int NQGetUnlimitedRandom(void* data, size_t size)
 {
-#if defined(NQ_SYS_LINUX)
+#if defined(NQ_OS_KERNEL)
   get_random_bytes(data, size);
   return 0;
 

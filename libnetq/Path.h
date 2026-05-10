@@ -12,6 +12,7 @@
 
 #include <libnetq/Basic.h>
 #include <libnetq/string/StringArray.h>
+#include <libnetq/string/StringVec.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -66,10 +67,44 @@ NQ_EXPORT bool NQPathBuilder_join(NQPathBuilder*, const char* path);
 NQ_EXPORT bool NQPathBuilder_add(NQPathBuilder*, const char* text);
 NQ_EXPORT void NQPathBuilder_removeLastSegment(NQPathBuilder*);
 
+typedef struct NQWinPathBuilder NQWinPathBuilder;
+struct NQWinPathBuilder {
+  NQWChar* characters;
+  uint16_t length;
+  uint16_t capacity;
+  NQWChar buffer[80];
+};
+
+NQ_EXPORT void NQWinPathBuilder_init(NQWinPathBuilder*);
+
+typedef struct NQPathInfo NQPathInfo;
+struct NQPathInfo {
+  NQStringVec path;
+  NQStringVec dirname;
+  NQStringVec basename;
+  bool isAbsolute;
+  bool isDirOnly;
+  bool isNormalize;
+};
+
+NQ_EXPORT bool NQPathInfoParse(const char* path, NQPathInfo* result);
+NQ_EXPORT bool NQPathInfoParse2(const char* path, size_t length, NQPathInfo* result);
+
 NQ_EXPORT size_t NQPathFrom(char* buffer, size_t n, const NQWChar* path);
 NQ_EXPORT size_t NQGetAbsolutePath(char* buffer, size_t n, const char* path);
 NQ_EXPORT size_t NQWinPathFrom(NQWChar* buffer, size_t n, const char* path);
 NQ_EXPORT size_t NQGetAbsoluteWinPath(NQWChar* buffer, size_t n, const char* path);
+
+static inline bool NQIsAbsolutePosixPath(const char* path)
+{
+  return path[0] == NQ_PATH_DELIMITER;
+}
+
+static inline bool NQIsRootPosixPath(const char* path)
+{
+  return path[0] == NQ_PATH_DELIMITER && path[1] == '\0';
+}
+
 NQ_EXPORT bool NQIsAbsolutePath(const char* path);
 NQ_EXPORT const char* NQGetFilename(const char* path);
 NQ_EXPORT const char* NQGetExtname(const char* path);

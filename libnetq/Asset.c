@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/Asset.h"
 
-#include <libnetq/CStrBase.h>
+#include <libnetq/string/CStrBase.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/asset/PlatformAsset.h>
 #include <libnetq/asset/BinaryAsset.h>

@@ -16,7 +16,7 @@
 
 #if WITH_OLE32
 # include <combaseapi.h>
-#elif defined(NQ_SYS_LINUX)
+#elif defined(NQ_OS_KERNEL)
 # include <linux/uuid.h>
 #else
 # include <libnetq/Random.h>
@@ -81,7 +81,7 @@ void NQUUID_initAsCanonical(NQUUID* uuid)
   data[13] = (uint8_t)(newId.Data4[5]);
   data[14] = (uint8_t)(newId.Data4[6]);
   data[15] = (uint8_t)(newId.Data4[7]);
-#elif defined(NQ_SYS_LINUX)
+#elif defined(NQ_OS_KERNEL)
   NQ_STATIC_ASSERT(NQ_UUID_SIZE == UUID_SIZE, "");
   generate_random_uuid(uuid->data);
 #else

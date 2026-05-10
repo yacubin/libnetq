@@ -14,7 +14,7 @@
 #include <libnetq/CPU.h>
 #include <libnetq/Compiler.h>
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 #include <linux/bitops.h>
 #endif
 
@@ -83,7 +83,7 @@ static unsigned NQGetClz64(uint64_t x)
 }
 #endif
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 static NQ_ALWAYS_INLINE unsigned NQGetFls32(uint32_t x)
 {
   return fls(x);

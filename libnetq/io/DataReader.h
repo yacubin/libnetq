@@ -84,7 +84,7 @@ static inline bool NQDataReader_seekTo(NQDataReader* thiz, size_t position)
   return true;
 }
 
-static inline int NQDataReader_read(NQDataReader* thiz, uint8_t* data, size_t size)
+static inline int NQDataReader_read(NQDataReader* thiz, void* data, size_t size)
 {
   size = NQGetMin(size, NQGetMin(NQDataReader_availableSize(thiz), NQ_INT32_MAX));
   if (data != NULL)
@@ -93,7 +93,7 @@ static inline int NQDataReader_read(NQDataReader* thiz, uint8_t* data, size_t si
   return (int)size;
 }
 
-static inline bool NQDataReader_readAll(NQDataReader* thiz, uint8_t* data, size_t size)
+static inline bool NQDataReader_readAll(NQDataReader* thiz, void* data, size_t size)
 {
   if (size > NQDataReader_availableSize(thiz))
     return false;

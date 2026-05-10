@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/Network.h"
 
-#include <libnetq/CStrBase.h>
+#include <libnetq/String.h>
 #include <libnetq/Sprintf.h>
 #include <libnetq/Strtox.h>
 #include <libnetq/Limits.h>

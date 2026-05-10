@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2021-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2021-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -10,12 +10,12 @@
 #include "config.h"
 #include "libnetq/Signal.h"
 
-#ifndef NQ_SYS_LINUX
+#ifndef NQ_OS_KERNEL
 
 #include <libnetq/Once.h>
 #include <libnetq/Mutex.h>
 #include <libnetq/Malloc.h>
-#include <libnetq/CStrBase.h>
+#include <libnetq/string/CStrBase.h>
 
 #ifdef NQ_OS_WINDOWS
 #include <windows.h>

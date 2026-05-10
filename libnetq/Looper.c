@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -150,7 +150,7 @@ void NQLooper_finalize(NQLooper* looper)
     NQDispatchQueue_destroy(looper->dispatchQueue);
   }
 
-  NQMutex_destroy(&looper->mutex);
+  NQMutex_finalize(&looper->mutex);
 }
 
 bool NQLooper_isLoopThread(const NQLooper* looper)
@@ -295,8 +295,8 @@ void NQLooper_callAndWait(NQLooper* looper, void* userdata, NQDispatchHandleCall
     NQCond_wait(&callData.cond, &callData.mutex);
   NQMutex_unlock(&callData.mutex);
 
-  NQMutex_destroy(&callData.mutex);
-  NQCond_destroy(&callData.cond);
+  NQMutex_finalize(&callData.mutex);
+  NQCond_finalize(&callData.cond);
 }
 
 static NQTimerIdentifier NQLooper_startTimer(NQLooper* looper, int64_t timeout, bool isInterval, void* userdata, NQDispatchHandleCallback handle, NQDispatchDestroyCallback destroy)

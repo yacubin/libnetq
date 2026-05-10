@@ -15,7 +15,7 @@
 #include <libnetq/ConstExpr.h>
 #include <libnetq/Assert.h>
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 #include <linux/timekeeping.h>
 #include <linux/ktime.h>
 #endif
@@ -49,23 +49,6 @@
 #if !defined(HAVE_GMTIME_S) && defined(NQ_OS_WINDOWS)
 # define HAVE_GMTIME_S 1
 #endif
-
-static inline NQTimeVal* timeMsToTimeVal(NQTimeMs time, NQTimeVal* tv)
-{
-  if (time < 0)
-    return NULL;
-
-  if (time == 0) {
-    tv->tv_sec = 0;
-    tv->tv_usec = 0;
-  }
-  else {
-    tv->tv_sec = time / NQ_MSECS_PER_SEC;
-    tv->tv_usec = (time - (NQTimeMs)tv->tv_sec * NQ_MSECS_PER_SEC) * 1000;
-  }
-
-  return tv;
-}
 
 static inline NQTimeMs timeValToTimeMs(const NQTimeVal* tv)
 {
@@ -115,7 +98,7 @@ static bool WinFileTimeToTimeMsCheck(const FILETIME* ft, NQTimeMs timeMs)
 
 NQTimeMs NQGetTimeMs()
 {
-#if defined(NQ_SYS_LINUX)
+#if defined(NQ_OS_KERNEL)
   ktime_t now = ktime_get_real();
   return (NQTimeMs)ktime_to_ms(now);
 #elif defined(NQ_OS_WINDOWS)
@@ -134,7 +117,7 @@ NQTimeMs NQGetTimeMs()
 
 NQTickMs NQGetCPUTickMs()
 {
-#if defined(NQ_SYS_LINUX)
+#if defined(NQ_OS_KERNEL)
   ktime_t now = ktime_get();
   return (NQTickMs)ktime_to_ms(now);
 #elif defined(NQ_COMPILER_MINGW64)
@@ -160,7 +143,7 @@ void NQGetLocaltime(const time_t* t, struct tm* tm)
   localtime_s(t, tm);
 # endif
 
-#elif defined(NQ_SYS_LINUX)
+#elif defined(NQ_OS_KERNEL)
   time64_to_tm(*t, 0, tm);
 
 #elif defined(NQ_OS_WINDOWS)
@@ -200,7 +183,7 @@ void NQGetLocaltime(const time_t* t, struct tm* tm)
 
 time_t nq_timegm(const struct tm* tm)
 {
-#if defined(NQ_SYS_LINUX)
+#if defined(NQ_OS_KERNEL)
     return mktime64(tm->tm_year + NQ_TM_YEAR_BASE,
                     tm->tm_mon + 1,
                     tm->tm_mday,
@@ -287,7 +270,7 @@ void nq_gmtimems(NQTimeMs time, struct tm* ptm, int* pms)
   ctimer -= (NQTimeMs)ptm->tm_min * _MS_PER_MIN;
   ptm->tm_sec = (int)(ctimer / _MS_PER_SEC);
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   /* do nothing */
 #else
   ptm->tm_isdst = 0;
@@ -379,7 +362,36 @@ void NQDataTime_initLocalTime(NQDataTime* datatime)
 
 NQTimeVal* NQTimeMsToTimeVal(NQTimeMs time, NQTimeVal* tv)
 {
-  return timeMsToTimeVal(time, tv);
+  if (time < 0)
+    return NULL;
+
+  if (time == 0) {
+    tv->tv_sec = 0;
+    tv->tv_usec = 0;
+  }
+  else {
+    tv->tv_sec = time / NQ_MSECS_PER_SEC;
+    tv->tv_usec = (time % NQ_MSECS_PER_SEC) * NQ_MSECS_PER_SEC;
+  }
+
+  return tv;
+}
+
+NQTimeSpec* NQTimeMsToTimeSpec(NQTimeMs time, NQTimeSpec* ts)
+{
+  if (time < 0)
+    return NULL;
+
+  if (time == 0) {
+    ts->tv_sec = 0;
+    ts->tv_nsec = 0;
+  }
+  else {
+    ts->tv_sec = time / NQ_MSECS_PER_SEC;
+    ts->tv_nsec = (time % NQ_MSECS_PER_SEC) * NQ_NSECS_PER_MSEC;
+  }
+
+  return ts;
 }
 
 NQTimeMs NQTimeValToTimeMs(const NQTimeVal* tv)

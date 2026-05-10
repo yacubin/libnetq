@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/RWLock.h"
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 
 int NQRWLock_init(NQRWLock* rwlock)
 {
@@ -56,4 +56,4 @@ int NQRWLock_unlock(NQRWLock* rwlock)
   return 0;
 }
 
-#endif /* NQ_SYS_LINUX */
+#endif /* NQ_OS_KERNEL */

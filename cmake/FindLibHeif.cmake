@@ -7,10 +7,14 @@
 # under the MIT License. See LICENSE file for details.
 #
 
-if (LibHeif_LIBRARIES AND LibHeif_INCLUDE_DIRS)
+if (TARGET LibHeif::LibHeif)
   set(LibHeif_FIND_QUIETLY TRUE)
   set(LibHeif_FOUND TRUE)
   return ()
+endif ()
+
+if (LibHeif_LIBRARIES AND LibHeif_INCLUDE_DIRS)
+  set(LibHeif_FIND_QUIETLY TRUE)
 endif ()
 
 find_package(PkgConfig QUIET)

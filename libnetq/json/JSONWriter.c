@@ -339,7 +339,7 @@ static inline bool writeUint64(NQJSONWriter* thiz, uint64_t val)
 
 static inline bool writeDouble(NQJSONWriter* thiz, double val)
 {
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   NQ_ASSERT_NOT_REACHED();
   return false;
 #else

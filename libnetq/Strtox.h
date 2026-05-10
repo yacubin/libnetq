@@ -12,7 +12,7 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 #include <linux/kstrtox.h>
 #else
 #include <stdlib.h>
@@ -20,7 +20,7 @@
 
 static inline long NQSimpleStrtol(const char* str, char** endstr, unsigned base)
 {
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   return simple_strtol(str, endstr, base);
 #else
   return strtol(str, endstr, (int)base);
@@ -29,7 +29,7 @@ static inline long NQSimpleStrtol(const char* str, char** endstr, unsigned base)
 
 static inline unsigned long NQSimpleStrtoul(const char* str, char** endstr, unsigned base)
 {
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   return simple_strtoul(str, endstr, base);
 #else
   return strtoul(str, endstr, (int)base);
@@ -38,7 +38,7 @@ static inline unsigned long NQSimpleStrtoul(const char* str, char** endstr, unsi
 
 static inline long long NQSimpleStrtoll(const char* str, char** endstr, unsigned base)
 {
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   return simple_strtoll(str, endstr, base);
 #else
   return strtoll(str, endstr, (int)base);
@@ -47,7 +47,7 @@ static inline long long NQSimpleStrtoll(const char* str, char** endstr, unsigned
 
 static inline unsigned long long NQSimpleStrtoull(const char* str, char** endstr, unsigned base)
 {
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   return simple_strtoull(str, endstr, base);
 #else
   return strtoull(str, endstr, (int)base);

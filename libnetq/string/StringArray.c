@@ -10,19 +10,19 @@
 #include "config.h"
 #include "libnetq/string/StringArray.h"
 
-#include <libnetq/CStrBase.h>
+#include <libnetq/string/String.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Log.h>
 
 static NQStringArray16 s_empty16 = {
   .length = 0,
-  .characters = NQ_NIL,
+  .characters = { '\0' },
 };
 
 static NQStringArray s_empty = {
   .length = 0,
-  .characters = NQ_NIL,
+  .characters = { '\0' },
 };
 
 NQStringArray16* NQStringArray16_alloc(size_t length)
@@ -37,7 +37,7 @@ NQStringArray16* NQStringArray16_alloc(size_t length)
   }
 
   NQStringArray16* thiz = (NQStringArray16*)NQMalloc(sizeof(*thiz) + length);
-  thiz->characters[length] = NQ_NIL;
+  thiz->characters[length] = '\0';
   thiz->length = (uint16_t)length;
   return thiz;
 }
@@ -73,7 +73,7 @@ NQStringArray* NQStringArray_alloc(size_t length)
   }
 
   NQStringArray* thiz = (NQStringArray*)NQMalloc(sizeof(*thiz) + length);
-  thiz->characters[length] = NQ_NIL;
+  thiz->characters[length] = '\0';
   thiz->length = (uint32_t)length;
   return thiz;
 }

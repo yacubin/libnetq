@@ -7,10 +7,14 @@
 # under the MIT License. See LICENSE file for details.
 #
 
-if (LibBase58_LIBRARIES AND LibBase58_INCLUDE_DIRS)
+if (TARGET Bitcoin::LibBase58)
   set(LibBase58_FIND_QUIETLY TRUE)
   set(LibBase58_FOUND TRUE)
   return ()
+endif ()
+
+if (LibBase58_LIBRARIES AND LibBase58_INCLUDE_DIRS)
+  set(LibBase58_FIND_QUIETLY TRUE)
 endif ()
 
 find_package(PkgConfig QUIET)

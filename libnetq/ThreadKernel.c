@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/Thread.h"
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 
 #include <libnetq/Malloc.h>
 #include <libnetq/String.h>

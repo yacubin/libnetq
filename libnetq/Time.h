@@ -13,7 +13,7 @@
 #include <libnetq/Basic.h>
 #include <libnetq/Limits.h>
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 #include <linux/time.h>
 typedef time64_t time_t;
 typedef struct timespec64 NQTimeSpec;
@@ -106,6 +106,7 @@ enum NQTimeFormat {
 
 NQ_EXPORT int NQTimeMsFormat(NQTimeMs time, int format, char* buffer, size_t size);
 NQ_EXPORT NQTimeVal* NQTimeMsToTimeVal(NQTimeMs time, NQTimeVal* tv);
+NQ_EXPORT NQTimeSpec* NQTimeMsToTimeSpec(NQTimeMs time, NQTimeSpec* ts);
 NQ_EXPORT NQTimeMs NQTimeValToTimeMs(const NQTimeVal* tv);
 NQ_EXPORT NQTimeMs NQTimeSpecToTimeMs(const NQTimeSpec* ts);
 NQ_EXPORT NQTimeMs NQWinFileTimeToTimeMs(uint32_t highDateTime, uint32_t lowDateTime);

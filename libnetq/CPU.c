@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -22,7 +22,7 @@
 #include <unistd.h>
 #endif
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 #include <linux/cpumask.h>
 #endif
 
@@ -46,7 +46,7 @@ static inline unsigned getOSNumberOfCores(void)
   long ret = sysconf(_SC_NPROCESSORS_ONLN);
   return (ret < 0) ? 0 : (unsigned)(ret);
 
-#elif defined(NQ_SYS_LINUX)
+#elif defined(NQ_OS_KERNEL)
   return num_online_cpus();
 
 #else

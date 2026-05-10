@@ -64,7 +64,7 @@ static void Looper_finalize(NQLooper* looper)
   struct Looper* impl = (struct Looper*)looper->priv;
 
   NQEventWakeup_finalize(&impl->wakeup);
-  NQMutex_destroy(&impl->mutex);
+  NQMutex_finalize(&impl->mutex);
   NQFree(looper->priv);
 }
 

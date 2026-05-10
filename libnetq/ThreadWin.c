@@ -74,7 +74,7 @@ static inline void NQThread_setState(NQThread* thread, enum NQThreadState state)
 
 static void NQThread_destroyImpl(NQThread* thread)
 {
-  NQMutex_destroy(&thread->mutex);
+  NQMutex_finalize(&thread->mutex);
 
   if (thread->handle)
     CloseHandle(thread->handle);

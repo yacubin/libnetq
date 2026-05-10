@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2024-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -10,11 +10,10 @@
 #include "config.h"
 #include "libnetq/Tarball.h"
 
-#include <libnetq/CStrBase.h>
+#include <libnetq/string/CStrBase.h>
 #include <libnetq/Math.h>
 #include <libnetq/Assert.h>
 #include <libnetq/Time.h>
-#include <libnetq/CStrBase.h>
 
 enum {
   kInitSTate,

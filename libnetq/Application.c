@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -59,8 +59,8 @@ void NQApplication_finalize(NQApplication* app)
 
   NQEventTarget_finalize(&app->eventTarget);
 
-  NQCond_destroy(&app->cond);
-  NQMutex_destroy(&app->mutex);
+  NQCond_finalize(&app->cond);
+  NQMutex_finalize(&app->mutex);
 }
 
 static void NQApplication_worker(void* p)

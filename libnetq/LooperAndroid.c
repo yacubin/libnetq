@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -15,7 +15,7 @@
 #include <android/looper.h>
 #include <android/input.h>
 
-#include <libnetq/CStrBase.h>
+#include <libnetq/string/String.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Assert.h>
@@ -63,7 +63,7 @@ static int Looper_init(NQLooper* looper)
 static void Looper_finalize(NQLooper* looper)
 {
   struct Looper* thiz = (struct Looper*)looper->priv;
-  NQMutex_destroy(&thiz->mutex);
+  NQMutex_finalize(&thiz->mutex);
   NQFree(looper->priv);
 }
 

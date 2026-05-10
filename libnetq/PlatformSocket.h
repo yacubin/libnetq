@@ -12,19 +12,28 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 #include <linux/net.h>
 typedef struct socket* NQPlatformSocket;
+#define NQ_SHUT_RD   SHUT_RD
+#define NQ_SHUT_WR   SHUT_WR
+#define NQ_SHUT_RDWR SHUT_RDWR
 #endif
 
 #ifdef NQ_OS_UNIX
 #include <sys/socket.h>
 typedef int NQPlatformSocket;
+#define NQ_SHUT_RD   SHUT_RD
+#define NQ_SHUT_WR   SHUT_WR
+#define NQ_SHUT_RDWR SHUT_RDWR
 #endif
 
 #ifdef NQ_OS_WINDOWS
 #include <winsock2.h>
 typedef SOCKET NQPlatformSocket;
+#define NQ_SHUT_RD   SD_RECEIVE
+#define NQ_SHUT_WR   SD_SEND
+#define NQ_SHUT_RDWR SD_BOTH
 #endif
 
 #define NQ_SO_ERROR SO_ERROR

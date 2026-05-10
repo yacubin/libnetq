@@ -12,8 +12,6 @@
 
 #ifdef NQ_OS_WINDOWS
 
-#include <windows.h>
-
 #include <libnetq/Path.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Log.h>

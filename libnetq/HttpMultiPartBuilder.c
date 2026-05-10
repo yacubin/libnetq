@@ -12,7 +12,7 @@
 
 #include <libnetq/Limits.h>
 #include <libnetq/Malloc.h>
-#include <libnetq/CStrBase.h>
+#include <libnetq/String.h>
 #include <libnetq/HttpHeader.h>
 #include <libnetq/HttpMultiPartParser.h>
 
@@ -110,12 +110,12 @@ static inline bool onMultiPartFieldValue(NQHttpMultiPartBuilder* thiz, const cha
 
     entry = thiz->first;
     while (entry != NULL) {
-      if (entry->nameLength == formData.nameSize && memcmp(entry->formData.name, formData.nameData, formData.nameSize) == 0) {
+      if (entry->nameLength == formData.name.length && memcmp(entry->formData.name, formData.name.characters, formData.name.length) == 0) {
         if (entry->flags & kNQHttpFormDataWithFilename) {
-          if (formData.filenameSize == 0 || formData.filenameSize >= kFileNameMax)
+          if (formData.filename.length == 0 || formData.filename.length >= kFileNameMax)
             return false;
-          memcpy(entry->filename, formData.filenameData, formData.filenameSize);
-          entry->filename[formData.filenameSize] = 0;
+          memcpy(entry->filename, formData.filename.characters, formData.filename.length);
+          entry->filename[formData.filename.length] = 0;
           entry->formData.filename = entry->filename;
         }
         if (thiz->hasContentType) {

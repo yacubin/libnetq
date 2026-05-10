@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2023-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -73,8 +73,8 @@ void CoherentLooper_destroy(CoherentLooper* thiz)
   deleteEntryChain(thiz->first);
   deleteEntryChain(thiz->free);
 
-  NQMutex_destroy(&thiz->mutex);
-  NQCond_destroy(&thiz->cond);
+  NQMutex_finalize(&thiz->mutex);
+  NQCond_finalize(&thiz->cond);
 
   NQFree(thiz);
 }

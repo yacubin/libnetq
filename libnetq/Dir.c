@@ -18,7 +18,7 @@
 #include <libnetq/Path.h>
 #include <libnetq/Assert.h>
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 #include <linux/namei.h>
 #endif
 
@@ -37,7 +37,7 @@ enum {
 
 struct NQDir {
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   struct path path;
   struct dentry* iter;
 #endif
@@ -59,7 +59,7 @@ NQDir* NQDir_open(const char* pathname)
 {
   NQDir* dir;
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   struct path path;
   struct dentry* first;
   struct dentry* iter;
@@ -148,7 +148,7 @@ NQDir* NQDir_open(const char* pathname)
 
 bool NQDir_next(NQDir* dir)
 {
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   struct dentry* prev;
   struct dentry* iter;
 
@@ -202,7 +202,7 @@ bool NQDir_next(NQDir* dir)
 
 void NQDir_close(NQDir* dir)
 {
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   dput(dir->iter);
   path_put(&dir->path);
 #endif
@@ -220,7 +220,7 @@ void NQDir_close(NQDir* dir)
 
 const char* NQDir_name(NQDir* dir)
 {
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   if (dir->iter != NULL)
     return dir->iter->d_name.name;
 #endif
@@ -240,7 +240,7 @@ const char* NQDir_name(NQDir* dir)
 
 bool NQDir_isFile(NQDir* dir)
 {
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   if (dir->iter != NULL)
     return d_is_file(dir->iter);
 #endif
@@ -260,7 +260,7 @@ bool NQDir_isFile(NQDir* dir)
 
 bool NQDir_isDirectory(NQDir* dir)
 {
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   if (dir->iter != NULL)
     return d_is_dir(dir->iter);
 #endif

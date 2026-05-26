@@ -100,35 +100,8 @@
 /* Have Intel __sync_* atomic primitives */
 #cmakedefine HAVE_SYNC_BUILTINS 1
 
-/* Define if you have ZLIB */
-#cmakedefine01 WITH_ZLIB
-
 /* Define if you have OLE32 */
 #cmakedefine01 WITH_OLE32
-
-/* Define if you have ADVAPI32 */
-#cmakedefine01 WITH_ADVAPI32
-
-/* Define if you have OpenSSL */
-#cmakedefine01 WITH_OPENSSL
-
-/* Define if you have Jansson */
-#cmakedefine01 WITH_JANSSON
-
-/* Define if you have cJSON */
-#cmakedefine01 WITH_CJSON
-
-/* Define if you have PCRE2 */
-#cmakedefine01 WITH_PCRE2
-
-/* Define if you have Expat */
-#cmakedefine01 WITH_EXPAT
-
-/* Define if you have CivetWeb */
-#cmakedefine01 WITH_CIVETWEB
-
-/* Define if you have LibBase58 */
-#cmakedefine01 WITH_LIBBASE58
 
 /* Define to 2 if the system does not provide POSIX.1 features except with
 this defined. */

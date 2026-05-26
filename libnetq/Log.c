@@ -145,7 +145,7 @@ int NQLog_print(NQLogLevel level, const char* tag, const char* format, ...)
 
 int NQLog_vprint(NQLogLevel level, const char* tag, const char* format, va_list args)
 {
-#if defined(NQ_SYS_LINUX)
+#if defined(NQ_OS_KERNEL)
   int ret;
   struct va_format vaf;
   va_list vargs;

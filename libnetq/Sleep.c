@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -12,7 +12,7 @@
 
 #include <libnetq/Assert.h>
 
-#if defined(NQ_SYS_LINUX)
+#if defined(NQ_OS_KERNEL)
 # include <linux/delay.h>
 #elif defined(NQ_OS_WINDOWS)
 # include <windows.h>
@@ -30,7 +30,7 @@
 void NQSleep(int64_t ms)
 {
   NQ_ASSERT(ms >= 0);
-#if defined(NQ_SYS_LINUX)
+#if defined(NQ_OS_KERNEL)
   msleep_interruptible(ms);
 #elif defined(NQ_OS_WINDOWS)
   NQ_ASSERT(ms <= MAXDWORD);

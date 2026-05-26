@@ -29,7 +29,7 @@
 
 #include <libnetq/Mutex.h>
 #include <libnetq/Malloc.h>
-#include <libnetq/CStrBase.h>
+#include <libnetq/string/CStrBase.h>
 #include <libnetq/Sleep.h>
 #include <libnetq/Log.h>
 #include <libnetq/Assert.h>
@@ -91,7 +91,7 @@ static void* NQThreadEntry(void* context)
 
 static void NQThread_destroyImpl(NQThread* thread)
 {
-  NQMutex_destroy(&thread->mutex);
+  NQMutex_finalize(&thread->mutex);
   NQFree((void*)thread);
 }
 

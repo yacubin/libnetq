@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2023-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -11,7 +11,7 @@
 #include "libnetq/ImageBuilder.h"
 
 #include <libnetq/Assert.h>
-#include <libnetq/CStrBase.h>
+#include <libnetq/String.h>
 #include <libnetq/Malloc.h>
 
 struct NQImageBuilderPriv {

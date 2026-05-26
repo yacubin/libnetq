@@ -15,16 +15,16 @@
 #ifdef NQ_OS_WINDOWS
 #include <windows.h>
 #else
-#include <libnetq/CStrBase.h>
+#include <libnetq/string/CStrBase.h>
 #include <libnetq/Atomic.h>
 #endif
 
-static inline void NQSecureErase(void* ptr, size_t len)
+static inline void NQSecureErase(void* data, size_t size)
 {
 #ifdef NQ_OS_WINDOWS
-  SecureZeroMemory(ptr, len);
+  SecureZeroMemory(data, size);
 #else
-  memset(ptr, 0, len);
+  memset(data, 0, size);
   NQCompilerFence();
 #endif
 }

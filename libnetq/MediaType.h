@@ -30,9 +30,14 @@
 #define NQ_MEDIATYPE_AUDIO_MP4                      "audio/mp4"
 #define NQ_MEDIATYPE_IMAGE_APNG                     "image/apng"
 #define NQ_MEDIATYPE_IMAGE_AVIF                     "image/avif"
+#define NQ_MEDIATYPE_IMAGE_JPEG                     "image/jpeg"
 #define NQ_MEDIATYPE_IMAGE_PNG                      "image/png"
 #define NQ_MEDIATYPE_IMAGE_WEBP                     "image/webp"
+#define NQ_MEDIATYPE_IMAGE_TIFF                     "image/tiff"
+#define NQ_MEDIATYPE_IMAGE_TIFFFX                   "image/tiff-fx"
+#define NQ_MEDIATYPE_IMAGE_XBMP                     "image/x-bmp"
 #define NQ_MEDIATYPE_IMAGE_XICON                    "image/x-icon"
+#define NQ_MEDIATYPE_IMAGE_XXCF                     "image/x-xcf"
 #define NQ_MEDIATYPE_IMAGE_SVGXML                   "image/svg+xml"
 #define NQ_MEDIATYPE_MULTIPART_FORMDATA             "multipart/form-data"
 #define NQ_MEDIATYPE_TEXT_CSS                       "text/css"
@@ -42,6 +47,7 @@
 #define NQ_MEDIATYPE_VIDEO_3GP2                     "video/3gp2"
 #define NQ_MEDIATYPE_VIDEO_3GPP                     "video/3gpp"
 #define NQ_MEDIATYPE_VIDEO_MP4                      "video/mp4"
+#define NQ_MEDIATYPE_VIDEO_Y4M                      "video/y4m"
 #define NQ_MEDIATYPE_WILDCARD                       "*/*"
 
 #endif /* _LIBNETQ_MEDIATYPE_H */

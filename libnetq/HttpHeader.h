@@ -11,6 +11,7 @@
 #define _LIBNETQ_HTTPHEADER_H
 
 #include <libnetq/Basic.h>
+#include <libnetq/string/StringVec.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -83,10 +84,8 @@ NQ_EXPORT bool NQHttpStatusLineParse(const char* data, size_t size, NQHttpStatus
 
 typedef struct NQHttpHeaderLine NQHttpHeaderLine;
 struct NQHttpHeaderLine {
-  const char* nameData;
-  size_t nameSize;
-  const char* valueData;
-  size_t valueSize;
+  NQStringVec name;
+  NQStringVec value;
 };
 
 NQ_EXPORT bool NQHttpHeaderLineParse(const char* data, size_t size, NQHttpHeaderLine* result);
@@ -103,10 +102,8 @@ NQ_EXPORT bool NQHttpHeaderValueParse(const char* data, size_t size, NQHttpHeade
 
 typedef struct NQHttpFormData NQHttpFormData;
 struct NQHttpFormData {
-  const char* nameData;
-  size_t nameSize;
-  const char* filenameData;
-  size_t filenameSize;
+  NQStringVec name;
+  NQStringVec filename;
 };
 
 NQ_EXPORT bool NQHttpFormDataParse(const char* data, size_t size, NQHttpFormData* result);

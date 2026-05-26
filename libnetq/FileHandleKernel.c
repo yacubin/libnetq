@@ -10,11 +10,12 @@
 #include "config.h"
 #include "libnetq/FileHandle.h"
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 
 #include <linux/fs.h>
 
 #include <libnetq/Assert.h>
+#include <libnetq/ErrorCode.h>
 
 NQFileHandle NQFileOpen(const char* path, NQFileOpenMode mode)
 {
@@ -22,7 +23,7 @@ NQFileHandle NQFileOpen(const char* path, NQFileOpenMode mode)
 
   if (path == NULL) {
     NQ_ASSERT_NOT_REACHED();
-    return ERR_PTR(-EINVAL);
+    return ERR_PTR(-NQ_EINVAL);
   }
 
   flags = 0;
@@ -37,7 +38,7 @@ NQFileHandle NQFileOpen(const char* path, NQFileOpenMode mode)
 
   default:
     NQ_ASSERT_NOT_REACHED();
-    return ERR_PTR(-EINVAL);
+    return ERR_PTR(-NQ_EINVAL);
   }
 
   return filp_open(path, flags, 0666);
@@ -88,4 +89,4 @@ long long NQFileGetSize(NQFileHandle handle)
   return (long long)i_size_read(file_inode(handle));
 }
 
-#endif /* NQ_SYS_LINUX */
+#endif /* NQ_OS_KERNEL */

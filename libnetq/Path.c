@@ -11,7 +11,7 @@
 #include "libnetq/Path.h"
 
 #include <libnetq/UTF.h>
-#include <libnetq/CStrBase.h>
+#include <libnetq/string/String.h>
 #include <libnetq/Math.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
@@ -232,6 +232,95 @@ void NQPathBuilder_removeLastSegment(NQPathBuilder* thiz)
   }
 }
 
+void NQWinPathBuilder_init(NQWinPathBuilder* thiz)
+{
+  thiz->characters = thiz->buffer;
+  thiz->characters[0] = L'\0';
+  thiz->length = 0;
+  thiz->capacity = NQ_ARRAY_LENGTH(thiz->buffer);
+}
+
+bool NQPathInfoParse(const char* path, NQPathInfo* result)
+{
+  return NQPathInfoParse2(path, strlen(path), result);
+}
+
+bool NQPathInfoParse2(const char* path, size_t length, NQPathInfo* result)
+{
+  if (length == 0) {
+    result->path.characters = path;
+    result->path.length = 0;
+    result->dirname.characters = ".";
+    result->dirname.length = 1;
+    result->basename.characters = path;
+    result->basename.length = 0;
+    result->isAbsolute = false;
+    result->isDirOnly = false;
+    result->isNormalize = true;
+    return true;
+  }
+
+  bool isNormalize = true;
+  char lastChar = path[0];
+
+  const char* basename = path;
+  bool isAbsolute = (lastChar == NQ_PATH_DELIMITER);
+  int normalizeCount = (lastChar == '.') ? 1 : 3;
+
+  for (size_t i = 1; i < length; i++) {
+    char ch = path[i];
+    if (ch == '\0') {
+      break;
+    }
+    if (ch != NQ_PATH_DELIMITER) {
+      if (lastChar == NQ_PATH_DELIMITER) {
+        basename = &path[i];
+        normalizeCount = (ch == '.') ? 1 : 3;
+      }
+      else if (ch == '.') {
+        normalizeCount++;
+      }
+    }
+    else if (lastChar == NQ_PATH_DELIMITER || normalizeCount < 3) {
+      isNormalize = false;
+    }
+    lastChar = ch;
+  }
+
+  if (length == 1 && lastChar == NQ_PATH_DELIMITER) {
+    result->path.characters = path;
+    result->path.length = 1;
+    result->dirname.characters = path;
+    result->dirname.length = 1;
+    result->basename.characters = path;
+    result->basename.length = 0;
+    result->isAbsolute = isAbsolute;
+    result->isDirOnly = true;
+    result->isNormalize = isNormalize;
+    return true;
+  }
+
+  result->path.characters = path;
+  result->path.length = length;
+  result->dirname.characters = path;
+  result->dirname.length = basename - path;
+  if (result->dirname.length > 1)
+    result->dirname.length--;
+  if (result->dirname.length == 0) {
+    result->dirname.characters = ".";
+    result->dirname.length = 1;
+  }
+  result->basename.characters = basename;
+  result->basename.length = length - (basename - path);
+  result->isAbsolute = isAbsolute;
+  result->isDirOnly = (lastChar == NQ_PATH_DELIMITER);
+  if (result->isDirOnly)
+    result->basename.length--;
+  result->isNormalize = isNormalize;
+
+  return true;
+}
+
 size_t NQPathFrom(char* buffer, size_t n, const NQWChar* path)
 {
   if (n == 0)
@@ -325,7 +414,7 @@ size_t NQGetAbsoluteWinPath(NQWChar* buffer, size_t n, const char* path)
 }
 
 bool NQIsAbsolutePath(const char* path) {
-  if (path[0] == NQ_PATH_DELIMITER)
+  if (NQIsAbsolutePosixPath(path))
     return true;
   if (path[0] == '\0')
     return false;

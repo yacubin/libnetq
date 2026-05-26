@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/HttpHeader.h"
 
-#include <libnetq/CStrBase.h>
+#include <libnetq/string/CStrBase.h>
 
 static const char* findChar(const char* start, const char* end, char ch)
 {
@@ -119,7 +119,7 @@ bool NQHttpHeaderLineParse(const char* data, size_t size, NQHttpHeaderLine* resu
   const char* start = data;
   const char* end = data + size;
 
-  start = result->nameData = findCharIfNot(start, end, ' ');
+  start = result->name.characters = findCharIfNot(start, end, ' ');
   if (start == NULL) {
     return false;
   }
@@ -129,14 +129,14 @@ bool NQHttpHeaderLineParse(const char* data, size_t size, NQHttpHeaderLine* resu
     return false;
   }
 
-  result->nameSize = start - result->nameData;
+  result->name.length = start - result->name.characters;
 
-  start = result->valueData = findCharIfNot(start + 1, end, ' ');
+  start = result->value.characters = findCharIfNot(start + 1, end, ' ');
   if (start == NULL) {
     return false;
   }
 
-  result->valueSize = end - start;
+  result->value.length = end - start;
   return true;
 }
 
@@ -265,14 +265,14 @@ bool NQHttpFormDataParse(const char* data, size_t size, NQHttpFormData* result)
     if (NQHttpHeaderValueParse(data, size, &kv)) {
       if (kv.keySize == 4 && memcmp("name", kv.keyData, kv.keySize) == 0) {
         if(result != NULL) {
-          result->nameData = kv.valueData;
-          result->nameSize = kv.valueSize;
+          result->name.characters = kv.valueData;
+          result->name.length = kv.valueSize;
         }
       }
       else if (kv.keySize == 8 && memcmp("filename", kv.keyData, kv.keySize) == 0) {
         if(result != NULL) {
-          result->filenameData = kv.valueData;
-          result->filenameSize = kv.valueSize;
+          result->filename.characters = kv.valueData;
+          result->filename.length = kv.valueSize;
         }
       }
     }

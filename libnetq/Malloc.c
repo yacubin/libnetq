@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -12,7 +12,7 @@
 
 #include <libnetq/OS.h>
 
-#if defined(NQ_SYS_LINUX)
+#if defined(NQ_OS_KERNEL)
 # include <linux/slab.h>
 #elif defined(NQ_OS_WINDOWS)
 # include <windows.h>
@@ -23,7 +23,7 @@
 
 void* NQMalloc(size_t size)
 {
-#if defined(NQ_SYS_LINUX)
+#if defined(NQ_OS_KERNEL)
   return kmalloc(size, GFP_KERNEL);
 
 #elif defined(NQ_OS_WINDOWS)
@@ -43,7 +43,7 @@ void* NQMalloc(size_t size)
 
 void* NQZeroMalloc(size_t size)
 {
-#if defined(NQ_SYS_LINUX)
+#if defined(NQ_OS_KERNEL)
   return kzalloc(size, GFP_KERNEL);
 
 #elif defined(NQ_OS_WINDOWS)
@@ -66,7 +66,7 @@ void* NQZeroMalloc(size_t size)
 
 void* NQCalloc(size_t n, size_t size)
 {
-#if defined(NQ_SYS_LINUX)
+#if defined(NQ_OS_KERNEL)
   return kmalloc_array(n, size, GFP_KERNEL | __GFP_ZERO);
 
 #elif defined(NQ_OS_WINDOWS)
@@ -86,7 +86,7 @@ void* NQCalloc(size_t n, size_t size)
 
 void* NQRealloc(void* ptr, size_t size)
 {
-#if defined(NQ_SYS_LINUX)
+#if defined(NQ_OS_KERNEL)
   return krealloc(ptr, size, GFP_KERNEL);
 
 #elif defined(NQ_OS_WINDOWS)
@@ -115,7 +115,7 @@ void* NQRealloc(void* ptr, size_t size)
 
 void NQFree(void* ptr)
 {
-#if defined(NQ_SYS_LINUX)
+#if defined(NQ_OS_KERNEL)
   kfree(ptr);
 
 #elif defined(NQ_OS_WINDOWS)

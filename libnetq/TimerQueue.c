@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/TimerQueue.h"
 
-#include <libnetq/CStrBase.h>
+#include <libnetq/string/CStrBase.h>
 #include <libnetq/List.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Assert.h>

@@ -12,7 +12,7 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 #include <linux/math.h>
 #include <linux/math64.h>
 #else

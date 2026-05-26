@@ -12,7 +12,7 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 #include <linux/poll.h>
 #endif
 
@@ -37,7 +37,7 @@
 #define NQ_POLLHUP     POLLHUP
 #define NQ_POLLNVAL    POLLNVAL
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 typedef struct pollfd NQPlatformPollfd;
 static inline int NQPlatformPoll(NQPlatformPollfd* fds, unsigned long nfds, int timeout)
 {

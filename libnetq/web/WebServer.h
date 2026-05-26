@@ -13,6 +13,7 @@
 #include <libnetq/Asset.h>
 #include <libnetq/Array.h>
 #include <libnetq/String.h>
+#include <libnetq/string/StringVec.h>
 #include <libnetq/HttpStatus.h>
 #include <libnetq/HttpMethod.h>
 #include <libnetq/PrimitiveStorage.h>
@@ -83,10 +84,10 @@ struct NQWebServer {
   NQListHead writerExecutors;
   NQHttpStatistics* statistics;
   NQUrlHost* host;
-  NQStringStorage version;
-  NQStringStorage email;
-  NQStringStorage workDir;
-  NQStringStorage resourceDir;
+  NQStringVec version;
+  NQStringVec email;
+  NQStringVec workDir;
+  NQStringVec resourceDir;
   NQString* tlsKeyString;
   NQString* tlsCertString;
   bool tlsEnabled;
@@ -108,22 +109,22 @@ NQ_EXPORT int NQWebServer_stop(NQWebServer* service);
 
 static inline const char* NQWebServer_version(const NQWebServer* thiz)
 {
-  return NQStringStorage_characters(&thiz->version);
+  return NQStringVec_characters(&thiz->version);
 }
 
 static inline const char* NQWebServer_email(const NQWebServer* thiz)
 {
-  return NQStringStorage_characters(&thiz->email);
+  return NQStringVec_characters(&thiz->email);
 }
 
 static inline const char* NQWebServer_workDir(const NQWebServer* thiz)
 {
-  return NQStringStorage_characters(&thiz->workDir);
+  return NQStringVec_characters(&thiz->workDir);
 }
 
 static inline const char* NQWebServer_resourceDir(const NQWebServer* thiz)
 {
-  return NQStringStorage_characters(&thiz->resourceDir);
+  return NQStringVec_characters(&thiz->resourceDir);
 }
 
 static inline bool NQWebServer_tlsEnabled(const NQWebServer* thiz)

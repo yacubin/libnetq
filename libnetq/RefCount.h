@@ -10,7 +10,7 @@
 #ifndef _LIBNETQ_REFCOUNT_H
 #define _LIBNETQ_REFCOUNT_H
 
-#include <libnetq/atomic/AtomicTypes.h>
+#include <libnetq/sync/AtomicTypes.h>
 
 #ifdef __cplusplus
 extern "C" {

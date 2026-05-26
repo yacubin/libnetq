@@ -12,47 +12,15 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_OS_WINDOWS
-#include <windows.h>
-#ifdef SRWLOCK_INIT
-typedef SRWLOCK NQMutex;
-#define NQ_MUTEX_INIT SRWLOCK_INIT
-#define NQ_MUTEX_DEFINE(mutexname) NQMutex mutexname = NQ_MUTEX_INIT
-#define HAVE_SRWLOCK 1
+#if defined(NQ_OS_WINDOWS)
+# include <libnetq/sync/win32/Mutex.h>
+#elif defined(NQ_OS_UNIX)
+# include <libnetq/sync/posix/Mutex.h>
+#elif defined(NQ_OS_KERNEL)
+# include <libnetq/sync/kernel/Mutex.h>
 #else
-typedef struct NQMutex NQMutex;
-struct NQMutex {
-  CRITICAL_SECTION internalMutex;
-  size_t recursionCount;
-};
-#endif
-#endif
-
-#ifdef NQ_OS_UNIX
-#include <pthread.h>
-typedef pthread_mutex_t NQMutex;
-#define NQ_MUTEX_INIT PTHREAD_MUTEX_INITIALIZER
-#define NQ_MUTEX_DEFINE(mutexname) NQMutex mutexname = NQ_MUTEX_INIT
-#endif
-
-#ifdef NQ_SYS_LINUX
-#include <linux/mutex.h>
-typedef struct mutex NQMutex;
-#define NQ_MUTEX_DEFINE(mutexname) DEFINE_MUTEX(mutexname)
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-NQ_EXPORT void NQMutex_init(NQMutex* mutex);
-NQ_EXPORT void NQMutex_destroy(NQMutex* mutex); // NQMutex_finalize
-NQ_EXPORT void NQMutex_lock(NQMutex* mutex);
-NQ_EXPORT bool NQMutex_trylock(NQMutex* mutex);
-NQ_EXPORT void NQMutex_unlock(NQMutex* mutex);
-
-#ifdef __cplusplus
-}
+# warning There is no implementation for the Mutex
+# include <libnetq/sync/stub/Mutex.h>
 #endif
 
 #endif /* _LIBNETQ_MUTEX_H */

@@ -738,7 +738,6 @@ static bool onParserSection(void* userdata, const NQDBCSection* section) {
       return true;
     }
 
-    bool success = false;
     switch (section->attrDefault.value.type) {
     case kNQDBCVariantInt:
     case kNQDBCVariantUint:

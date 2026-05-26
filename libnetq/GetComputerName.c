@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2023-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/GetComputerName.h"
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 #include <linux/utsname.h>
 #include <libnetq/Math.h>
 #define NQ_COMPUTER_NAME_MAX (__NEW_UTS_LEN + 1)
@@ -30,7 +30,7 @@
 
 size_t NQGetComputerName(char* buffer, size_t n)
 {
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   struct new_utsname* u = init_utsname();
   size_t res = strlen(u->nodename);
   memcpy(buffer, u->nodename, NQGetMin(res, n));

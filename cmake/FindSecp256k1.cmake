@@ -7,13 +7,15 @@
 # under the MIT License. See LICENSE file for details.
 #
 
-if (Secp256k1_LIBRARIES AND Secp256k1_INCLUDE_DIRS)
+if (TARGET Bitcoin::Secp256k1)
   set(Secp256k1_FIND_QUIETLY TRUE)
   set(Secp256k1_FOUND TRUE)
   return ()
 endif ()
 
-set(Secp256k1_DEFINITIONS "")
+if (Secp256k1_LIBRARIES AND Secp256k1_INCLUDE_DIRS)
+  set(Secp256k1_FIND_QUIETLY TRUE)
+endif ()
 
 find_package(PkgConfig QUIET)
 if (PkgConfig_FOUND)
@@ -50,8 +52,8 @@ if (SECP256K1_FOUND)
 endif ()
 
 if (Secp256k1_FOUND)
-  set(Secp256k1_INCLUDE_DIRS ${Secp256k1_INCLUDE_DIR})
-  set(Secp256k1_LIBRARIES ${Secp256k1_LIBRARY})
+  set(Secp256k1_INCLUDE_DIRS "${Secp256k1_INCLUDE_DIR}")
+  set(Secp256k1_LIBRARIES "${Secp256k1_LIBRARY}")
 endif ()
 
 if (Secp256k1_FOUND AND NOT TARGET Bitcoin::Secp256k1)

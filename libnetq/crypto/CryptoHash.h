@@ -14,15 +14,15 @@
 #include <libnetq/crypto/CryptoAlgorithm.h>
 
 #if defined(NQ_USE_OPENSSL_CRYPTOHASH)
-# include <libnetq/crypto/CryptoHashOpenSSL.h>
+# include <libnetq/crypto/openssl/CryptoHash.h>
 #elif defined(NQ_USE_ADVAPI32_CRYPTOHASH)
-# include <libnetq/crypto/CryptoHashAdvapi32.h>
+# include <libnetq/crypto/advapi32/CryptoHash.h>
+#elif defined(NQ_USE_KERNEL_CRYPTOHASH)
+# include <libnetq/crypto/kernel/CryptoHash.h>
 #elif defined(NQ_USE_STUB_CRYPTOHASH)
-# include <libnetq/crypto/CryptoHashStub.h>
-#elif defined(NQ_SYS_LINUX)
-# include <libnetq/crypto/CryptoHashSysLinux.h>
+# include <libnetq/crypto/stub/CryptoHash.h>
 #else
-#error There is no implementation for the CryptoHash
+# error There is no implementation for the CryptoHash
 #endif
 
 #endif /* _LIBNETQ_CRYPTO_CRYPTOHASH_H */

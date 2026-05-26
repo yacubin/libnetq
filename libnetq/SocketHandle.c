@@ -17,7 +17,7 @@
 #include <libnetq/ErrorCode.h>
 #include <libnetq/Assert.h>
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 #include <linux/socket.h>
 #include <linux/net.h> // SOCK_STREAM
 #include <uapi/linux/tcp.h> // TCP_NODELAY
@@ -33,23 +33,19 @@ static inline int NQSocketGetLastError(void)
 
 #define NQSocketInit() ((void)0)
 #define NQSocketOpenImpl(domain, type, protocol) \
-  ({ (void)(domain); (void)(type); (void)(protocol); -1; })
+  ({ (void)(domain); (void)(type); (void)(protocol); NULL; })
 #define NQSocketConnectImpl(handle, addr, len) \
-  ({ (void)(handle); (void)(addr); (void)(len); -1; })
+  ({ (void)(handle); (void)(addr); (void)(len); NULL; })
 #define NQSocketAcceptImpl(handle, addr, len) \
-  ({ (void)(handle); (void)(addr); (void)(len); -1; })
+  ({ (void)(handle); (void)(addr); (void)(len); NULL; })
 #define NQSocketCloseImpl(handle) ((void)(handle))
+#define NQSocketShutdownImpl(handle, how) kernel_sock_shutdown(handle, how)
 
-#define _SD_RECV    0
-#define _SD_SEND    0
-#define _SD_BOTH    0
-
-static int shutdown(int, int) { return -1; }
-static int getsockopt(int, int, int, void*, socklen_t*) { return -1; }
-static int setsockopt(int, int, int, const void*, socklen_t) { return -1; }
-static int fcntl(int, int, ...) { return -1; }
-static int bind(int, const struct sockaddr*, socklen_t) { return -1; }
-static int listen(int, int) { return -1; }
+static int getsockopt(NQSocketHandle, int, int, void*, socklen_t*) { return -1; }
+static int setsockopt(NQSocketHandle, int, int, const void*, socklen_t) { return -1; }
+static int fcntl(NQSocketHandle, int, ...) { return -1; }
+static int bind(NQSocketHandle, const struct sockaddr*, socklen_t) { return -1; }
+static int listen(NQSocketHandle, int) { return -1; }
 
 #define FD_SETSIZE 1024
 
@@ -69,10 +65,7 @@ static int listen(int, int) { return -1; }
 #define NQSocketAcceptImpl(handle, addr, len) WSAAccept(handle, addr, len, NULL, 0)
 #define NQSocketCloseImpl(handle) closesocket(handle)
 #define NQSocketIoctlImpl ioctlsocket
-
-#define _SD_RECV    SD_RECEIVE
-#define _SD_SEND    SD_SEND
-#define _SD_BOTH    SD_BOTH
+#define NQSocketShutdownImpl(handle, how) shutdown(handle, how)
 
 NQ_STATIC_ASSERT(sizeof(NQSocketHandle) == sizeof(SOCKET), "Socket size did not match in Windows");
 
@@ -109,10 +102,7 @@ static inline int NQSocketGetLastError(void)
 #define NQSocketAcceptImpl(handle, addr, len) accept(handle, addr, len)
 #define NQSocketCloseImpl(handle) close(handle)
 #define NQSocketIoctlImpl ioctl
-
-#define _SD_RECV    SHUT_RD
-#define _SD_SEND    SHUT_WR
-#define _SD_BOTH    SHUT_RDWR
+#define NQSocketShutdownImpl(handle, how) shutdown(handle, how)
 
 static inline int NQSocketGetLastError(void)
 {
@@ -260,7 +250,7 @@ int NQSocketSend(NQSocketHandle handle, const uint8_t* buf, size_t len, int flag
   if (NQ_INT32_MAX < len)
     len = NQ_INT32_MAX;
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   return -1;
 #endif
 
@@ -283,7 +273,7 @@ int NQSocketRecv(NQSocketHandle handle, uint8_t* buf, size_t len, int flags)
   if (NQ_INT32_MAX < len)
     len = NQ_INT32_MAX;
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   return -1;
 #endif
 
@@ -311,15 +301,15 @@ int NQSocketShutdown(NQSocketHandle handle, int how)
 {
   switch (how) {
   case NQ_SD_RECV:
-    how = _SD_RECV;
+    how = NQ_SHUT_RD;
     break;
 
   case NQ_SD_SEND:
-    how = _SD_SEND;
+    how = NQ_SHUT_WR;
     break;
 
   case NQ_SD_BOTH:
-    how = _SD_BOTH;
+    how = NQ_SHUT_RDWR;
     break;
 
   default:
@@ -327,7 +317,7 @@ int NQSocketShutdown(NQSocketHandle handle, int how)
     break;
   }
 
-  return shutdown(handle, how);
+  return NQSocketShutdownImpl(handle, how);
 }
 
 bool NQSocketGetOpt(NQSocketHandle handle, int level, int id, void* value, uint32_t* length)
@@ -559,7 +549,7 @@ static inline int NQSocketSendToImpl(NQSocketHandle handle, const uint8_t* buf, 
 {
   NQ_ASSERT(NQ_INT32_MAX < len);
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
   return -1;
 #endif
 
@@ -611,8 +601,8 @@ int NQSocketSendTo6(NQSocketHandle handle, const uint8_t* buf, size_t len, int f
 
 int NQSocketPair(int domain, int type, int protocol, NQSocketHandle sock[2])
 {
-#ifdef NQ_SYS_LINUX
-  return -1;
+#ifdef NQ_OS_KERNEL
+  return -NQ_ENOTSUP;
 #endif
 
 #ifdef NQ_OS_WINDOWS

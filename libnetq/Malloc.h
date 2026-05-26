@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -17,7 +17,7 @@ extern "C" {
 #endif
 
 NQ_EXPORT void* NQMalloc(size_t size);
-NQ_EXPORT void* NQZeroMalloc(size_t size);
+NQ_EXPORT void* NQZeroMalloc(size_t size); // Zalloc
 NQ_EXPORT void* NQCalloc(size_t n, size_t size);
 NQ_EXPORT void* NQRealloc(void* ptr, size_t size);
 NQ_EXPORT void NQFree(void* ptr);

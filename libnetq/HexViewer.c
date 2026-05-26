@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/HexViewer.h"
 
-#include <libnetq/CStrBase.h>
+#include <libnetq/string/CStrBase.h>
 #include <libnetq/Sprintf.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Assert.h>

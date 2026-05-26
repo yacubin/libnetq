@@ -47,6 +47,30 @@ static inline bool NQWriteWrapper_writeUint8(NQWriteWrapper* thiz, uint8_t value
   return NQWriteWrapper_writeAll(thiz, &value, sizeof(value));
 }
 
+static inline bool NQWriteWrapper_writeUint16LE(NQWriteWrapper* thiz, uint16_t value)
+{
+  value = NQHostToLE16(value);
+  return NQWriteWrapper_writeAll(thiz, &value, sizeof(value));
+}
+
+static inline bool NQWriteWrapper_writeUint16BE(NQWriteWrapper* thiz, uint16_t value)
+{
+  value = NQHostToBE16(value);
+  return NQWriteWrapper_writeAll(thiz, &value, sizeof(value));
+}
+
+static inline bool NQWriteWrapper_writeInt32LE(NQWriteWrapper* thiz, int32_t value)
+{
+  value = NQHostToLE32(value);
+  return NQWriteWrapper_writeAll(thiz, &value, sizeof(value));
+}
+
+static inline bool NQWriteWrapper_writeInt32BE(NQWriteWrapper* thiz, int32_t value)
+{
+  value = NQHostToBE32(value);
+  return NQWriteWrapper_writeAll(thiz, &value, sizeof(value));
+}
+
 static inline bool NQWriteWrapper_writeUint32LE(NQWriteWrapper* thiz, uint32_t value)
 {
   value = NQHostToLE32(value);

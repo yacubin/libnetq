@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2024-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2024-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -16,6 +16,37 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct NQImageInfo NQImageInfo;
+struct NQImageInfo {
+  NQColorSpace colorspace;
+  uint32_t width;
+  uint32_t height;
+  uint32_t stride;
+};
+
+typedef struct NQImageStorage NQImageStorage;
+struct NQImageStorage {
+  NQColorSpace colorspace;
+  uint32_t width;
+  uint32_t height;
+  uint32_t stride;
+  const uint8_t* data;
+};
+
+#define NQ_YUVA_Y_IDX 0
+#define NQ_YUVA_U_IDX 1
+#define NQ_YUVA_V_IDX 2
+#define NQ_YUVA_A_IDX 3
+
+typedef struct NQImageStorage4 NQImageStorage4;
+struct NQImageStorage4 {
+  NQColorSpace colorspace;
+  uint32_t width;
+  uint32_t height;
+  uint32_t stride[4];
+  const uint8_t* data[4];
+};
 
 typedef struct NQImage NQImage;
 struct NQImage {

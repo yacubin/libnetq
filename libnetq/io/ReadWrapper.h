@@ -29,6 +29,7 @@ static inline void NQReadWrapper_init(NQReadWrapper* thiz, NQReadCallback read, 
 {
   thiz->read = read;
   thiz->userdata = userdata;
+  thiz->numberOfBytesRead = 0;
 }
 
 static inline int NQReadWrapper_read(NQReadWrapper* thiz, void* data, size_t size)

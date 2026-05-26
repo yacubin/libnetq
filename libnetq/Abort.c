@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -14,7 +14,7 @@
 # include <intrin.h>
 #endif
 
-#ifdef NQ_SYS_LINUX
+#ifdef NQ_OS_KERNEL
 # include <linux/bug.h>
 #endif
 
@@ -24,7 +24,7 @@ void NQAbort(void)
   __builtin_trap();
 #elif defined(NQ_COMPILER_MSVC)
   __debugbreak();
-#elif defined(NQ_SYS_LINUX)
+#elif defined(NQ_OS_KERNEL)
   BUG();
 #endif
   for (;;) {

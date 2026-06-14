@@ -22,6 +22,9 @@ struct NQListHead {
   NQListHead* prev;
 };
 
+#define NQ_LISTHEAD_INIT(thiz) { &(thiz), &(thiz) }
+#define NQ_LISTHEAD_DEFINE(name) NQListHead name = NQ_LISTHEAD_INIT(name)
+
 static inline void NQListHead_init(NQListHead* thiz)
 {
   thiz->next = thiz;

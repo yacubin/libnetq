@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -27,5 +27,10 @@
 #define NQ_JSONRPC_ECODE_INVALID_PARAMS (-32602)
 #define NQ_JSONRPC_ECODE_INTERNAL_ERROR (-32603)
 #define NQ_JSONRPC_ECODE_PARSE_ERROR (-32700)
+
+struct NQJsonRpcErrorParams {
+  const char* message;
+  int code;
+};
 
 #endif /* _LIBNETQ_WEB_JSONRPCTYPES_H */

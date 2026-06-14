@@ -40,11 +40,11 @@ find_library(SDL3_ttf_LIBRARY
 mark_as_advanced(SDL3_ttf_INCLUDE_DIR SDL3_ttf_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(SDL3_ttf DEFAULT_MSG SDL3_ttf_LIBRARY SDL3_ttf_INCLUDE_DIR)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(SDL3_ttf REQUIRED_VARS SDL3_ttf_LIBRARY SDL3_ttf_INCLUDE_DIR)
 
 if (SDL3_ttf_FOUND)
-  set(SDL3_ttf_INCLUDE_DIRS ${SDL3_ttf_INCLUDE_DIR})
-  set(SDL3_ttf_LIBRARIES ${SDL3_ttf_LIBRARY})
+  set(SDL3_ttf_INCLUDE_DIRS "${SDL3_ttf_INCLUDE_DIR}")
+  set(SDL3_ttf_LIBRARIES "${SDL3_ttf_LIBRARY}")
 endif ()
 
 if (SDL3_ttf_FOUND AND NOT TARGET SDL3_ttf::SDL3_ttf)

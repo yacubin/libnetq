@@ -66,9 +66,9 @@ mark_as_advanced(
   )
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(WebP DEFAULT_MSG
-  WebP_INCLUDE_DIR
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(WebP REQUIRED_VARS
   WebP_webp_LIBRARY
+  WebP_INCLUDE_DIR
   WebP_webpdecoder_LIBRARY
   WebP_webpmux_LIBRARY
   WebP_webpdemux_LIBRARY
@@ -78,12 +78,12 @@ if (WEBP_FOUND)
 endif()
 
 if (WebP_FOUND)
-  set(WebP_INCLUDE_DIRS ${WebP_INCLUDE_DIR})
+  set(WebP_INCLUDE_DIRS "${WebP_INCLUDE_DIR}")
   set(WebP_LIBRARIES
-    ${WebP_webp_LIBRARY}
-    ${WebP_webpdecoder_LIBRARY}
-    ${WebP_webpmux_LIBRARY}
-    ${WebP_webpdemux_LIBRARY}
+    "${WebP_webp_LIBRARY}"
+    "${WebP_webpdecoder_LIBRARY}"
+    "${WebP_webpmux_LIBRARY}"
+    "${WebP_webpdemux_LIBRARY}"
     )
 endif()
 

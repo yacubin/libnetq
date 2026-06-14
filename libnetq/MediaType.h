@@ -44,6 +44,7 @@
 #define NQ_MEDIATYPE_TEXT_HTML                      "text/html"
 #define NQ_MEDIATYPE_TEXT_PLAIN                     "text/plain"
 #define NQ_MEDIATYPE_TEXT_XML                       "text/xml"
+#define NQ_MEDIATYPE_TEXT_XSH                       "text/x-sh"
 #define NQ_MEDIATYPE_VIDEO_3GP2                     "video/3gp2"
 #define NQ_MEDIATYPE_VIDEO_3GPP                     "video/3gpp"
 #define NQ_MEDIATYPE_VIDEO_MP4                      "video/mp4"

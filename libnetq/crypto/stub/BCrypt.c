@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/crypto/BCrypt.h"
 
-#ifdef NQ_USE_STUB_BCRYPT
+#ifdef NQCONFIG_USE_STUB_BCRYPT
 
 bool NQBCryptHashPassword(const char* password, const void* salt, void* hash)
 {
@@ -28,4 +28,4 @@ bool NQBCryptVerifyPassword(const char* password, const void* salt, const void* 
   return false;
 }
 
-#endif /* NQ_USE_STUB_BCRYPT */
+#endif /* NQCONFIG_USE_STUB_BCRYPT */

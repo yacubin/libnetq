@@ -13,7 +13,7 @@
 #include <libnetq/Cond.h>
 #include <libnetq/Time.h>
 #include <libnetq/Malloc.h>
-#include <libnetq/Once.h>
+#include <libnetq/sync/Once.h>
 #include <libnetq/Signal.h>
 #include <libnetq/Assert.h>
 

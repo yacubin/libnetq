@@ -18,28 +18,47 @@
 #include <libnetq/Math.h>
 #include <libnetq/Limits.h>
 
-enum {
-  kNQPrimitiveStorageHandler = NQ_UINT32_MAX
-};
-
-struct NQPrimitiveStorageEntry {
+struct NQBaseValue {
+  uint32_t type;
   NQListHead list;
   const char* name;
-
-  uint32_t type;
-
-  union {
-    bool dataBool;
-    uint32_t dataUint32;
-    const char* dataString;
-    NQPrimitiveStorageHandler* dataHandler;
-  };
-
-  union {
-    size_t dataLength;
-    void* dataPointer;
-  };
 };
+
+struct NQBoolValue {
+  struct NQBaseValue base;
+  bool value;
+};
+
+struct NQUint32Value {
+  struct NQBaseValue base;
+  uint32_t value;
+};
+
+struct NQStringValue {
+  struct NQBaseValue base;
+  char value[1];
+};
+
+static struct NQBaseValue* NQPrimitiveStorage_addNewValue(NQPrimitiveStorage* thiz, size_t sizeInBytes, uint32_t type, const char* name)
+{
+  size_t nlenz = NQStrlen(name) + 1;
+  struct NQBaseValue* objVal = (struct NQBaseValue*)NQMalloc(sizeInBytes + nlenz);
+  if (objVal != NULL) {
+    char* ptr = (char*)objVal + sizeInBytes;
+    (void)memcpy(ptr, name, nlenz);
+    objVal->name = ptr;
+    objVal->type = type;
+    NQListHead_init(&objVal->list);
+    NQListHead_addBack(&thiz->entryList, &objVal->list);
+  }
+  return objVal;
+}
+
+static void NQPrimitiveStorage_removeNewValue(NQPrimitiveStorage* thiz, struct NQBaseValue* objVal)
+{
+  NQListHead_remove(&objVal->list);
+  NQFree(objVal);
+}
 
 void NQPrimitiveStorage_init(NQPrimitiveStorage* thiz, NQPrimitiveStorage* parent)
 {
@@ -49,187 +68,103 @@ void NQPrimitiveStorage_init(NQPrimitiveStorage* thiz, NQPrimitiveStorage* paren
 
 void NQPrimitiveStorage_finalize(NQPrimitiveStorage* thiz)
 {
-  NQListHead* iter = thiz->entryList.next;
-  while (iter != &thiz->entryList) {
-    struct NQPrimitiveStorageEntry* entry = NQ_CONTAINER_OF(iter, struct NQPrimitiveStorageEntry, list);
-    NQListHead* next = iter->next;
-    NQListHead_remove(iter);
-    NQFree(entry);
-    iter = next;
+  while (!NQListHead_isEmpty(&thiz->entryList)) {
+    struct NQBaseValue* objVal = NQ_CONTAINER_OF(thiz->entryList.prev, struct NQBaseValue, list);
+    NQPrimitiveStorage_removeNewValue(thiz, objVal);
   }
 }
 
-static struct NQPrimitiveStorageEntry* NQPrimitiveStorage_getEntry(NQPrimitiveStorage* thiz, const char* name)
+static struct NQBaseValue* NQPrimitiveStorage_findValue(NQPrimitiveStorage* thiz, const char* name)
 {
   NQListHead* iter = thiz->entryList.next;
   while (iter != &thiz->entryList) {
-    struct NQPrimitiveStorageEntry* entry = NQ_CONTAINER_OF(iter, struct NQPrimitiveStorageEntry, list);
-    if (!strcmp(entry->name, name))
-      return entry;
+    struct NQBaseValue* baseVal = NQ_CONTAINER_OF(iter, struct NQBaseValue, list);
+    if (!NQStrcmp(baseVal->name, name))
+      return baseVal;
     iter = iter->next;
   }
   return NULL;
 }
 
-size_t NQPrimitiveStorage_getBool(NQPrimitiveStorage* thiz, const char* name, bool* value)
+bool NQPrimitiveStorage_getBool(NQPrimitiveStorage* thiz, const char* name, bool* value)
 {
-  struct NQPrimitiveStorageEntry* entry = NQPrimitiveStorage_getEntry(thiz, name);
-
-  if (entry != NULL) {
-    if (entry->type == kNQBoolType) {
-      if (value)
-        memcpy(value, &entry->dataBool, sizeof(*value));
-      return sizeof(*value);
-    }
-    if (entry->type == kNQPrimitiveStorageHandler) {
-      return entry->dataHandler(entry->dataPointer, kNQBoolType, (char*)value, sizeof(*value));
-    }
+  struct NQBaseValue* objVal = NQPrimitiveStorage_findValue(thiz, name);
+  if (objVal != NULL) {
+    if (objVal->type != kNQBoolType)
+      return false;
+    if (value)
+      *value = ((struct NQBoolValue*)objVal)->value;
+    return true;
   }
 
   if(thiz->parent != NULL) {
     return NQPrimitiveStorage_getBool(thiz->parent, name, value);
   }
 
-  return 0;
+  return false;
 }
 
 bool NQPrimitiveStorage_setBool(NQPrimitiveStorage* thiz, const char* name, bool value)
 {
-  size_t nlenz = strlen(name) + 1;
-
-  struct NQPrimitiveStorageEntry* entry;
-  entry = (struct NQPrimitiveStorageEntry*)NQMalloc(sizeof(*entry) + nlenz);
-  if (entry == NULL)
+  struct NQBoolValue* objVal = (struct NQBoolValue*)NQPrimitiveStorage_addNewValue(thiz, sizeof(*objVal), kNQBoolType, name);
+  if (objVal == NULL)
     return false;
-
-  entry->type = kNQBoolType;
-
-  char* ptr = (char*)entry + sizeof(*entry);
-  (void)memcpy(ptr, name, nlenz);
-  entry->name = ptr;
-
-  entry->dataBool = value;
-  entry->dataLength = sizeof(value);
-
-  NQListHead_addBack(&thiz->entryList, &entry->list);
-
+  objVal->value = value;
   return true;
 }
 
-size_t NQPrimitiveStorage_getUint32(NQPrimitiveStorage* thiz, const char* name, uint32_t* value)
+bool NQPrimitiveStorage_getUint32(NQPrimitiveStorage* thiz, const char* name, uint32_t* value)
 {
-  struct NQPrimitiveStorageEntry* entry = NQPrimitiveStorage_getEntry(thiz, name);
-
-  if (entry != NULL) {
-    if (entry->type == kNQUint32Type) {
-      if (value)
-        memcpy(value, &entry->dataUint32, sizeof(*value));
-      return sizeof(*value);
-    }
-    if (entry->type == kNQPrimitiveStorageHandler) {
-      return entry->dataHandler(entry->dataPointer, kNQUint32Type, (char*)value, sizeof(*value));
-    }
+  struct NQBaseValue* baseVal = NQPrimitiveStorage_findValue(thiz, name);
+  if (baseVal != NULL) {
+    if (baseVal->type != kNQUint32Type)
+      return false;
+    if (value)
+      *value = ((struct NQUint32Value*)baseVal)->value;
+    return true;
   }
 
   if(thiz->parent != NULL) {
     return NQPrimitiveStorage_getUint32(thiz->parent, name, value);
   }
 
-  return 0;
+  return false;
 }
 
 bool NQPrimitiveStorage_setUint32(NQPrimitiveStorage* thiz, const char* name, uint32_t value)
 {
-  size_t nlenz = strlen(name) + 1;
-
-  struct NQPrimitiveStorageEntry* entry;
-  entry = (struct NQPrimitiveStorageEntry*)NQMalloc(sizeof(*entry) + nlenz);
-  if (entry == NULL)
+  struct NQBoolValue* objVal = (struct NQBoolValue*)NQPrimitiveStorage_addNewValue(thiz, sizeof(*objVal), kNQUint32Type, name);
+  if (objVal == NULL)
     return false;
-
-  entry->type = kNQUint32Type;
-
-  char* ptr = (char*)entry + sizeof(*entry);
-  (void)memcpy(ptr, name, nlenz);
-  entry->name = ptr;
-
-  entry->dataUint32 = value;
-  entry->dataLength = sizeof(value);
-
-  NQListHead_addBack(&thiz->entryList, &entry->list);
-
+  objVal->value = value;
   return true;
 }
 
-size_t NQPrimitiveStorage_getString(NQPrimitiveStorage* thiz, const char* name, char* buffer, size_t size)
+bool NQPrimitiveStorage_getString(NQPrimitiveStorage* thiz, const char* name, const char** value)
 {
-  struct NQPrimitiveStorageEntry* entry = NQPrimitiveStorage_getEntry(thiz, name);
-
-  if (entry != NULL) {
-    if (entry->type == kNQStringType) {
-      size_t nlenz = NQGetMin(entry->dataLength + 1, size);
-      if (buffer)
-        memcpy(buffer, entry->dataString, nlenz);
-      return entry->dataLength;
-    }
-    if (entry->type == kNQPrimitiveStorageHandler) {
-      return entry->dataHandler(entry->dataPointer, kNQStringType, buffer, size);
-    }
+  struct NQBaseValue* baseVal = NQPrimitiveStorage_findValue(thiz, name);
+  if (baseVal != NULL) {
+    if (baseVal->type != kNQStringType)
+      return false;
+    if (value)
+      *value = ((struct NQStringValue*)baseVal)->value;
+    return true;
   }
 
   if(thiz->parent != NULL) {
-    return NQPrimitiveStorage_getString(thiz->parent, name, buffer, size);
+    return NQPrimitiveStorage_getString(thiz->parent, name, value);
   }
 
-  return 0;
+  return false;
 }
 
 bool NQPrimitiveStorage_setString(NQPrimitiveStorage* thiz, const char* name, const char* value)
 {
-  struct NQPrimitiveStorageEntry* entry;
-
-  size_t nlenz = strlen(name) + 1;
-  size_t vlenz = strlen(value) + 1;
-
-  entry = (struct NQPrimitiveStorageEntry*)NQMalloc(sizeof(*entry) + nlenz + vlenz);
-  if (entry == NULL)
+  size_t length = NQStrlen(value);
+  struct NQStringValue* objVal = (struct NQStringValue*)NQPrimitiveStorage_addNewValue(thiz, sizeof(*objVal) + length, kNQStringType, name);
+  if (objVal == NULL)
     return false;
 
-  entry->type = kNQStringType;
-
-  char* ptr = (char*)entry + sizeof(*entry);
-  (void)memcpy(ptr, name, nlenz);
-  entry->name = ptr;
-  ptr += nlenz;
-
-  (void)memcpy(ptr, value, vlenz);
-  entry->dataString = ptr;
-  entry->dataLength = vlenz - 1;
-
-  NQListHead_addBack(&thiz->entryList, &entry->list);
-
-  return true;
-}
-
-bool NQPrimitiveStorage_setHandle(NQPrimitiveStorage* thiz, const char* name, NQPrimitiveStorageHandler* handler, void* userdata)
-{
-  size_t nlenz = strlen(name) + 1;
-
-  struct NQPrimitiveStorageEntry* entry;
-  entry = (struct NQPrimitiveStorageEntry*)NQMalloc(sizeof(*entry) + nlenz);
-  if (entry == NULL)
-    return false;
-
-  entry->type = kNQUint32Type;
-
-  char* ptr = (char*)entry + sizeof(*entry);
-  (void)memcpy(ptr, name, nlenz);
-  entry->name = ptr;
-
-  entry->dataHandler = handler;
-  entry->dataPointer = userdata;
-
-  NQListHead_addBack(&thiz->entryList, &entry->list);
-
+  memcpy(objVal->value, value, length + 1);
   return true;
 }

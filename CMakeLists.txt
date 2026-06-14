@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.13
+project(libnetq VERSION 1.0.14
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -7,6 +7,7 @@ project(libnetq VERSION 1.0.13
 
 message(STATUS "Project ${PROJECT_NAME}/${PROJECT_VERSION} (${PROJECT_DESCRIPTION})")
 message(STATUS "URL: ${PROJECT_HOMEPAGE_URL}")
+message(STATUS "System: ${CMAKE_SYSTEM_NAME}")
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
@@ -138,6 +139,17 @@ LNQ_ADD_LIBRARY(AtomicOps)
 LNQ_ADD_LIBRARY(LibBase58)
 LNQ_ADD_LIBRARY(Secp256k1)
 LNQ_ADD_LIBRARY(SQLite3)
+LNQ_ADD_LIBRARY(CJOSE)
+LNQ_ADD_LIBRARY(LibJWT)
+LNQ_ADD_LIBRARY(MHD)
+
+if (LibJWT_FOUND AND LibJWT_VERSION VERSION_GREATER_EQUAL "3.0.0")
+  if (LNQ_WITH_LIBJWT STREQUAL "AUTO")
+    set(WITH_LIBJWT OFF)
+  elseif (LNQ_WITH_LIBJWT)
+    message(FATAL_ERROR "LibJWT ${LibJWT_VERSION} is not supported")
+  endif ()
+endif ()
 
 check_include_file(errno.h HAVE_ERRNO_H)
 check_include_file(stddef.h HAVE_STDDEF_H)
@@ -371,6 +383,7 @@ set(libnetq_HEADERS
   libnetq/crypto/CryptoAlgorithm.h
   libnetq/crypto/CryptoHash.h
   libnetq/crypto/HMAC_SHA1.h
+  libnetq/crypto/JWT.h
   libnetq/crypto/MD4.h
   libnetq/crypto/MD5.h
   libnetq/crypto/Secp256k1.h
@@ -412,6 +425,10 @@ set(libnetq_HEADERS
   libnetq/json/JSONTypes.h
   libnetq/json/JSONWriter.h
 
+  libnetq/net/kernel/SocketHandle.h
+  libnetq/net/posix/SocketHandle.h
+  libnetq/net/stub/SocketHandle.h
+  libnetq/net/win32/SocketHandle.h
   libnetq/net/ChunkBuffer.h
   libnetq/net/NetBufferQueue.h
   libnetq/net/SpyModule.h
@@ -427,25 +444,43 @@ set(libnetq_HEADERS
   libnetq/sql/UrlDataStore.h
   libnetq/sql/UserDataStore.h
 
-  libnetq/string/CStrBase.h
   libnetq/string/String.h
   libnetq/string/StringArray.h
+  libnetq/string/StringData.h
+  libnetq/string/StringList.h
+  libnetq/string/StringPrint.h
+  libnetq/string/StringRange.h
   libnetq/string/StringRef.h
-  libnetq/string/StringVec.h
+  libnetq/string/StringUtil.h
 
+  libnetq/sync/atomic/Atomic.h
+  libnetq/sync/kernel/Atomic.h
   libnetq/sync/kernel/Cond.h
   libnetq/sync/kernel/Mutex.h
+  libnetq/sync/kernel/Once.h
   libnetq/sync/posix/Cond.h
   libnetq/sync/posix/Mutex.h
+  libnetq/sync/posix/Once.h
+  libnetq/sync/stub/Atomic.h
   libnetq/sync/stub/Mutex.h
+  libnetq/sync/stub/Once.h
+  libnetq/sync/sync/Atomic.h
+  libnetq/sync/win32/Atomic.h
   libnetq/sync/win32/Cond.h
   libnetq/sync/win32/Mutex.h
-  libnetq/sync/AtomicTypes.h
+  libnetq/sync/win32/Once.h
+  libnetq/sync/Atomic.h
+  libnetq/sync/Once.h
+  libnetq/sync/OnceCallback.h
 
-  libnetq/web/FileSytemGetRequest.h
   libnetq/web/HttpStatistics.h
+  libnetq/web/JsonRpcResponse.h
   libnetq/web/JsonRpcTypes.h
   libnetq/web/UrlHost.h
+  libnetq/web/WebRestArchApi.h
+  libnetq/web/WebRestEnvApi.h
+  libnetq/web/WebRestFileApi.h
+  libnetq/web/WebRestUsersApi.h
   libnetq/web/WebRequest.h
   libnetq/web/WebResponse.h
   libnetq/web/WebServer.h
@@ -535,6 +570,7 @@ set(libnetq_HEADERS
   libnetq/Math.h
   libnetq/MediaType.h
   libnetq/MimeTypes.def
+  libnetq/MinMax.h
   libnetq/Module.h
   libnetq/MotionEvent.h
   libnetq/MouseEvent.h
@@ -542,7 +578,6 @@ set(libnetq_HEADERS
   libnetq/Network.h
   libnetq/NetworkLooper.h
   libnetq/Notifier.h
-  libnetq/Once.h
   libnetq/OS.h
   libnetq/Path.h
   libnetq/PlatformLooper.h
@@ -564,8 +599,6 @@ set(libnetq_HEADERS
   libnetq/Sprintf.h
   libnetq/SQL.h
   libnetq/String.h
-  libnetq/StringList.h
-  libnetq/StringPrint.h
   libnetq/Strtox.h
   libnetq/Tarball.h
   libnetq/Thread.h
@@ -599,9 +632,12 @@ set(libnetq_SOURCES
   libnetq/checksum/stub/CRC32.c
   libnetq/checksum/zlib/CRC32.c
 
-  libnetq/crypto/kernel/CryptoHash.c
   libnetq/crypto/advapi32/CryptoHash.c
+  libnetq/crypto/cjose/JWT.c
+  libnetq/crypto/kernel/CryptoHash.c
+  libnetq/crypto/libjwt/JWT.c
   libnetq/crypto/openssl/BCrypt.c
+  libnetq/crypto/openssl/JWT.c
   libnetq/crypto/openssl/CryptoHash.c
   libnetq/crypto/openssl/MD4.c
   libnetq/crypto/openssl/MD5.c
@@ -609,8 +645,10 @@ set(libnetq_SOURCES
   libnetq/crypto/openssl/SHA256.c
   libnetq/crypto/secp256k1/Secp256k1.c
   libnetq/crypto/stub/BCrypt.c
+  libnetq/crypto/stub/JWT.c
   libnetq/crypto/stub/Secp256k1.c
   libnetq/crypto/HMAC_SHA1.c
+  libnetq/crypto/JWT.c
 
   libnetq/dbc/DBCAlloc.c
   libnetq/dbc/DBCDocBuilder.c
@@ -639,6 +677,10 @@ set(libnetq_SOURCES
   libnetq/json/JSON.c
   libnetq/json/JSONWriter.c
 
+  libnetq/net/kernel/SocketHandle.c
+  libnetq/net/posix/SocketHandle.c
+  libnetq/net/stub/SocketHandle.c
+  libnetq/net/win32/SocketHandle.c
   libnetq/net/ChunkBuffer.c
   libnetq/net/NetBufferQueue.c
   libnetq/net/SpyModuleList.c
@@ -656,23 +698,31 @@ set(libnetq_SOURCES
   libnetq/sql/UrlDataStore.c
   libnetq/sql/UserDataStore.c
 
-  libnetq/string/CStrBase.c
   libnetq/string/String.c
   libnetq/string/StringArray.c
+  libnetq/string/StringData.c
+  libnetq/string/StringList.c
+  libnetq/string/StringPrint.c
   libnetq/string/StringRef.c
-  libnetq/string/StringVec.c
+  libnetq/string/StringUtil.c
 
   libnetq/sync/kernel/Cond.c
   libnetq/sync/posix/Cond.c
   libnetq/sync/win32/Cond.c
-  libnetq/sync/win32/Mutex.c
+  libnetq/sync/win32/Once.c
 
   libnetq/wasm/Module.c
   libnetq/wasm/ModuleTypes.c
 
-  libnetq/web/FileSytemGetRequest.c
+  libnetq/web/civetweb/WebServerOperations.c
+  libnetq/web/mhd/WebServerOperations.c
   libnetq/web/HttpStatistics.c
+  libnetq/web/JsonRpcResponse.c
   libnetq/web/UrlHost.c
+  libnetq/web/WebRestArchApi.c
+  libnetq/web/WebRestEnvApi.c
+  libnetq/web/WebRestFileApi.c
+  libnetq/web/WebRestUsersApi.c
   libnetq/web/WebResponse.c
   libnetq/web/WebServer.c
 
@@ -685,7 +735,6 @@ set(libnetq_SOURCES
   libnetq/Arguments.c
   libnetq/Array.c
   libnetq/Asset.c
-  libnetq/Atomic.c
   libnetq/Base16.c
   libnetq/Base58LibBase58.c
   libnetq/Base58Stub.c
@@ -737,9 +786,6 @@ set(libnetq_SOURCES
   libnetq/Math.c
   libnetq/Network.c
   libnetq/NetworkLooper.c
-  libnetq/OnceKernel.c
-  libnetq/OncePosix.c
-  libnetq/OnceWin.c
   libnetq/Path.c
   libnetq/PlatformLooperCF.c
   libnetq/PlatformLooperStub.c
@@ -758,8 +804,6 @@ set(libnetq_SOURCES
   libnetq/Sleep.c
   libnetq/Socket.c
   libnetq/SocketHandle.c
-  libnetq/StringList.c
-  libnetq/StringPrint.c
   libnetq/Tarball.c
   libnetq/ThreadDataPosix.c
   libnetq/ThreadDataWin.c
@@ -788,11 +832,15 @@ set(libnetq_CMAKEFILES
   cmake/FindAtomicOps.cmake
   cmake/FindBCrypt.cmake
   cmake/FindBZip2.cmake
+  cmake/FindCairo.cmake
   cmake/FindCivetWeb.cmake
+  cmake/FindCJOSE.cmake
   cmake/FindCJSON.cmake
   cmake/FindDBC.cmake
   cmake/FindExpat.cmake
+  cmake/FindFreeType.cmake
   cmake/FindGIF.cmake
+  cmake/FindGumbo.cmake
   cmake/FindIFF.cmake
   cmake/FindILBM.cmake
   cmake/FindJansson.cmake
@@ -806,6 +854,7 @@ set(libnetq_CMAKEFILES
   cmake/FindLibEvent.cmake
   cmake/FindLibHeif.cmake
   cmake/FindLibJpegTurbo.cmake
+  cmake/FindLibJWT.cmake
   cmake/FindLibNetQ.cmake
   cmake/FindLibUV.cmake
   cmake/FindLibXml2.cmake
@@ -815,6 +864,7 @@ set(libnetq_CMAKEFILES
   cmake/FindNanoSVG.cmake
   cmake/FindOpenJP2.cmake
   cmake/FindPCRE2.cmake
+  cmake/FindPixman.cmake
   cmake/FindQuickJS.cmake
   cmake/FindSDL3.cmake
   cmake/FindSDL3_ttf.cmake
@@ -852,117 +902,126 @@ set(libnetq_GENERATED
 
 set_source_files_properties(${libnetq_HEADERS} PROPERTIES HEADER_FILE_ONLY TRUE)
 
+if (HAVE_ATOMIC_BUILTINS)
+  set(NQCONFIG_USE_ATOMIC 1)
+elseif (HAVE_SYNC_BUILTINS)
+  set(NQCONFIG_USE_SYNC_ATOMIC 1)
+#elseif (WITH_ATOMICOPS)
+#  set(NQCONFIG_USE_ATOMICOPS_ATOMIC 1)
+endif ()
+
 if (WITH_OPENSSL)
-  set(NQ_USE_OPENSSL_CRYPTOHASH 1)
+  set(NQCONFIG_USE_OPENSSL_CRYPTOHASH 1)
 elseif (WITH_ADVAPI32)
-  set(NQ_USE_ADVAPI32_CRYPTOHASH 1)
+  set(NQCONFIG_USE_ADVAPI32_CRYPTOHASH 1)
 else ()
-  set(NQ_USE_STUB_CRYPTOHASH 1)
+  set(NQCONFIG_USE_STUB_CRYPTOHASH 1)
   message("! CryptoHash has no implementation")
 endif ()
 
 if (WITH_OPENSSL)
-  set(NQ_USE_OPENSSL_BCRYPT 1)
+  set(NQCONFIG_USE_OPENSSL_BCRYPT 1)
 else ()
   message("! BCrypt has no implementation")
-  set(NQ_USE_STUB_BCRYPT 1)
+  set(NQCONFIG_USE_STUB_BCRYPT 1)
 endif ()
 
 if (WITH_OPENSSL)
-  set(NQ_USE_OPENSSL_MD4 1)
-elseif (NOT WITH_ADVAPI32)
+  set(NQCONFIG_USE_OPENSSL_MD4 1)
+elseif (NQCONFIG_USE_STUB_CRYPTOHASH)
   message("! MD4 has no implementation")
-  set(NQ_USE_STUB_CRYPTOHASH 1)
 endif ()
 
 if (WITH_OPENSSL)
-  set(NQ_USE_OPENSSL_MD5 1)
-elseif (NOT WITH_ADVAPI32)
+  set(NQCONFIG_USE_OPENSSL_MD5 1)
+elseif (NQCONFIG_USE_STUB_CRYPTOHASH)
   message("! MD5 has no implementation")
-  set(NQ_USE_STUB_CRYPTOHASH 1)
 endif ()
 
 if (WITH_OPENSSL)
-  set(NQ_USE_OPENSSL_SHA1 1)
-elseif (NOT WITH_ADVAPI32)
+  set(NQCONFIG_USE_OPENSSL_SHA1 1)
+elseif (NQCONFIG_USE_STUB_CRYPTOHASH)
   message("! SHA1 has no implementation")
-  set(NQ_USE_STUB_CRYPTOHASH 1)
 endif ()
 
 if (WITH_OPENSSL)
   set(NQ_USE_OPENSSL_SHA256 1)
-elseif (NOT WITH_ADVAPI32)
+elseif (NQCONFIG_USE_STUB_CRYPTOHASH)
   message("! SHA256 has no implementation")
-  set(NQ_USE_STUB_CRYPTOHASH 1)
 endif ()
 
 if (WITH_OPENSSL)
-  set(NQ_USE_OPENSSL_CRYPTORAND 1)
+  set(NQCONFIG_USE_OPENSSL_CRYPTORAND 1)
 else ()
-  set(NQ_USE_PLATFORM_CRYPTORAND 1)
+  set(NQCONFIG_USE_PLATFORM_CRYPTORAND 1)
 endif ()
 
 if (WITH_ZLIB)
-  set(NQ_USE_ZLIB_CRC32 1)
-  set(NQ_USE_ZLIB_BINARYASSET 1)
+  set(NQCONFIG_USE_ZLIB_CRC32 1)
+  set(NQCONFIG_USE_ZLIB_BINARYASSET 1)
 else ()
   message("! CRC32 has no implementation")
-  set(NQ_USE_STUB_CRC32 1)
+  set(NQCONFIG_USE_STUB_CRC32 1)
   set(NQ_USE_STUB_BINARYASSET 1)
 endif ()
 
 if (WITH_JANSSON)
-  set(NQ_USE_JANSSON_JSON 1)
+  set(NQCONFIG_USE_JANSSON_JSON 1)
 elseif (WITH_CJSON)
-  set(NQ_USE_CJSON_JSON 1)
+  set(NQCONFIG_USE_CJSON_JSON 1)
 else ()
   message("! JSON has no implementation")
-  set(NQ_USE_STUB_JSON 1)
+  set(NQCONFIG_USE_STUB_JSON 1)
 endif ()
 
 if (WITH_PCRE2)
-  set(NQ_USE_PCRE2_REGEX 1)
+  set(NQCONFIG_USE_PCRE2_REGEX 1)
 else ()
   message("! Regex has no implementation")
-  set(NQ_USE_STUB_REGEX 1)
+  set(NQCONFIG_USE_STUB_REGEX 1)
 endif ()
 
 if (WITH_EXPAT)
-  set(NQ_USE_EXPAT_XMLPARSER 1)
+  set(NQCONFIG_USE_EXPAT_XMLPARSER 1)
 else ()
   message("! XMLParser has no implementation")
-  set(NQ_USE_STUB_XMLPARSER 1)
-endif ()
-
-if (WITH_ATOMICOPS)
-  set(NQ_USE_ATOMICOPS_ATOMIC 1)
-else ()
-  set(NQ_USE_NATIVE_ATOMIC 1)
+  set(NQCONFIG_USE_STUB_XMLPARSER 1)
 endif ()
 
 if (WITH_LIBBASE58)
-  set(NQ_USE_LIBBASE58_BASE58 1)
+  set(NQCONFIG_USE_LIBBASE58_BASE58 1)
 else ()
   message("! Base58 has no implementation")
-  set(NQ_USE_STUB_BASE58 1)
+  set(NQCONFIG_USE_STUB_BASE58 1)
 endif ()
 
 if (WITH_SECP256K1)
-  set(NQ_USE_SECP256K1_SECP256K1 1)
+  set(NQCONFIG_USE_SECP256K1_SECP256K1 1)
 else ()
   message("! Secp256k1 has no implementation")
-  set(NQ_USE_STUB_SECP256K1 1)
+  set(NQCONFIG_USE_STUB_SECP256K1 1)
 endif ()
 
 if (WITH_SQLITE3)
-  set(NQ_USE_SQLITE3_SQLITE 1)
+  set(NQCONFIG_USE_SQLITE3_SQLITE 1)
 else ()
   message("! SQLite has no implementation")
-  set(NQ_USE_STUB_SQLITE 1)
+  set(NQCONFIG_USE_STUB_SQLITE 1)
 endif ()
 
-if (CMAKE_SYSTEM_NAME MATCHES "Android")
-  list(APPEND libnetq_LIBRARIES android log)
+if (WITH_CJOSE AND (WITH_JANSSON OR WITH_CJSON))
+  set(NQCONFIG_USE_CJOSE_JWT 1)
+elseif (WITH_LIBJWT)
+  set(NQCONFIG_USE_LIBJWT_JWT 1)
+elseif (WITH_OPENSSL AND (WITH_JANSSON OR WITH_CJSON))
+  set(NQCONFIG_USE_OPENSSL_JWT 1)
+else ()
+  message("! JWT has no implementation")
+  set(NQCONFIG_USE_STUB_JWT 1)
+endif ()
+
+if (WITH_CIVETWEB)
+  list(APPEND libnetq_LIBRARIES CivetWeb::CivetWeb)
 endif ()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
@@ -977,6 +1036,12 @@ endif ()
 if (CMAKE_SYSTEM_NAME MATCHES "Windows")
   list(APPEND libnetq_DEFINITIONS _WIN32_WINNT=0x0600)
   list(APPEND libnetq_LIBRARIES ws2_32 wsock32)
+endif ()
+
+if (CMAKE_SYSTEM_NAME MATCHES "Generic")
+  if (HAVE_ERRNO_H)
+    set(NQCONFIG_USE_ERRNO_H 1)
+  endif ()
 endif ()
 
 if (WITH_PTHREAD)
@@ -1033,6 +1098,18 @@ endif ()
 
 if (WITH_SQLITE3)
   list(APPEND libnetq_LIBRARIES SQLite3::SQLite3)
+endif ()
+
+if (WITH_CJOSE)
+  list(APPEND libnetq_LIBRARIES CJOSE::CJOSE)
+endif ()
+
+if (WITH_LIBJWT)
+  list(APPEND libnetq_LIBRARIES LibJWT::LibJWT)
+endif ()
+
+if (WITH_MHD)
+  list(APPEND libnetq_LIBRARIES MHD::MHD)
 endif ()
 
 configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/config.h" @ONLY)
@@ -1098,3 +1175,6 @@ message(STATUS "AtomicOps  . . . . . . . . . . . . . . . . . ${WITH_ATOMICOPS} (
 message(STATUS "LibBase58  . . . . . . . . . . . . . . . . . ${WITH_LIBBASE58} (HAVE ${HAVE_LIBBASE58})")
 message(STATUS "Secp256k1  . . . . . . . . . . . . . . . . . ${WITH_SECP256K1} (HAVE ${HAVE_SECP256K1})")
 message(STATUS "SQLite3  . . . . . . . . . . . . . . . . . . ${WITH_SQLITE3} (HAVE ${HAVE_SQLITE3})")
+message(STATUS "CJOSE  . . . . . . . . . . . . . . . . . . . ${WITH_CJOSE} (HAVE ${HAVE_CJOSE})")
+message(STATUS "LibJWT . . . . . . . . . . . . . . . . . . . ${WITH_LIBJWT} (HAVE ${HAVE_LIBJWT})")
+message(STATUS "MHD  . . . . . . . . . . . . . . . . . . . . ${WITH_MHD} (HAVE ${HAVE_MHD})")

@@ -10,30 +10,50 @@
 #ifndef _LIBNETQ_ATOMIC_H
 #define _LIBNETQ_ATOMIC_H
 
-#include <libnetq/sync/AtomicTypes.h>
+#include <libnetq/sync/Atomic.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define NQ_ATOMIC_INIT(counter) { counter }
 
-#define NQ_ATOMIC32_INIT(counter) { counter }
-
-static NQ_ALWAYS_INLINE void NQAtomic32_init(NQAtomic32* thiz, int32_t counter)
+static NQ_ALWAYS_INLINE void NQAtomic_init(NQAtomic* thiz, int32_t counter)
 {
   thiz->counter = counter;
 }
 
-#define NQAtomic32_finalize(a) ((void)0)
+#define NQAtomic_finalize(a) ((void)0)
 
-NQ_EXPORT int32_t NQAtomic32_addFetch(NQAtomic32*, int32_t i);
-NQ_EXPORT void NQAtomic32_inc(NQAtomic32*);
-NQ_EXPORT void NQAtomic32_dec(NQAtomic32*);
-NQ_EXPORT bool NQAtomic32_compareExchange(NQAtomic32*, int32_t* expected, int32_t desired);
-
-NQ_EXPORT void NQCompilerFence(void);
-
-#ifdef __cplusplus
+static NQ_ALWAYS_INLINE int32_t NQAtomic_addFetch(NQAtomic* thiz, int32_t i)
+{
+  return __NQAtomic_addFetch(thiz, i);
 }
-#endif
+
+static NQ_ALWAYS_INLINE void NQAtomic_inc(NQAtomic* thiz)
+{
+  __NQAtomic_inc(thiz);
+}
+
+static NQ_ALWAYS_INLINE void NQAtomic_dec(NQAtomic* thiz)
+{
+  __NQAtomic_dec(thiz);
+}
+
+static NQ_ALWAYS_INLINE int32_t NQAtomic_cmpxchg(NQAtomic* thiz, int32_t oldVal, int32_t newVal)
+{
+  return __NQAtomic_cmpxchg(thiz, oldVal, newVal);
+}
+
+static NQ_ALWAYS_INLINE bool NQAtomic_compareExchange(NQAtomic* thiz, int32_t* expected, int32_t desired)
+{
+  return __NQAtomic_compareExchange(thiz, expected, desired);
+}
+
+static NQ_ALWAYS_INLINE void NQCompilerFence(void)
+{
+  __NQCompilerFence();
+}
+
+static NQ_ALWAYS_INLINE void NQMemoryBarrier(void)
+{
+  __NQMemoryBarrier();
+}
 
 #endif /* _LIBNETQ_ATOMIC_H */

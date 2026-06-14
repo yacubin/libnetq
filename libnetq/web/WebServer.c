@@ -12,11 +12,10 @@
 
 #define NQ_LOG_TAG "NQWebServer"
 
-#include <libnetq/Module.h>
+#include <libnetq/string/StringUtil.h>
 #include <libnetq/CType.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
-#include <libnetq/String.h>
 #include <libnetq/Log.h>
 #include <libnetq/Path.h>
 #include <libnetq/Network.h>
@@ -26,8 +25,12 @@
 #include <libnetq/UrlPath.h>
 #include <libnetq/MediaType.h>
 #include <libnetq/Assert.h>
+#include <libnetq/Math.h>
+#include <libnetq/ErrorCode.h>
+#include <libnetq/random/CryptoRandom.h>
 #include <libnetq/web/WebRequest.h>
 #include <libnetq/web/WebResponse.h>
+#include <libnetq/web/WebSocket.h>
 
 struct WebWriterEntry {
   const struct NQWebWriterOperations* operations;
@@ -44,31 +47,43 @@ enum MatchType {
   kMatchAny,
 };
 
-enum ExecutorType {
-  kRequestExecutorType,
-  kSocketExecutorType,
+static NQ_LISTHEAD_DEFINE(g_registredOpsList);
+
+#if defined(WITH_MHD)
+extern NQWebServerOperations kMHDServerOperations;
+#endif
+
+#if defined(WITH_CIVETWEB)
+extern NQWebServerOperations kCivetWebServerOperations;
+#endif
+
+static NQWebServerOperations* g_builtinOpsList[] = {
+#if defined(WITH_MHD)
+  &kMHDServerOperations,
+#endif
+
+#if defined(WITH_CIVETWEB)
+  &kCivetWebServerOperations,
+#endif
 };
 
-struct WebExecutorEntry {
-  char* pattern;
-  char* method;
-  NQListHead list;
-  enum MatchType matchType;
-
-  bool (*match)   (void* userdata, NQWebRequest* request, NQWebSocket* sock);
-  void (*release) (void* userdata);
-  void* userdata;
-};
-
-NQWebServer* NQWebServer_create(const NQWebServerParams* params, const struct NQWebServerOperations* operations)
+static const NQWebServerOperations* defaultOperations(void)
 {
-  NQWebServer* thiz = (NQWebServer*)NQZeroMalloc(sizeof(NQWebServer));
-  if (!NQWebServer_init(thiz, params, operations)) {
-    NQWebServer_finalize(thiz);
-    NQFree((void*)thiz);
-    return NULL;
-  }
-  return thiz;
+  if (!NQListHead_isEmpty(&g_registredOpsList))
+    return NQ_CONTAINER_OF(g_registredOpsList.next, struct NQWebServerOperations, list);
+  if (NQ_ARRAY_LENGTH(g_builtinOpsList))
+    return g_builtinOpsList[0];
+  return NULL;
+}
+
+NQWebServer* NQWebServer_create(const NQWebServerParams* params)
+{
+  NQWebServer* thiz = (NQWebServer*)NQZalloc(sizeof(NQWebServer));
+  if (NQWebServer_init(thiz, params, NULL))
+    return thiz;
+  NQWebServer_finalize(thiz);
+  NQFree((void*)thiz);
+  return NULL;
 }
 
 void NQWebServer_destroy(NQWebServer* thiz)
@@ -94,21 +109,27 @@ static NQString* loadFileAsString(const char* workDir, const char* filename)
   return result;
 }
 
-bool NQWebServer_init(NQWebServer* thiz, const NQWebServerParams* params, const struct NQWebServerOperations* operations)
+bool NQWebServer_init(NQWebServer* thiz, const NQWebServerParams* params, NQWebServerSupervisor* parent)
 {
-  thiz->operations = operations;
+  thiz->parent = parent;
+  if (parent && parent->serverOps)
+    thiz->operations = parent->serverOps;
+  else {
+    thiz->operations = defaultOperations();
+    if (thiz->operations == NULL) {
+      NQ_LOGE("No server implementation available");
+      return false;
+    }
+  }
 
-  NQStringVec_init(&thiz->version);
-  NQStringVec_setCharacters(&thiz->version, params->version);
+  NQStringData_init(&thiz->email);
+  NQStringData_set(&thiz->email, params->email);
 
-  NQStringVec_init(&thiz->email);
-  NQStringVec_setCharacters(&thiz->email, params->email);
+  NQStringData_init(&thiz->workDir);
+  NQStringData_set(&thiz->workDir, params->workDir);
 
-  NQStringVec_init(&thiz->workDir);
-  NQStringVec_setCharacters(&thiz->workDir, params->workDir);
-
-  NQStringVec_init(&thiz->resourceDir);
-  NQStringVec_setCharacters(&thiz->resourceDir, params->resourceDir);
+  NQStringData_init(&thiz->resourceDir);
+  NQStringData_set(&thiz->resourceDir, params->resourceDir);
 
   thiz->host = NQUrlHost_create(params->host);
 
@@ -117,40 +138,64 @@ bool NQWebServer_init(NQWebServer* thiz, const NQWebServerParams* params, const 
      NQUrlHost_setPort(thiz->host, thiz->tlsEnabled ? NQ_DEFAULT_HTTPS_PORT : NQ_DEFAULT_HTTP_PORT);
   }
 
-  thiz->tlsKeyString = NQIsCStrNullOrEmpty(params->tlsKey) ? NULL : loadFileAsString(params->workDir, params->tlsKey);
-  thiz->tlsCertString = NQIsCStrNullOrEmpty(params->tlsCert) ? NULL : loadFileAsString(params->workDir, params->tlsCert);
-  thiz->asset = NQIsCStrNullOrEmpty(params->resourceDir) ? NULL : NQFileSystemAssetCreate(params->resourceDir);
+  thiz->tlsKeyString = NQCStrIsNullOrEmpty(params->tlsKey) ? NULL : loadFileAsString(params->workDir, params->tlsKey);
+  thiz->tlsCertString = NQCStrIsNullOrEmpty(params->tlsCert) ? NULL : loadFileAsString(params->workDir, params->tlsCert);
+  thiz->asset = NQCStrIsNullOrEmpty(params->resourceDir) ? NULL : NQFileSystemAssetCreate(params->resourceDir);
 
+  NQListHead_init(&thiz->executors);
   NQListHead_init(&thiz->requestExecutors);
   NQListHead_init(&thiz->socketExecutors);
   NQListHead_init(&thiz->writerExecutors);
+  NQListHead_init(&thiz->moduleList);
   thiz->statistics = NQHttpStatistics_create();
-  NQPrimitiveStorage_init(&thiz->storage, NULL);
+  NQPrimitiveStorage_init(&thiz->storage, thiz->parent ? thiz->parent->storage : NULL);
 
-  thiz->looper = NULL;
+  NQGetCryptoRandom(thiz->sessionSeckey, sizeof(thiz->sessionSeckey));
+
+  thiz->looper = thiz->parent ? thiz->parent->looper : NULL;
   thiz->mimetypes = NULL;
 
   thiz->userdata = NULL;
   return thiz->operations->init(thiz);
 }
 
-static void WebExecutorList_finalize(NQListHead* executorList)
+void NQWebExecutor_init(NQWebExecutor* thiz, const struct NQWebExecutorOperations* operations)
 {
-  NQListHead* iter = executorList->next;
-  while (iter != executorList) {
-    NQListHead* next = iter->next;
-    struct WebExecutorEntry* entry = NQ_CONTAINER_OF(iter, struct WebExecutorEntry, list);
-    if (entry->release)
-      entry->release(entry->userdata);
-    NQFree(entry);
-    iter = next;
-  }
+  thiz->server = NULL;
+  thiz->userdata = NULL;
+  thiz->operations = operations;
+  NQListHead_init(&thiz->list);
+}
+
+NQWebExecutor* NQWebExecutor_alloc(size_t sizeInBytes, const struct NQWebExecutorOperations* mops)
+{
+  struct NQWebExecutor* thiz = (struct NQWebExecutor*)NQZalloc(NQGetMax(sizeof(*thiz), sizeInBytes));
+  if (thiz == NULL)
+    return NULL;
+
+  NQWebExecutor_init(thiz, mops);
+  return thiz;
+}
+
+void NQWebExecutor_release(NQWebExecutor* thiz)
+{
+  NQ_ASSERT(NQListHead_isEmpty(&thiz->list));
+  NQFree(thiz);
+}
+
+static void moduleEntryRelease(NQWebServer* thiz, NQWebExecutor* entry)
+{
+  if (entry->operations && entry->operations->release)
+    entry->operations->release(entry);
+  if (entry->release)
+    entry->release(entry);
+  NQListHead_remove(&entry->list);
+  NQWebExecutor_release(entry);
 }
 
 void NQWebServer_finalize(NQWebServer* thiz)
 {
   thiz->operations->release(thiz);
-  NQNetworkLooper_release(thiz->looper);
 
   NQPrimitiveStorage_finalize(&thiz->storage);
   NQHttpStatistics_destroy(thiz->statistics);
@@ -166,19 +211,26 @@ void NQWebServer_finalize(NQWebServer* thiz)
     }
   }
 
+  while (!NQListHead_isEmpty(&thiz->moduleList)) {
+    NQWebExecutor* entry = NQ_CONTAINER_OF(thiz->moduleList.prev, struct NQWebExecutor, list);
+    moduleEntryRelease(thiz, entry);
+  }
+
   if (thiz->mimetypes)
     NQKeyVal_release(thiz->mimetypes);
 
-  WebExecutorList_finalize(&thiz->socketExecutors);
-  WebExecutorList_finalize(&thiz->requestExecutors);
+  while (!NQListHead_isEmpty(&thiz->executors)) {
+    NQWebExecutor* entry = NQ_CONTAINER_OF(thiz->executors.prev, struct NQWebExecutor, list);
+    NQListHead_remove(&entry->list);
+    NQFree(entry);
+  }
 
   if (thiz->asset != NULL)
     NQAsset_destroy(thiz->asset);
 
-  NQStringVec_finalize(&thiz->email);
-  NQStringVec_finalize(&thiz->version);
-  NQStringVec_finalize(&thiz->workDir);
-  NQStringVec_finalize(&thiz->resourceDir);
+  NQStringData_finalize(&thiz->email);
+  NQStringData_finalize(&thiz->workDir);
+  NQStringData_finalize(&thiz->resourceDir);
 
   if (thiz->tlsKeyString != NULL)
     NQString_release(thiz->tlsKeyString);
@@ -212,8 +264,9 @@ static bool comparePattern(const char* pattern, const char* url)
   }
 }
 
-static bool NQWebServer_initBase(NQListHead* head, NQWebRequest* request, NQWebSocket* sock)
+bool NQWebServer_initRequest(NQWebServer* thiz, NQWebRequest* request)
 {
+  NQListHead* head = &thiz->requestExecutors;
   const char* url = NQWebRequest_url(request);
   const char* method = NQWebRequest_method(request);
 
@@ -224,13 +277,14 @@ static bool NQWebServer_initBase(NQListHead* head, NQWebRequest* request, NQWebS
 
   NQListHead* iter;
   for (iter = head->next; iter != head; iter = iter->next) {
-    struct WebExecutorEntry* entry = NQ_CONTAINER_OF(iter, struct WebExecutorEntry, list);
-    if (strcmp(entry->method, method) != 0)
+    struct NQWebRequestListener* entry = NQ_CONTAINER_OF(iter, struct NQWebRequestListener, list);
+
+    if (NQStrcmp(entry->method, method) != 0)
       continue;
 
-    switch (entry->matchType) {
+    switch (entry->patternKind) {
     case kMatchText:
-      if (strcmp(entry->pattern, url) != 0)
+      if (NQStrcmp(entry->pattern, url) != 0)
         continue;
       request->urlPath = urlPath;
       break;
@@ -256,7 +310,9 @@ static bool NQWebServer_initBase(NQListHead* head, NQWebRequest* request, NQWebS
       continue;
     }
 
-    if (entry->match == NULL || entry->match(entry->userdata, request, sock)) {
+    request->operations = entry->operations;
+    request->userdata = entry->userdata;
+    if (request->operations->init == NULL || request->operations->init(request, entry->userdata) == 0) {
       if (request->urlPath != urlPath)
         NQUrlPath_destroy(urlPath);
       return true;
@@ -265,102 +321,293 @@ static bool NQWebServer_initBase(NQListHead* head, NQWebRequest* request, NQWebS
     if (request->urlPath != urlPath)
       NQUrlPath_destroy(request->urlPath);
 
+    request->operations = NULL;
     request->urlPath = NULL;
+    request->userdata = NULL;
   }
 
   NQUrlPath_destroy(urlPath);
   return false;
 }
 
-bool NQWebServer_initRequest(NQWebServer* thiz, NQWebRequest* request)
-{
-  return NQWebServer_initBase(&thiz->requestExecutors, request, NULL);
-}
-
 bool NQWebServer_initSocket(NQWebServer* thiz, NQWebRequest* request, NQWebSocket* sock)
 {
-  return NQWebServer_initBase(&thiz->socketExecutors, request, sock);
+  NQListHead* head = &thiz->socketExecutors;
+  const char* url = NQWebRequest_url(request);
+  const char* method = NQWebRequest_method(request);
+
+  NQ_ASSERT(!request->urlPath);
+  NQUrlPath* urlPath = NQUrlPath_create(url, NULL, false);
+  if (urlPath == NULL)
+    return false;
+
+  NQListHead* iter;
+  for (iter = head->next; iter != head; iter = iter->next) {
+    struct NQWebSocketListener* entry = NQ_CONTAINER_OF(iter, struct NQWebSocketListener, list);
+
+    if (NQStrcmp(entry->method, method) != 0)
+      continue;
+
+    switch (entry->patternKind) {
+    case kMatchText:
+      if (NQStrcmp(entry->pattern, url) != 0)
+        continue;
+      request->urlPath = urlPath;
+      break;
+
+    case kMatchSegments:
+      request->urlPath = NQUrlPath_create(url, entry->pattern, true);
+      if (request->urlPath == NULL)
+        continue;
+      break;
+
+    case kMatchPattern:
+      if (!comparePattern(entry->pattern, url))
+        continue;
+      request->urlPath = urlPath;
+      break;
+
+    case kMatchAnyBefore:
+    case kMatchAny:
+      request->urlPath = urlPath;
+      break;
+
+    default:
+      continue;
+    }
+
+    sock->operations = entry->operations;
+    sock->userdata = entry->userdata;
+    if (sock->operations->init == NULL || sock->operations->init(sock, entry->userdata) == 0) {
+      if (request->urlPath != urlPath)
+        NQUrlPath_destroy(urlPath);
+      return true;
+    }
+
+    if (request->urlPath != urlPath)
+      NQUrlPath_destroy(request->urlPath);
+
+    request->operations = NULL;
+    request->urlPath = NULL;
+    request->userdata = NULL;
+  }
+
+  NQUrlPath_destroy(urlPath);
+  return false;
 }
 
-static struct WebExecutorEntry* WebExecutorEntryCreate(const char* method, const char* url)
+static int getPatternKind(const char* pattern)
 {
-  struct WebExecutorEntry* entry;
-
-  size_t mlenz = strlen(method) + 1;
-  size_t ulenz = strlen(url) + 1;
-
-  entry = (struct WebExecutorEntry*)NQZeroMalloc(sizeof(*entry) + mlenz + ulenz);
-  if (entry == NULL)
-    return NULL;
-
-  entry->method = (char*)entry + sizeof(*entry);
-  (void)memcpy(entry->method, method, mlenz);
-
-  entry->pattern = entry->method + mlenz;
-  (void)memcpy(entry->pattern, url, ulenz);
-
-  if (!strcmp(url, "*:before"))
-    entry->matchType = kMatchAnyBefore;
-  else if (!strcmp(url, "*"))
-    entry->matchType = kMatchAny;
-  else if (strchr(url, '*') != NULL)
-    entry->matchType = kMatchPattern;
-  else if (NQIsUrlPathPattern(url))
-    entry->matchType = kMatchSegments;
+  if (!NQStrcmp(pattern, "*:before"))
+    return kMatchAnyBefore;
+  else if (!NQStrcmp(pattern, "*"))
+    return kMatchAny;
+  else if (strchr(pattern, '*') != NULL)
+    return kMatchPattern;
+  else if (NQIsUrlPathPattern(pattern))
+    return kMatchSegments;
   else
-    entry->matchType = kMatchText;
-
-  entry->match = NULL;
-  entry->userdata = NULL;
-
-  return entry;
+    return kMatchText;
 }
 
-static void NQWebServer_addExecutorEntry(NQListHead* head, struct WebExecutorEntry* entry)
+static int addRequestListener(NQWebServer* thiz, struct NQWebRequestListener* entry)
 {
-  NQListHead* iter = head->next;
+  if (NQCStrIsNullOrEmpty(entry->method) || NQCStrIsNullOrEmpty(entry->pattern))
+    return -NQ_EINVAL;
+
+  entry->patternKind = getPatternKind(entry->pattern);
+
+  NQListHead* iter = thiz->requestExecutors.next;
   for (;;) {
-    if (iter == head) {
-      NQListHead_addBack(head, &entry->list);
+    if (iter == &thiz->requestExecutors) {
+      NQListHead_addBack(&thiz->requestExecutors, &entry->list);
       break;
     }
-    struct WebExecutorEntry* it = NQ_CONTAINER_OF(iter, struct WebExecutorEntry, list);
-    if (it->matchType > entry->matchType) {
+    struct NQWebRequestListener* it = NQ_CONTAINER_OF(iter, struct NQWebRequestListener, list);
+    if (it->patternKind > entry->patternKind) {
       NQListHead_addBack(&it->list, &entry->list);
       break;
     }
     iter = iter->next;
   }
+
+  if (entry->patternKind == kMatchText) {
+    NQWebServer_allowMetric(thiz, entry->method, entry->pattern);
+  }
+
+  return 0;
 }
 
-static bool requestMatch(void* userdata, NQWebRequest* request, NQWebSocket* sock)
+static void removeRequestListener(NQWebServer* thiz, struct NQWebRequestListener* executor)
 {
-  NQWebRequestExecutor* requestExecutor = (NQWebRequestExecutor*)userdata;
-  return requestExecutor->match(requestExecutor, request);
+  NQ_ASSERT(!NQListHead_isEmpty(&executor->list));
+  // if (entry->type == kMatchText)
+  // NQWebServer_removeMetric
+  NQListHead_remove(&executor->list);
 }
 
-static void requestRelease(void* userdata)
+int NQWebExecutor_addRequestListener(NQWebExecutor* executor, struct NQWebRequestListener* listener, const NQWebRequestOperations* operations, void* userdata, const char* method, const char* format, ...)
 {
-  NQWebRequestExecutor* requestExecutor = (NQWebRequestExecutor*)userdata;
-  requestExecutor->release(requestExecutor);
+  va_list args;
+  va_start(args, format);
+  char* newPattern = NQCStrFormatV(format, args);
+  va_end(args);
+
+  if (newPattern == NULL)
+    return -NQ_ENOMEM;
+
+  char* newMethod = NQCStrDuplicate(method);
+  if (newMethod == NULL) {
+    NQCStrFree(newMethod);
+    return -NQ_ENOMEM;
+  }
+
+  listener->method = newMethod;
+  listener->pattern = newPattern;
+  listener->executor = executor;
+  NQListHead_init(&listener->list);
+  listener->userdata = userdata;
+  listener->operations = operations;
+
+  int ret = addRequestListener(executor->server, listener);
+  if (ret) {
+    NQCStrFree(newMethod);
+    NQCStrFree(newPattern);
+  }
+
+  return ret;
 }
 
-bool NQWebServer_registerRequestExecutor(NQWebServer* thiz, const char* method, const char* url, struct NQWebRequestExecutor* executor)
+void NQWebExecutor_removeRequestListener(NQWebExecutor* executor, struct NQWebRequestListener* listener)
 {
-  struct WebExecutorEntry* entry = WebExecutorEntryCreate(method, url);
-  if (entry == NULL)
-    return false;
-
-  entry->match = executor->match ? requestMatch : NULL;
-  entry->release = executor->release ? requestRelease : NULL;
-  entry->userdata = executor;
-
-  NQWebServer_addExecutorEntry(&thiz->requestExecutors, entry);
-  NQWebServer_allowMetric(thiz, method, url);
-  return true;
+  removeRequestListener(executor->server, listener);
+  NQCStrFree(listener->method);
+  NQCStrFree(listener->pattern);
 }
 
-static int onBlobRequest(NQWebRequest* request, NQWebResponse* response)
+static int addSocketListener(NQWebServer* thiz, struct NQWebSocketListener* entry)
+{
+  if (entry->method == NULL || entry->pattern == NULL)
+    return -NQ_EINVAL;
+
+  entry->patternKind = getPatternKind(entry->pattern);
+
+  NQListHead* iter = thiz->socketExecutors.next;
+  for (;;) {
+    if (iter == &thiz->socketExecutors) {
+      NQListHead_addBack(&thiz->socketExecutors, &entry->list);
+      break;
+    }
+    struct NQWebRequestListener* it = NQ_CONTAINER_OF(iter, struct NQWebRequestListener, list);
+    if (it->patternKind > entry->patternKind) {
+      NQListHead_addBack(&it->list, &entry->list);
+      break;
+    }
+    iter = iter->next;
+  }
+
+  return 0;
+}
+
+static void removeSocketListener(NQWebServer* thiz, struct NQWebSocketListener* executor)
+{
+  NQListHead_remove(&executor->list);
+}
+
+int NQWebExecutor_addSocketListener(NQWebExecutor* executor, struct NQWebSocketListener* listener, const NQWebSocketOperations* operations, void* userdata, const char* method, const char* format, ...)
+{
+  va_list args;
+  va_start(args, format);
+  char* newPattern = NQCStrFormatV(format, args);
+  va_end(args);
+
+  if (newPattern == NULL)
+    return -NQ_ENOMEM;
+
+  char* newMethod = NQCStrDuplicate(method);
+  if (newMethod == NULL) {
+    NQCStrFree(newMethod);
+    return -NQ_ENOMEM;
+  }
+
+  listener->method = newMethod;
+  listener->pattern = newPattern;
+  listener->executor = executor;
+  NQListHead_init(&listener->list);
+  listener->userdata = userdata;
+  listener->operations = operations;
+
+  int ret = addSocketListener(executor->server, listener);
+  if (ret) {
+    NQCStrFree(newMethod);
+    NQCStrFree(newPattern);
+  }
+
+  return ret;
+}
+
+void NQWebExecutor_removeSocketListener(NQWebExecutor* executor, struct NQWebSocketListener* listener)
+{
+  removeSocketListener(executor->server, listener);
+  NQCStrFree(listener->method);
+  NQCStrFree(listener->pattern);
+}
+
+struct NQWebRequestExecutor {
+  NQWebExecutor executor;
+  size_t listenerCount;
+  struct NQWebRequestListener listeners[1];
+};
+
+void releaseRequestExecutor(NQWebExecutor* executor)
+{
+  struct NQWebRequestExecutor* execApi = NQ_CONTAINER_OF(executor, struct NQWebRequestExecutor, executor);
+  for (size_t i = 0; i < execApi->listenerCount; i++)
+    NQWebExecutor_removeRequestListener(&execApi->executor, &execApi->listeners[i]);
+}
+
+NQWebExecutor* NQWebServer_createRequestExecutor(NQWebServer* thiz, const char* method, const char* url, const NQWebRequestOperations* operations, void* data)
+{
+  const NQWebRequestMatch matches[] = { { .method = method, .url = url }, { NULL } };
+  return NQWebServer_createRequestExecutorEx(thiz, matches, operations, data);
+}
+
+NQWebExecutor* NQWebServer_createRequestExecutorEx(NQWebServer* thiz, const NQWebRequestMatch* matches, const NQWebRequestOperations* operations, void* data)
+{
+  size_t listenerCount = 0;
+  for (const NQWebRequestMatch* iter = matches; iter->method && iter->url; iter = &matches[listenerCount])
+    listenerCount++;
+  if (listenerCount == 0)
+    return NULL;
+
+  struct NQWebRequestExecutor* execApi;
+  size_t sizeInBytes = sizeof(struct NQWebRequestExecutor) - sizeof(execApi->listeners) + sizeof(*execApi->listeners) * listenerCount;
+  execApi = (struct NQWebRequestExecutor*)NQWebServer_createExecutor(thiz, sizeInBytes, NULL, NULL);
+  if (execApi == NULL)
+    return NULL;
+
+  for (size_t index = 0; index < listenerCount; index++) {
+    int ret = NQWebExecutor_addRequestListener(&execApi->executor, &execApi->listeners[index], operations, data, matches[index].method, "%s", matches[index].url);
+    if (ret) {
+      for (size_t i = 0; i < index; i++)
+        NQWebExecutor_removeRequestListener(&execApi->executor, &execApi->listeners[i]);
+      NQWebServer_destroyExecutor(thiz, &execApi->executor);
+      return NULL;
+    }
+  }
+
+  execApi->listenerCount = listenerCount;
+  execApi->executor.release = releaseRequestExecutor;
+  return &execApi->executor;
+}
+
+static int onBlobInit(NQWebRequest* request, void* data)
+{
+  request->userdata = data;
+  return 0;
+}
+
+static int onBlobHandler(NQWebRequest* request, NQWebResponse* response)
 {
   NQWebBlob* blob = (NQWebBlob*)request->userdata;
 
@@ -372,59 +619,72 @@ static int onBlobRequest(NQWebRequest* request, NQWebResponse* response)
   return NQ_HTTP_OK;
 }
 
-static bool blobMatch(void* userdata, NQWebRequest* request, NQWebSocket* sock)
+static const NQWebRequestOperations kBlobOps = {
+  .init = onBlobInit,
+  .handler = onBlobHandler,
+};
+
+NQWebExecutor* NQWebServer_createRequestBlob(NQWebServer* thiz, const char* method, const char* url, const NQWebBlob* blob)
 {
-  struct WebBlob* blob = (struct WebBlob*)userdata;
-  request->userdata = blob;
-  request->onRequest = onBlobRequest;
-  return true;
+  return NQWebServer_createRequestExecutor(thiz, method, url, &kBlobOps, (void*)blob);
 }
 
-bool NQWebServer_registerRequestBlob(NQWebServer* thiz, const char* method, const char* url, const NQWebBlob* blob)
+NQWebExecutor* NQWebServer_createRequestBlobEx(NQWebServer* thiz, const NQWebRequestMatch* matches, const NQWebBlob* blob)
 {
-  struct WebExecutorEntry* entry = WebExecutorEntryCreate(method, url);
-  if (entry == NULL)
-    return false;
-
-  entry->match = blobMatch;
-  entry->release = NULL;
-  entry->userdata = (void*)blob;
-
-  NQWebServer_addExecutorEntry(&thiz->requestExecutors, entry);
-  NQWebServer_allowMetric(thiz, method, url);
-  return true;
+  return NQWebServer_createRequestExecutorEx(thiz, matches, &kBlobOps, (void*)blob);
 }
 
-static bool socketMatch(void* userdata, NQWebRequest* request, NQWebSocket* sock)
+struct NQWebSocketExecutor {
+  NQWebExecutor executor;
+  size_t listenerCount;
+  struct NQWebSocketListener listeners[1];
+};
+
+void releaseSocketExecutor(NQWebExecutor* pexec)
 {
-  NQWebSocketExecutor* socketExecutor = (NQWebSocketExecutor*)userdata;
-  return socketExecutor->match(socketExecutor, sock);
+  struct NQWebSocketExecutor* execApi = NQ_CONTAINER_OF(pexec, struct NQWebSocketExecutor, executor);
+  for (size_t i = 0; i < execApi->listenerCount; i++)
+    NQWebExecutor_removeSocketListener(&execApi->executor, &execApi->listeners[i]);
 }
 
-static void socketRelease(void* userdata)
+NQWebExecutor* NQWebServer_createSocketExecutor(NQWebServer* thiz, const char* method, const char* url, const NQWebSocketOperations* operations, void* data)
 {
-  NQWebSocketExecutor* socketExecutor = (NQWebSocketExecutor*)userdata;
-  socketExecutor->release(socketExecutor);
+  const NQWebRequestMatch matches[] = { { .method = method, .url = url }, { NULL } };
+  return NQWebServer_createSocketExecutorEx(thiz, matches, operations, data);
 }
 
-bool NQWebServer_registerSocketExecutor(NQWebServer* thiz, const char* method, const char* url, struct NQWebSocketExecutor* executor)
+NQWebExecutor* NQWebServer_createSocketExecutorEx(NQWebServer* thiz, const NQWebRequestMatch* matches, const NQWebSocketOperations* operations, void* data)
 {
-  struct WebExecutorEntry* entry = WebExecutorEntryCreate(method, url);
-  if (entry == NULL)
-    return false;
+  size_t listenerCount = 0;
+  for (const NQWebRequestMatch* iter = matches; iter->method && iter->url; iter = &matches[listenerCount])
+    listenerCount++;
+  if (listenerCount == 0)
+    return NULL;
 
-  entry->match = executor->match ? socketMatch : NULL;
-  entry->release = executor->release ? socketRelease : NULL;
-  entry->userdata = executor;
+  struct NQWebSocketExecutor* execApi;
+  size_t sizeInBytes = sizeof(struct NQWebSocketExecutor) - sizeof(execApi->listeners) + sizeof(*execApi->listeners) * listenerCount;
+  execApi = (struct NQWebSocketExecutor*)NQWebServer_createExecutor(thiz, sizeInBytes, NULL, NULL);
+  if (execApi == NULL)
+    return NULL;
 
-  NQWebServer_addExecutorEntry(&thiz->socketExecutors, entry);
-  NQWebServer_allowMetric(thiz, method, url);
-  return true;
+  for (size_t index = 0; index < listenerCount; index++) {
+    int ret = NQWebExecutor_addSocketListener(&execApi->executor, &execApi->listeners[index], operations, data, matches[index].method, "%s", matches[index].url);
+    if (ret) {
+      for (size_t i = 0; i < index; i++)
+        NQWebExecutor_removeSocketListener(&execApi->executor, &execApi->listeners[i]);
+      NQWebServer_destroyExecutor(thiz, &execApi->executor);
+      return NULL;
+    }
+  }
+
+  execApi->listenerCount = listenerCount;
+  execApi->executor.release = releaseRequestExecutor;
+  return &execApi->executor;
 }
 
 bool NQWebServer_registerWriter(NQWebServer* thiz, const char* contentType, const struct NQWebWriterOperations* operations, void* userdata)
 {
-  size_t len = strlen(contentType);
+  size_t len = NQStrlen(contentType);
   struct WebWriterEntry* entry = (struct WebWriterEntry*)NQMalloc(sizeof(*entry) + len);
   if (entry == NULL)
     return false;
@@ -487,14 +747,6 @@ bool NQWebServer_allowMetric(NQWebServer* thiz, const char* method, const char* 
   return NQIsUrlPath(url) && NQHttpStatistics_add(thiz->statistics, method, url);
 }
 
-void NQWebServer_setLooper(NQWebServer* thiz, NQNetworkLooper* looper)
-{
-  if (thiz->looper)
-    NQNetworkLooper_release(thiz->looper);
-
-  thiz->looper = NQNetworkLooper_retain(looper);
-}
-
 NQUint8Array* NQWebServer_loadAssetBytes(const NQWebServer* thiz, const char* filename)
 {
   if (thiz->asset == NULL) {
@@ -535,4 +787,39 @@ int NQWebServer_start(NQWebServer* thiz)
 int NQWebServer_stop(NQWebServer* thiz)
 {
   return thiz->operations->stop(thiz);
+}
+
+NQWebExecutor* NQWebServer_createExecutor(NQWebServer* thiz, size_t sizeInBytes, const struct NQWebExecutorOperations* operations, void* data)
+{
+  NQWebExecutor* executor = NQWebExecutor_alloc(sizeInBytes, operations);
+  executor->server = thiz;
+  executor->release = NULL;
+  NQListHead_addBack(&thiz->moduleList, &executor->list);
+
+  if (executor->operations && executor->operations->init) {
+    int ret = executor->operations->init(executor, data);
+    if (ret != 0) {
+      NQListHead_remove(&executor->list);
+      NQWebExecutor_release(executor);
+      return NULL;
+    }
+  }
+
+  return executor;
+}
+
+void NQWebServer_destroyExecutor(NQWebServer* thiz, NQWebExecutor* executor)
+{
+  NQ_ASSERT(thiz == executor->server);
+  moduleEntryRelease(thiz, executor);
+}
+
+void NQWebServerOperationsRegister(NQWebServerOperations* operations)
+{
+  NQListHead_addBack(&g_registredOpsList, &operations->list);
+}
+
+void NQWebServerOperationsUnregister(NQWebServerOperations* operations)
+{
+  NQListHead_remove(&operations->list);
 }

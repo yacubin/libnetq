@@ -8,7 +8,7 @@
  */
 
 #include "config.h"
-#include "libnetq/string/CStrBase.h"
+#include "libnetq/string/StringUtil.h"
 
 #include <libnetq/Malloc.h>
 #include <libnetq/Sprintf.h>
@@ -21,6 +21,11 @@ const char* NQCStrEmpty(void)
   return s_cstrEmpty;
 }
 
+void NQCStrFree(const char* str)
+{
+  NQFree((void*)str);
+}
+
 size_t NQCStrLen16(const uint16_t* s)
 {
   const uint16_t* p = s;
@@ -31,7 +36,7 @@ size_t NQCStrLen16(const uint16_t* s)
 
 char* NQCStrDuplicate(const char* str)
 {
-  size_t lenz = strlen(str) + 1;
+  size_t lenz = NQStrlen(str) + 1;
 
   char* dup = (char*)NQMalloc(lenz);
   if (dup == NULL)
@@ -64,11 +69,6 @@ const char* NQCStrFindCStrn(const char* s1, const char* s2, size_t n)
   return NULL;
 }
 
-void NQCStrDestroy(const char* str)
-{
-  NQFree((char*)str);
-}
-
 bool NQCStrStartsWith(const char* str, const char* search)
 {
   while (*search) {
@@ -81,36 +81,51 @@ bool NQCStrStartsWith(const char* str, const char* search)
   return true;
 }
 
-char* NQCStrFormat(const char* format, ...)
+char* NQCStrFormatV(const char* format, va_list args)
 {
   NQ_ASSERT(format);
 
-  int result;
-  char* buffer;
+  int n;
+  char* result;
   size_t size;
+  va_list argsCopy;
+
+  va_copy(argsCopy, args);
+
+#ifdef NQ_COMPILER_MSVC
+  n = _vscprintf(format, argsCopy);
+#else
+  char ch;
+  n = vsnprintf(&ch, 1, format, argsCopy);
+#endif
+
+  va_end(argsCopy);
+
+  if (n < 0)
+    result = NULL;
+  else if (n == 0)
+    result = NQZalloc(1);
+  else {
+    size = (size_t)n + 1;
+    result = (char*)NQMalloc(size);
+    if (result != NULL) {
+      va_copy(argsCopy, args);
+      vsnprintf(result, size, format, argsCopy);
+      va_end(argsCopy);
+    }
+  }
+
+  return result;
+}
+
+char* NQCStrFormat(const char* format, ...)
+{
+  char* result;
   va_list args;
 
   va_start(args, format);
-
-#ifdef NQ_COMPILER_MSVC
-  result = _vscprintf(format, args);
-#else
-  char ch;
-  result = vsnprintf(&ch, 1, format, args);
-  va_end(args);
-  va_start(args, format);
-#endif
-
-  if (result == 0 || result < 0)
-    buffer = NQZeroMalloc(1);
-  else {
-    size = ((size_t)result + 1);
-    buffer = (char*)NQMalloc(size);
-    if (buffer != NULL)
-      vsnprintf(buffer, size, format, args);
-  }
-
+  result = NQCStrFormatV(format, args);
   va_end(args);
 
-  return buffer;
+  return result;
 }

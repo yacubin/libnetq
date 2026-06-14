@@ -7,36 +7,23 @@
  * under the MIT License. See LICENSE file for details.
  */
 
-#ifndef _LIBNETQ_ONCE_H
-#define _LIBNETQ_ONCE_H
+#ifndef _LIBNETQ_SYNC_WIN32_ONCE_H
+#define _LIBNETQ_SYNC_WIN32_ONCE_H
 
 #include <libnetq/Basic.h>
-
-#ifdef NQ_OS_KERNEL
-#include <linux/atomic.h>
-typedef struct {
-  atomic_t flag;
-} NQOnce;
-#define NQ_ONCE_INIT { ATOMIC_INIT(0) }
-#endif
+#include <libnetq/sync/OnceCallback.h>
 
 #ifdef NQ_OS_WINDOWS
-#include <windows.h>
-typedef INIT_ONCE NQOnce;
-#define NQ_ONCE_INIT INIT_ONCE_STATIC_INIT
-#endif
 
-#ifdef NQ_OS_UNIX
-#include <pthread.h>
-typedef pthread_once_t NQOnce;
-#define NQ_ONCE_INIT PTHREAD_ONCE_INIT
-#endif
+#include <windows.h>
+
+typedef INIT_ONCE NQOnce;
+
+#define NQ_ONCE_INIT INIT_ONCE_STATIC_INIT
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef void (*NQOnceCallback) (void);
 
 NQ_EXPORT int NQOnce_call(NQOnce* once, NQOnceCallback callback);
 
@@ -44,4 +31,5 @@ NQ_EXPORT int NQOnce_call(NQOnce* once, NQOnceCallback callback);
 }
 #endif
 
-#endif /* _LIBNETQ_ONCE_H */
+#endif /* NQ_OS_WINDOWS */
+#endif /* _LIBNETQ_SYNC_WIN32_ONCE_H */

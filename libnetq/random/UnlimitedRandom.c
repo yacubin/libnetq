@@ -25,6 +25,11 @@
 # include <errno.h>
 # include <fcntl.h>
 # include <unistd.h>
+#elif defined(HAVE_STDLIB_H)
+#include <stdlib.h>
+#include <libnetq/Time.h>
+#include <libnetq/MinMax.h>
+#include <libnetq/string/String.h>
 #else
 # error "This configuration doesn't have a strong source of randomness."
 #endif
@@ -62,11 +67,41 @@ int NQGetUnlimitedRandom(void* data, size_t size)
       amountRead += currentRead;
     else {
       if (!(errno == EAGAIN || errno == EINTR))
-        NQ_ASSERT_NOT_REACHED();
+        return -errno;
     }
   }
   close(fd);
   return 0;
+
+#elif defined(HAVE_STDLIB_H)
+
+# ifndef RAND_MAX
+#  define RAND_SIZE 3
+# elif RAND_MAX == 0xffffffffu
+#  define RAND_SIZE 4
+# elif RAND_MAX >= 0xffffffu
+#  define RAND_SIZE 3
+# elif RAND_MAX >= 0xffffu
+#  define RAND_SIZE 2
+# else
+#  define RAND_SIZE 1
+# endif
+
+  static unsigned g_seed = 0;
+  if (NQ_UNLIKELY(g_seed == 0))
+    g_seed = (unsigned)NQGetTimeMs();
+
+  while (size) {
+    int val = rand_r(&g_seed);
+    size_t n = NQGetMin(size, RAND_SIZE);
+    memcpy(data, &val, n);
+    data = (char*)data + n;
+    size -= n;
+  }
+  return 0;
+
+#else
+  return -NQ_ENOTSUP;
 
 #endif
 }

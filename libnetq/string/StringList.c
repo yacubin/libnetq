@@ -11,7 +11,7 @@
 #define NQ_LOG_TAG NQ_CLASS_NAME
 
 #include "config.h"
-#include "libnetq/StringList.h"
+#include "libnetq/string/StringList.h"
 
 #include <libnetq/String.h>
 #include <libnetq/Malloc.h>

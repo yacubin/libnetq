@@ -13,24 +13,19 @@
 #include <libnetq/Network.h>
 
 #ifdef NQ_OS_KERNEL
-#include <linux/net.h>
-typedef struct socket* NQSocketHandle;
-#define NQ_INVALID_SOCKET NULL
-#endif
-  
-#ifdef NQ_OS_WINDOWS
-typedef uintptr_t NQSocketHandle;
-#define NQ_INVALID_SOCKET ((uintptr_t)~0)
+#include <libnetq/net/kernel/SocketHandle.h>
 #endif
 
 #ifdef NQ_OS_UNIX
-typedef int NQSocketHandle;
-#define NQ_INVALID_SOCKET (-1)
+#include <libnetq/net/posix/SocketHandle.h>
+#endif
+  
+#ifdef NQ_OS_WINDOWS
+#include <libnetq/net/win32/SocketHandle.h>
 #endif
 
 #ifdef NQ_OS_UNKNOWN
-typedef void* NQSocketHandle;
-#define NQ_INVALID_SOCKET NULL
+#include <libnetq/net/stub/SocketHandle.h>
 #endif
 
 #ifdef __cplusplus

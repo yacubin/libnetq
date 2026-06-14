@@ -12,7 +12,7 @@
 
 #include <libnetq/Basic.h>
 
-#if defined(NQ_USE_OPENSSL_SHA1)
+#if defined(NQCONFIG_USE_OPENSSL_SHA1)
 # include <openssl/sha.h>
 #else
 # include <libnetq/crypto/CryptoHash.h>
@@ -25,7 +25,7 @@ typedef uint8_t NQSHA1Digest[NQSHA1_DIGEST_SIZE];
 extern "C" {
 #endif
 
-#if defined(NQ_USE_OPENSSL_SHA1)
+#if defined(NQCONFIG_USE_OPENSSL_SHA1)
 
 #define NQSHA1 SHA_CTX
 

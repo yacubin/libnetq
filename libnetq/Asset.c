@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/Asset.h"
 
-#include <libnetq/string/CStrBase.h>
+#include <libnetq/string/StringUtil.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/asset/PlatformAsset.h>
 #include <libnetq/asset/BinaryAsset.h>

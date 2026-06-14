@@ -13,11 +13,9 @@
 #include "config.h"
 #include "libnetq/json/JSON.h"
 
-#ifdef NQ_USE_CJSON_JSON
+#ifdef NQCONFIG_USE_CJSON_JSON
 
 #include <libnetq/String.h>
-
-#include <cjson/cJSON.h>
 
 const char* NQJSON_package(void)
 {
@@ -34,69 +32,69 @@ NQJSON* NQJSON_fromFile(const char* filename)
   NQString* text = NQString_fromFile(filename);
   if (text == NULL)
     return NULL;
-  NQJSON* json = (NQJSON*)cJSON_ParseWithLength(NQString_characters(text), NQString_length(text));
+  NQJSON* json = cJSON_ParseWithLength(NQString_characters(text), NQString_length(text));
   NQString_release(text);
   return json;
 }
 
 NQJSON* NQJSON_parse(const char* text)
 {
-  return (NQJSON*)cJSON_Parse(text);
+  return cJSON_Parse(text);
 }
 
 NQJSON* NQJSON_parse2(const char* text, size_t length)
 {
-  return (NQJSON*)cJSON_ParseWithLength(text, length);
+  return cJSON_ParseWithLength(text, length);
 }
 
 NQJSON* NQJSON_clone(const NQJSON* json, bool deep)
 {
-  return (NQJSON*)cJSON_Duplicate((cJSON*)json, deep); // FIXME
+  return cJSON_Duplicate(json, deep); // FIXME
 }
 
 NQJSON* NQJSON_createNull(void)
 {
-  return (NQJSON*)cJSON_CreateNull();
+  return cJSON_CreateNull();
 }
 
 NQJSON* NQJSON_createTrue(void)
 {
-  return (NQJSON*)cJSON_CreateTrue();
+  return cJSON_CreateTrue();
 }
 
 NQJSON* NQJSON_createFalse(void)
 {
-  return (NQJSON*)cJSON_CreateFalse();
+  return cJSON_CreateFalse();
 }
 
 NQJSON* NQJSON_createBool(bool value)
 {
-  return (NQJSON*)cJSON_CreateBool(value);
+  return cJSON_CreateBool(value);
 }
 
 NQJSON* NQJSON_createDouble(double value)
 {
-  return (NQJSON*)cJSON_CreateNumber(value);
+  return cJSON_CreateNumber(value);
 }
 
 NQJSON* NQJSON_createInt64(int64_t value)
 {
-  return (NQJSON*)cJSON_CreateNumber((double)value);
+  return cJSON_CreateNumber((double)value);
 }
 
 NQJSON* NQJSON_createStringRef(const char* value)
 {
-  return (NQJSON*)cJSON_CreateStringReference(value);
+  return cJSON_CreateStringReference(value);
 }
 
 NQJSON* NQJSON_createArrayRef(void)
 {
-  return (NQJSON*)cJSON_CreateArrayReference(NULL);
+  return cJSON_CreateArrayReference(NULL);
 }
 
 NQJSON* NQJSON_createObjectRef(void)
 {
-  return (NQJSON*)cJSON_CreateObjectReference(NULL);
+  return cJSON_CreateObjectReference(NULL);
 }
 
 bool NQJSON_isNull(const NQJSON* json)
@@ -183,62 +181,72 @@ size_t NQJSON_arraySize(const NQJSON* json)
 
 NQJSON* NQJSON_arrayAt(NQJSON* json, size_t index)
 {
-  return (NQJSON*)cJSON_GetArrayItem((cJSON*)json, (int)index);
+  return cJSON_GetArrayItem(json, (int)index);
 }
 
 bool NQJSON_arrayAdd(NQJSON* json, NQJSON* item)
 {
-  return cJSON_AddItemReferenceToArray((cJSON*)json, (cJSON*)item);
+  return cJSON_AddItemReferenceToArray(json, item);
 }
 
-NQJSON* NQJSON_objectGet(NQJSON* json, const char* key)
+NQJSON* NQJSON_objectGet(const NQJSON* json, const char* key)
 {
-  return (NQJSON*)cJSON_GetObjectItemCaseSensitive((cJSON*)json, key);
+  return cJSON_GetObjectItemCaseSensitive(json, key);
 }
 
 bool NQJSON_objectSet(NQJSON* json, const char* key, NQJSON* item)
 {
-  return cJSON_AddItemReferenceToObject((cJSON*)json, key, (cJSON*)item);
+  return cJSON_AddItemReferenceToObject(json, key, item) != NULL;
+}
+
+bool NQJSON_objectSetBool(NQJSON* json, const char* key, bool value)
+{
+  return cJSON_AddBoolToObject(json, key, value) != NULL;
+}
+
+bool NQJSON_objectSetInt64(NQJSON* json, const char* key, int64_t value)
+{
+  return cJSON_AddNumberToObject(json, key, value) != NULL;
 }
 
 bool NQJSON_objectSetDouble(NQJSON* json, const char* key, double value)
 {
-  return cJSON_AddNumberToObject((cJSON*)json, key, value) != NULL;
+  return cJSON_AddNumberToObject(json, key, (int64_t)value) != NULL;
 }
 
 bool NQJSON_objectSetString(NQJSON* json, const char* key, const char* value)
 {
-  return cJSON_AddStringToObject((cJSON*)json, key, value) != NULL;
+  return cJSON_AddStringToObject(json, key, value) != NULL;
 }
 
 NQJSON_ObjectIter* NQJSON_objectIterFirst(NQJSON* json)
 {
-  return ((cJSON*)json)->child;
+  return json->child;
 }
 
 NQJSON_ObjectIter* NQJSON_objectIterNext(NQJSON* json, NQJSON_ObjectIter* iter)
 {
   NQ_UNUSED_PARAM(json);
-  return ((cJSON*)iter)->next;
+  return iter->next;
 }
 
 const char* NQJSON_objectIterKey(NQJSON_ObjectIter* iter)
 {
-  return ((cJSON*)iter)->string;
+  return iter->string;
 }
 
 NQJSON* NQJSON_objectIterValue(NQJSON_ObjectIter* iter)
 {
-  return (NQJSON*)iter;
+  return iter;
 }
 
 void NQJSON_release(NQJSON* json)
 {
-  cJSON_Delete((cJSON*)json);
+  cJSON_Delete(json);
 }
 
 bool NQJSON_isEqual(NQJSON* a, NQJSON* b)
 {
-  return cJSON_Compare((cJSON*)a, (cJSON*)b, true);
+  return cJSON_Compare(a, b, true);
 }
 #endif

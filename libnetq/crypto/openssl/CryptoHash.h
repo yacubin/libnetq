@@ -12,7 +12,7 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_USE_OPENSSL_CRYPTOHASH
+#ifdef NQCONFIG_USE_OPENSSL_CRYPTOHASH
 
 #include <openssl/evp.h>
 

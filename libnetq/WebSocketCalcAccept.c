@@ -32,5 +32,5 @@ int NQWebSocketCalcAccept(const char* key, char* buf, size_t len)
   if (!NQSHA1_final(&sha1, digest))
     return -1;
 
-  return NQBase64Encode(digest, digest + sizeof(digest), buf, buf + len, 0);
+  return NQBase64Encode(digest, sizeof(digest), buf, len);
 }

@@ -68,19 +68,23 @@ void NQDataTime_initLocalTime(NQDataTime*);
 
 typedef int64_t NQTimeMs;
 typedef int64_t NQMonoTime;
-typedef int64_t NQMSec;
 typedef uint64_t NQTickMs;
-typedef int64_t NQUnixTime; // in seconds
 typedef double NQSeconds;
 // NQMonoTime
 
 NQ_EXPORT NQTimeMs NQGetTimeMs(void);
-NQ_EXPORT NQTickMs NQGetCPUTickMs(void);
 
-static NQ_ALWAYS_INLINE NQUnixTime NQGetUnixTime(void)
+static inline int64_t NQGetTimeSec(void)
 {
   return NQGetTimeMs() / NQ_MSECS_PER_SEC;
 }
+
+static inline int64_t NQGetUnixTime(void)
+{
+  return NQGetTimeSec();
+}
+
+NQ_EXPORT NQTickMs NQGetCPUTickMs(void);
 
 NQ_EXPORT void NQGetLocaltime(const time_t* t, struct tm* tm);
 NQ_EXPORT void nq_gmtimems(NQTimeMs time, struct tm* ptm, int* pms);

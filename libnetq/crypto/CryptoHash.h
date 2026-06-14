@@ -13,13 +13,13 @@
 #include <libnetq/Basic.h>
 #include <libnetq/crypto/CryptoAlgorithm.h>
 
-#if defined(NQ_USE_OPENSSL_CRYPTOHASH)
+#if defined(NQCONFIG_USE_OPENSSL_CRYPTOHASH)
 # include <libnetq/crypto/openssl/CryptoHash.h>
-#elif defined(NQ_USE_ADVAPI32_CRYPTOHASH)
+#elif defined(NQCONFIG_USE_ADVAPI32_CRYPTOHASH)
 # include <libnetq/crypto/advapi32/CryptoHash.h>
 #elif defined(NQ_USE_KERNEL_CRYPTOHASH)
 # include <libnetq/crypto/kernel/CryptoHash.h>
-#elif defined(NQ_USE_STUB_CRYPTOHASH)
+#elif defined(NQCONFIG_USE_STUB_CRYPTOHASH)
 # include <libnetq/crypto/stub/CryptoHash.h>
 #else
 # error There is no implementation for the CryptoHash

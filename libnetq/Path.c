@@ -120,7 +120,7 @@ static inline bool pathBuilderExpandCapacity(NQPathBuilder* thiz, size_t newMinC
 
 static bool pathBuilderAdd(NQPathBuilder* thiz, const char* path, bool withDelimeter)
 {
-  size_t length = strlen(path);
+  size_t length = NQStrlen(path);
   if (length == 0)
     return true;
 

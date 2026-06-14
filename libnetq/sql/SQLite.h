@@ -12,7 +12,7 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_USE_SQLITE3_SQLITE
+#ifdef NQCONFIG_USE_SQLITE3_SQLITE
 #include <sqlite3.h>
 typedef sqlite3 NQSQLiteDatabase;
 typedef sqlite3_stmt NQSQLiteStatement;
@@ -25,7 +25,7 @@ enum NQSQLiteValueType {
 };
 #endif
 
-#ifdef NQ_USE_STUB_SQLITE
+#ifdef NQCONFIG_USE_STUB_SQLITE
 typedef void NQSQLiteDatabase;
 typedef void NQSQLiteStatement;
 enum NQSQLiteValueType {

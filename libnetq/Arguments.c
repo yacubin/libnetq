@@ -140,12 +140,12 @@ bool NQArgGetBool(const char* arg, const char* key, bool* result)
     return false;
   arg++;
 
-  if (NQIsEnabled(arg)) {
+  if (NQStrIsEnabled(arg)) {
     if (result) *result = false;
     return true;
   }
 
-  if (NQIsDisabled(arg)) {
+  if (NQStrIsDisabled(arg)) {
     if (result) *result = false;
     return true;
   }

@@ -14,7 +14,7 @@
 #include <libnetq/HttpVersion.h>
 #include <libnetq/HttpHeader.h>
 #include <libnetq/HttpMethod.h>
-#include <libnetq/string/CStrBase.h>
+#include <libnetq/string/StringUtil.h>
 
 static bool NQHttpBuilder_write(NQHttpBuilder* thiz, const char* characters)
 {

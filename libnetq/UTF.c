@@ -16,7 +16,7 @@
 
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
-#include <libnetq/string/CStrBase.h>
+#include <libnetq/string/StringUtil.h>
 #include <libnetq/Assert.h>
 
 // UTF-8

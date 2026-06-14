@@ -17,8 +17,7 @@
 #elif defined(NQ_OS_WINDOWS)
 # include <windows.h>
 #elif defined(NQ_OS_UNIX)
-# include <stdlib.h>
-# include <string.h>
+# include <libnetq/string/String.h>
 #endif
 
 void* NQMalloc(size_t size)

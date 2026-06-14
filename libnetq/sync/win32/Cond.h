@@ -20,7 +20,7 @@
 extern "C" {
 #endif
 
-#ifdef SRWLOCK_INIT
+#ifdef NQ_HAVE_ARCH_SRWLOCK
 typedef CONDITION_VARIABLE NQCond;
 #define HAVE_CONDITION_VARIABLE 1
 #else

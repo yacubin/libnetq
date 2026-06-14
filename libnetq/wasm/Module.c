@@ -13,7 +13,7 @@
 #include <libnetq/BufferBuilder.h>
 #include <libnetq/ByteBuffer.h>
 #include <libnetq/Malloc.h>
-#include <libnetq/string/StringVec.h>
+#include <libnetq/string/StringRange.h>
 #include <libnetq/Log.h>
 #include <libnetq/Leb128.h>
 #include <libnetq/Math.h>
@@ -66,7 +66,7 @@ static bool readLeb128Uint64(NQDataReader* reader, uint64_t* value)
   return true;
 }
 
-static bool readString(NQDataReader* thiz, NQStringVec* value)
+static bool readString(NQDataReader* thiz, NQStringRange* value)
 {
   if (!readLeb128Uint32(thiz, &value->length))
     return false;
@@ -144,7 +144,7 @@ static int writeByteBuffer(void* userdata, const void* data, size_t size)
   return NQByteBuffer_append(buffer, (const uint8_t*)data, n) ? n : -1;
 }
 
-static struct NQWasmImportItem* createImportItem(uint8_t importId, const NQStringVec* moduleName, const NQStringVec* itemName)
+static struct NQWasmImportItem* createImportItem(uint8_t importId, const NQStringRange* moduleName, const NQStringRange* itemName)
 {
   struct NQWasmImportItem* thiz = (struct NQWasmImportItem*)NQMalloc(sizeof(*thiz) + moduleName->length + itemName->length + 2);
   if (thiz == NULL) {
@@ -168,7 +168,7 @@ static struct NQWasmImportItem* createImportItem(uint8_t importId, const NQStrin
   return thiz;
 }
 
-static struct NQWasmImportItem* createImportFunction(const NQStringVec* moduleName, const NQStringVec* itemName, uint32_t typeidx)
+static struct NQWasmImportItem* createImportFunction(const NQStringRange* moduleName, const NQStringRange* itemName, uint32_t typeidx)
 {
   struct NQWasmImportItem* thiz = createImportItem(NQ_WASM_IMPORT_FUNC_ID, moduleName, itemName);
   if (thiz == NULL)
@@ -179,7 +179,7 @@ static struct NQWasmImportItem* createImportFunction(const NQStringVec* moduleNa
   return thiz;
 }
 
-static struct NQWasmImportItem* readImportFunction(const NQStringVec* moduleName, const NQStringVec* itemName, NQDataReader* reader)
+static struct NQWasmImportItem* readImportFunction(const NQStringRange* moduleName, const NQStringRange* itemName, NQDataReader* reader)
 {
   uint32_t typeidx;
   if (!readLeb128Uint32(reader, &typeidx)) {
@@ -189,7 +189,7 @@ static struct NQWasmImportItem* readImportFunction(const NQStringVec* moduleName
   return createImportFunction(moduleName, itemName, typeidx);
 }
 
-static struct NQWasmImportItem* createImportTable(const NQStringVec* moduleName, const NQStringVec* itemName, uint8_t elemtype, uint32_t minValue, uint32_t maxValue)
+static struct NQWasmImportItem* createImportTable(const NQStringRange* moduleName, const NQStringRange* itemName, uint8_t elemtype, uint32_t minValue, uint32_t maxValue)
 {
   struct NQWasmImportItem* thiz = createImportItem(NQ_WASM_IMPORT_TABLE_ID, moduleName, itemName);
   if (thiz == NULL)
@@ -202,7 +202,7 @@ static struct NQWasmImportItem* createImportTable(const NQStringVec* moduleName,
   return thiz;
 }
 
-static struct NQWasmImportItem* readImportTable(const NQStringVec* moduleName, const NQStringVec* itemName, NQDataReader* reader)
+static struct NQWasmImportItem* readImportTable(const NQStringRange* moduleName, const NQStringRange* itemName, NQDataReader* reader)
 {
   uint8_t elemtype;
   uint32_t minValue;
@@ -228,7 +228,7 @@ static struct NQWasmImportItem* readImportTable(const NQStringVec* moduleName, c
   return createImportTable(moduleName, itemName, elemtype, minValue, maxValue);
 }
 
-static struct NQWasmImportItem* createImportMemory(const NQStringVec* moduleName, const NQStringVec* itemName, uint8_t memtype, uint64_t minValue, uint64_t maxValue)
+static struct NQWasmImportItem* createImportMemory(const NQStringRange* moduleName, const NQStringRange* itemName, uint8_t memtype, uint64_t minValue, uint64_t maxValue)
 {
   struct NQWasmImportItem* thiz = createImportItem(NQ_WASM_IMPORT_MEM_ID, moduleName, itemName);
   if (thiz == NULL)
@@ -241,7 +241,7 @@ static struct NQWasmImportItem* createImportMemory(const NQStringVec* moduleName
   return thiz;
 }
 
-static struct NQWasmImportItem* readImportMemory(const NQStringVec* moduleName, const NQStringVec* itemName, NQDataReader* reader)
+static struct NQWasmImportItem* readImportMemory(const NQStringRange* moduleName, const NQStringRange* itemName, NQDataReader* reader)
 {
   uint8_t memtype;
   uint64_t minValue;
@@ -272,7 +272,7 @@ static struct NQWasmImportItem* readImportMemory(const NQStringVec* moduleName, 
   return createImportMemory(moduleName, itemName, memtype, minValue, maxValue);
 }
 
-static struct NQWasmImportItem* createImportGlobal(const NQStringVec* moduleName, const NQStringVec* itemName, uint8_t valtype, uint8_t mut)
+static struct NQWasmImportItem* createImportGlobal(const NQStringRange* moduleName, const NQStringRange* itemName, uint8_t valtype, uint8_t mut)
 {
   struct NQWasmImportItem* thiz = createImportItem(NQ_WASM_IMPORT_GLOBAL_ID, moduleName, itemName);
   if (thiz == NULL)
@@ -284,7 +284,7 @@ static struct NQWasmImportItem* createImportGlobal(const NQStringVec* moduleName
   return thiz;
 }
 
-static struct NQWasmImportItem* readImportGlobal(const NQStringVec* moduleName, const NQStringVec* itemName, NQDataReader* reader)
+static struct NQWasmImportItem* readImportGlobal(const NQStringRange* moduleName, const NQStringRange* itemName, NQDataReader* reader)
 {
   uint8_t valtype;
   uint8_t mut;
@@ -342,13 +342,13 @@ NQWasmImportSection* NQWasmImportSection_fromMemory(const void* data, size_t siz
   while (itemIndex < itemCount) {
     struct NQWasmImportItem* item = NULL;
 
-    NQStringVec moduleName;
+    NQStringRange moduleName;
     if (!readString(&reader, &moduleName)) {
       NQ_LOGE("Import module name is wrong");
       break;
     }
 
-    NQStringVec itemName;
+    NQStringRange itemName;
     if (!readString(&reader, &itemName)) {
       NQ_LOGE("Import item name is wrong");
       break;
@@ -513,11 +513,11 @@ bool NQWasmImportSection_writeTo(const NQWasmImportSection* thiz, NQWasmWriteCal
 
 bool NQWasmImportSection_addMemory(NQWasmImportSection* thiz, const char* module, const char* name, uint8_t memtype, uint64_t minValue, uint64_t maxValue)
 {
-  NQStringVec moduleName;
+  NQStringRange moduleName;
   moduleName.characters = module;
   moduleName.length = strlen(module);
 
-  NQStringVec itemName;
+  NQStringRange itemName;
   itemName.characters = name;
   itemName.length = strlen(name);
 

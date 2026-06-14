@@ -12,7 +12,7 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_USE_STUB_CRYPTOHASH
+#ifdef NQCONFIG_USE_STUB_CRYPTOHASH
 
 typedef struct NQCryptoHash NQCryptoHash;
 struct NQCryptoHash {

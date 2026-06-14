@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/random/CryptoRandom.h"
 
-#ifdef NQ_USE_OPENSSL_CRYPTORAND
+#ifdef NQCONFIG_USE_OPENSSL_CRYPTORAND
 
 #include <openssl/rand.h>
 #include <openssl/err.h>

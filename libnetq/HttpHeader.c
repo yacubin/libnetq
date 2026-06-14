@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/HttpHeader.h"
 
-#include <libnetq/string/CStrBase.h>
+#include <libnetq/string/StringUtil.h>
 
 static const char* findChar(const char* start, const char* end, char ch)
 {
@@ -43,7 +43,7 @@ bool NQHttpRequestLineParse(const char* data, size_t size, NQHttpRequestLine* re
   const char* start = data;
   const char* end = data + size;
 
-  start = result->methodData = findCharIfNot(start, end, ' ');
+  start = result->method.characters = findCharIfNot(start, end, ' ');
   if (start == NULL) {
     return false;
   }
@@ -53,9 +53,9 @@ bool NQHttpRequestLineParse(const char* data, size_t size, NQHttpRequestLine* re
     return false;
   }
 
-  result->methodSize = start - result->methodData;
+  result->method.length = start - result->method.characters;
 
-  start = result->urlData = findCharIfNot(start + 1, end, ' ');
+  start = result->url.characters = findCharIfNot(start + 1, end, ' ');
   if (start == NULL) {
     return false;
   }
@@ -65,14 +65,14 @@ bool NQHttpRequestLineParse(const char* data, size_t size, NQHttpRequestLine* re
     return false;
   }
 
-  result->urlSize = start - result->urlData;
+  result->url.length = start - result->url.characters;
 
-  start = result->versionData = findCharIfNot(start + 1, end, ' ');
+  start = result->version.characters = findCharIfNot(start + 1, end, ' ');
   if (start == NULL) {
     return false;
   }
 
-  result->versionSize = end - start;
+  result->version.length = end - start;
   return true;
 }
 
@@ -81,7 +81,7 @@ bool NQHttpStatusLineParse(const char* data, size_t size, NQHttpStatusLine* resu
   const char* start = data;
   const char* end = data + size;
 
-  start = result->versionData = findCharIfNot(start, end, ' ');
+  start = result->version.characters = findCharIfNot(start, end, ' ');
   if (start == NULL) {
     return false;
   }
@@ -91,9 +91,9 @@ bool NQHttpStatusLineParse(const char* data, size_t size, NQHttpStatusLine* resu
     return false;
   }
 
-  result->versionSize = start - result->versionData;
+  result->version.length = start - result->version.characters;
 
-  start = result->codeData = findCharIfNot(start + 1, end, ' ');
+  start = result->code.characters = findCharIfNot(start + 1, end, ' ');
   if (start == NULL) {
     return false;
   }
@@ -103,14 +103,14 @@ bool NQHttpStatusLineParse(const char* data, size_t size, NQHttpStatusLine* resu
     return false;
   }
 
-  result->codeSize = start - result->codeData;
+  result->code.length = start - result->code.characters;
 
-  start = result->reasonData = findCharIfNot(start + 1, end, ' ');
+  start = result->reason.characters = findCharIfNot(start + 1, end, ' ');
   if (start == NULL) {
     return false;
   }
 
-  result->reasonSize = end - start;
+  result->reason.length = end - start;
   return true;
 }
 
@@ -222,10 +222,10 @@ bool NQHttpHeaderValueParse(const char* data, size_t size, NQHttpHeaderValue* re
   }
 
   if (result != NULL) {
-    result->keyData = key;
-    result->keySize = klen;
-    result->valueData = val;
-    result->valueSize = vlen;
+    result->key.characters = key;
+    result->key.length = klen;
+    result->value.characters = val;
+    result->value.length = vlen;
   }
 
   return true;
@@ -263,17 +263,13 @@ bool NQHttpFormDataParse(const char* data, size_t size, NQHttpFormData* result)
     }
     NQHttpHeaderValue kv;
     if (NQHttpHeaderValueParse(data, size, &kv)) {
-      if (kv.keySize == 4 && memcmp("name", kv.keyData, kv.keySize) == 0) {
-        if(result != NULL) {
-          result->name.characters = kv.valueData;
-          result->name.length = kv.valueSize;
-        }
+      if (kv.key.length == 4 && memcmp("name", kv.key.characters, kv.key.length) == 0) {
+        if(result != NULL)
+          result->name = kv.value;
       }
-      else if (kv.keySize == 8 && memcmp("filename", kv.keyData, kv.keySize) == 0) {
-        if(result != NULL) {
-          result->filename.characters = kv.valueData;
-          result->filename.length = kv.valueSize;
-        }
+      else if (kv.key.length == 8 && memcmp("filename", kv.key.characters, kv.key.length) == 0) {
+        if(result != NULL)
+          result->filename = kv.value;
       }
     }
     count++;

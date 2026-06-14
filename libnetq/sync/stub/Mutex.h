@@ -7,8 +7,8 @@
  * under the MIT License. See LICENSE file for details.
  */
 
-#ifndef _LIBNETQ_SYNC_MUTEXSTUB_H
-#define _LIBNETQ_SYNC_MUTEXSTUB_H
+#ifndef _LIBNETQ_SYNC_STUB_MUTEX_H
+#define _LIBNETQ_SYNC_STUB_MUTEX_H
 
 #include <libnetq/ErrorCode.h>
 
@@ -50,4 +50,4 @@ static inline int NQMutex_unlock(NQMutex* thiz)
   return NQ_ENOTSUP;
 }
 
-#endif /* _LIBNETQ_SYNC_MUTEXSTUB_H */
+#endif /* _LIBNETQ_SYNC_STUB_MUTEX_H */

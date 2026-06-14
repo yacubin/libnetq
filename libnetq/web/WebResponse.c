@@ -67,7 +67,7 @@ void NQWebResponse_finalize(NQWebResponse* thiz)
 
 bool NQWebResponse_setHeader(NQWebResponse* thiz, const char* header, const char* value)
 {
-  if (!strcmp(NQHTTP_HEADER_CONTENT_TYPE, header)) {
+  if (!NQStrcmp(NQHTTP_HEADER_CONTENT_TYPE, header)) {
     NQWebWriter* writerChain = NQWebServer_createWriterChain(thiz->server, value, thiz->request);
     if (writerChain) {
       writerChain->next = thiz->firstWriter;

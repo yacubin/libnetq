@@ -89,7 +89,7 @@ static inline bool NQCond_waitImpl(NQCond* cond, NQMutex* mutex, DWORD durationM
   NQ_ASSERT_UNUSED(res, res);
 
   --mutex->recursionCount;
-  LeaveCriticalSection(&mutex->internalMutex);
+  LeaveCriticalSection(&mutex->cs);
 
   // Main wait - use timeout.
   bool timedOut = (WaitForSingleObject(cond->blockQueue, durationMilliseconds) == WAIT_TIMEOUT);
@@ -118,7 +118,7 @@ static inline bool NQCond_waitImpl(NQCond* cond, NQMutex* mutex, DWORD durationM
     NQ_ASSERT_UNUSED(res, res);
   }
 
-  EnterCriticalSection(&mutex->internalMutex);
+  EnterCriticalSection(&mutex->cs);
   ++mutex->recursionCount;
 
   return !timedOut;

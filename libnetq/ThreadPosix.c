@@ -29,7 +29,7 @@
 
 #include <libnetq/Mutex.h>
 #include <libnetq/Malloc.h>
-#include <libnetq/string/CStrBase.h>
+#include <libnetq/string/String.h>
 #include <libnetq/Sleep.h>
 #include <libnetq/Log.h>
 #include <libnetq/Assert.h>

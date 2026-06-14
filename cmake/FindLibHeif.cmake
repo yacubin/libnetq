@@ -42,14 +42,14 @@ find_library(LibHeif_LIBRARY
 mark_as_advanced(LibHeif_INCLUDE_DIR LibHeif_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibHeif DEFAULT_MSG LibHeif_INCLUDE_DIR LibHeif_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibHeif REQUIRED_VARS LibHeif_LIBRARY LibHeif_INCLUDE_DIR)
 if (LIBHEIF_FOUND)
   set(LibHeif_FOUND TRUE)
 endif ()
 
 if (LibHeif_FOUND)
-  set(LibHeif_INCLUDE_DIRS ${LibHeif_INCLUDE_DIR})
-  set(LibHeif_LIBRARIES ${LibHeif_LIBRARY})
+  set(LibHeif_INCLUDE_DIRS "${LibHeif_INCLUDE_DIR}")
+  set(LibHeif_LIBRARIES "${LibHeif_LIBRARY}")
 endif ()
 
 if (LibHeif_FOUND AND NOT TARGET LibHeif::LibHeif)

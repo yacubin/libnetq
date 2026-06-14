@@ -18,7 +18,7 @@
 #include <libnetq/Limits.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/FileHandle.h>
-#include <libnetq/StringPrint.h>
+#include <libnetq/string/StringPrint.h>
 #include <libnetq/Assert.h>
 #include <libnetq/Log.h>
 

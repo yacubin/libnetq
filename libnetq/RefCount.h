@@ -10,13 +10,13 @@
 #ifndef _LIBNETQ_REFCOUNT_H
 #define _LIBNETQ_REFCOUNT_H
 
-#include <libnetq/sync/AtomicTypes.h>
+#include <libnetq/Atomic.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct NQAtomic32 NQRefCount;
+typedef NQAtomic NQRefCount;
 
 static inline void NQRefCount_init(NQRefCount* thiz)
 {

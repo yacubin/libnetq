@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/crypto/Secp256k1.h"
 
-#ifdef NQ_USE_SECP256K1_SECP256K1
+#ifdef NQCONFIG_USE_SECP256K1_SECP256K1
 
 #include <secp256k1.h>
 #include <secp256k1_ecdh.h>

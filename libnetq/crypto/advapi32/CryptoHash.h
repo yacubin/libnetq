@@ -12,7 +12,7 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_USE_ADVAPI32_CRYPTOHASH
+#ifdef NQCONFIG_USE_ADVAPI32_CRYPTOHASH
 
 #include <windows.h>
 #include <wincrypt.h>

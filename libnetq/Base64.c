@@ -10,7 +10,8 @@
 #include "config.h"
 #include "libnetq/Base64.h"
 
-#include <libnetq/string/CStrBase.h>
+#include <libnetq/ErrorCode.h>
+#include <libnetq/Limits.h>
 #include <libnetq/Assert.h>
 
 #define UNKN 0xFF
@@ -75,42 +76,39 @@ static const uint8_t base64URLDecMap[128] = {
   0x31, 0x32, 0x33, UNKN, UNKN, UNKN, UNKN, UNKN
 };
 
-int NQBase64Encode(const uint8_t* inStart, const uint8_t* inEnd, char* outStart, char* outEnd, int flags)
+int NQBase64EncodeEx(const void* inData, size_t inSize, char* outData, size_t outSize, int flags)
 {
   uint8_t b;
   const char* map;
 
-  if (inStart == NULL)
-    return -1;
+  if (inData == NULL)
+    return -NQ_EINVAL;
 
-  if (inEnd == NULL)
-    inEnd = inStart + strlen((const char*)inStart);
-  
-  size_t size = inEnd - inStart;
-  int result = (((int)size + 2) / 3) * 4;
-  if (result < size)
-    return -1;
+  size_t result = ((inSize + 2) / 3) * 4;
+  if (result < inSize || NQ_INT32_MAX < result)
+    return -NQ_EINVAL;
 
   if (flags & NQ_BASE64_NONPAD) {
-    size_t rem = size % 3;
+    size_t rem = inSize % 3;
     if (rem != 0)
       result -= (3 - rem);
   }
 
-  if (outStart == NULL)
-    return result;
-
-  if (outEnd == NULL)
-    outEnd = outStart + result + 1;
-
+  if (outSize == 0) {
+    return (int)result;
+  }
   if (result == 0) {
-    if (outStart < outEnd)
-      *outStart = '\0';
-    return result;
+    *outData = '\0';
+    return 0;
   }
 
-  if (outEnd <= outStart)
-    return -1;
+  NQ_ASSERT(outData);
+
+  const uint8_t* inStart = inData;
+  const uint8_t* inEnd = (const uint8_t*)inData + inSize;
+
+  char* outStart = outData;
+  char* outEnd = outData + outSize;
 
   if (flags & NQ_BASE64_URL)
     map = base64URLEncMap;
@@ -179,55 +177,60 @@ int NQBase64Encode(const uint8_t* inStart, const uint8_t* inEnd, char* outStart,
   return result;
 }
 
-int NQBase64Decode(const char* inStart, const char* inEnd, uint8_t* outStart, uint8_t* outEnd, int flags)
+int NQBase64DecodeEx(const char* inData, size_t inSize, void* outData, size_t outSize, int flags)
 {
   uint8_t curr;
   uint8_t b1, b2, b3, b4;
-  int result;
-  const uint8_t* map;
 
-  if (inStart == NULL)
-    return -1;
+  if (inData == NULL)
+    return -NQ_EINVAL;
 
-  if (inEnd == NULL)
-    inEnd = inStart + strlen((const char*)inStart);
-
-  if (inEnd <= inStart) {
-    if (outStart < outEnd)
-      *outStart = '\0';
+  if (inSize == 0) {
+    if (outSize != 0)
+      *(uint8_t*)outData = '\0';
     return 0;
   }
 
-  if (outStart == NULL)
+  const uint8_t* inStart = (const uint8_t*)inData;
+  const uint8_t* inEnd = inStart + inSize;
+
+  uint8_t* outStart;
+  uint8_t* outEnd;
+
+  if (outData) {
+    outStart = outData;
+    outEnd = (uint8_t*)outData + outSize;
+  }
+  else {
+    outStart = NULL;
     outEnd = NULL;
-  else if (outEnd == NULL)
-    outEnd = outStart + (inEnd - inStart + 3) / 4 * 3 + 1;
+  }
 
-  if (flags & NQ_BASE64_URL)
-    map = base64URLDecMap;
-  else
-    map = base64DecMap;
-
-  result = 0;
+  int result = 0;
+  const uint8_t* map = (flags & NQ_BASE64_URL) ? base64URLDecMap : base64DecMap;
   for (;;) {
-    curr = (uint8_t)(*inStart++);
+    curr = *inStart++;
     b1 = map[curr];
     if (b1 == UNKN) {
-      result = -1;
+      result = -NQ_EINVAL;
       break;
     }
 
     if (inEnd <= inStart) {
-      result++;
-      if (outStart < outEnd)
-        *outStart++ = (b1 << 2);
+      uint8_t pad = (b1 << 2);
+      if (flags & NQ_BASE64_NONPAD && pad == 0)
+        break;
+      // result++;
+      // if (outStart < outEnd)
+      //   *outStart++ = pad;
+      result = -NQ_EINVAL;
       break;
     }
 
-    curr = (uint8_t)(*inStart++);
+    curr = *inStart++;
     b2 = map[curr];
     if (b2 == UNKN) {
-      result = -1;
+      result = -NQ_EINVAL;
       break;
     }
 
@@ -236,20 +239,24 @@ int NQBase64Decode(const char* inStart, const char* inEnd, uint8_t* outStart, ui
       *outStart++ = (b1 << 2) | (b2 >> 4);
 
     if (inEnd <= inStart) {
-      result++;
-      if (outStart < outEnd)
-        *outStart++ = ((b2 << 4) & 0xF0);
+      uint8_t pad = ((b2 << 4) & 0xF0);
+      if (flags & NQ_BASE64_NONPAD && pad == 0)
+        break;
+      // result++;
+      // if (outStart < outEnd)
+      //   *outStart++ = pad;
+      result = -NQ_EINVAL;
       break;
     }
 
-    curr = (uint8_t)(*inStart++);
+    curr = *inStart++;
     b3 = map[curr];
     if (b3 == UNKN) {
-      if (curr == '=' && inStart < inEnd && *inStart == '=') {
+      if ((flags & NQ_BASE64_NONPAD) == 0 && curr == '=' && inStart < inEnd && *inStart == '=') {
         if (++inStart == inEnd)
           break;
       }
-      result = -1;
+      result = -NQ_EINVAL;
       break;
     }
 
@@ -258,18 +265,22 @@ int NQBase64Decode(const char* inStart, const char* inEnd, uint8_t* outStart, ui
       *outStart++ = ((b2 << 4) & 0xF0) | (b3 >> 2);
 
     if (inEnd <= inStart) {
-      result++;
-      if (outStart < outEnd)
-        *outStart++ = (b3 << 6);
+      uint8_t pad = (b3 << 6);
+      if (flags & NQ_BASE64_NONPAD && pad == 0)
+        break;
+      // result++;
+      // if (outStart < outEnd)
+      //   *outStart++ = pad;
+      result = -NQ_EINVAL;
       break;
     }
 
-    curr = (uint8_t)(*inStart++);
+    curr = *inStart++;
     b4 = map[curr];
     if (b4 == UNKN) {
-      if (curr == '=' && inStart == inEnd)
+      if ((flags & NQ_BASE64_NONPAD) == 0 && curr == '=' && inStart == inEnd)
         break;
-      result = -1;
+      result = -NQ_EINVAL;
       break;
     }
 
@@ -287,12 +298,22 @@ int NQBase64Decode(const char* inStart, const char* inEnd, uint8_t* outStart, ui
   return result;
 }
 
-int NQBase64URLEncode(const uint8_t* inStart, const uint8_t* inEnd, char* outStart, char* outEnd)
+int NQBase64Encode(const void* inData, size_t inSize, char* outData, size_t outSize)
 {
-  return NQBase64Encode(inStart, inEnd, outStart, outEnd, NQ_BASE64_URL);
+  return NQBase64EncodeEx(inData, inSize, outData, outSize, 0);
 }
 
-int NQBase64URLDecode(const char* inStart, const char* inEnd, uint8_t* outStart, uint8_t* outEnd)
+int NQBase64Decode(const char* inData, size_t inSize, void* outData, size_t outSize)
 {
-  return NQBase64Decode(inStart, inEnd, outStart, outEnd, NQ_BASE64_URL);
+  return NQBase64DecodeEx(inData, inSize, outData, outSize, 0);
+}
+
+int NQBase64URLEncode(const void* inData, size_t inSize, char* outData, size_t outSize)
+{
+  return NQBase64EncodeEx(inData, inSize, outData, outSize, NQ_BASE64_URL);
+}
+
+int NQBase64URLDecode(const char* inData, size_t inSize, void* outData, size_t outSize)
+{
+  return NQBase64DecodeEx(inData, inSize, outData, outSize, NQ_BASE64_URL);
 }

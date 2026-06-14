@@ -22,23 +22,29 @@ typedef struct NQWebServer NQWebServer;
 typedef struct NQWebRequest NQWebRequest;
 typedef struct NQWebResponse NQWebResponse;
 
-typedef struct NQWebRequestOperations NQWebRequestOperations;
-struct NQWebRequestOperations {
+typedef struct NQWebRequestClass NQWebRequestClass;
+struct NQWebRequestClass {
   const char* (*getQuery)     (const NQWebRequest*, const char* name);
   const char* (*getCookie)    (const NQWebRequest*, const char* name);
   const char* (*getHeader)    (const NQWebRequest*, const char* header);
 };
 
+typedef struct NQWebRequestOperations NQWebRequestOperations;
+struct NQWebRequestOperations {
+  int    (*init)    (NQWebRequest*, void* data);
+  size_t (*receive) (NQWebRequest*, const char* data, size_t size);
+  int    (*handler) (NQWebRequest*, NQWebResponse*);
+  void   (*release) (NQWebRequest*);
+};
+
 struct NQWebRequest {
-  const struct NQWebRequestOperations* operations;
+  const NQWebRequestClass* clazz;
 
   const char* url;
   const char* method;
   const char* version;
 
-  size_t (*onReceive)  (NQWebRequest*, const char* data, size_t size);
-  int    (*onRequest)  (NQWebRequest*, NQWebResponse*);
-  void   (*onRelease)  (NQWebRequest*);
+  const NQWebRequestOperations* operations;
 
   NQUrlPath* urlPath;
   NQWebServer* server;
@@ -48,9 +54,7 @@ struct NQWebRequest {
 static inline void NQWebRequest_init(NQWebRequest* thiz)
 {
   thiz->urlPath = NULL;
-  thiz->onReceive = NULL;
-  thiz->onRequest = NULL;
-  thiz->onRelease = NULL;
+  thiz->operations = NULL;
 }
 
 static inline void NQWebRequest_finalize(NQWebRequest* thiz)
@@ -97,17 +101,17 @@ static inline const char* NQWebRequest_getSegment(const NQWebRequest* thiz, cons
 
 static inline const char* NQWebRequest_getQuery(const NQWebRequest* thiz, const char* name)
 {
-  return thiz->operations->getQuery(thiz, name);
+  return thiz->clazz->getQuery(thiz, name);
 }
 
 static inline const char* NQWebRequest_getCookie(const NQWebRequest* thiz, const char* name)
 {
-  return thiz->operations->getCookie(thiz, name);
+  return thiz->clazz->getCookie(thiz, name);
 }
 
 static inline const char* NQWebRequest_getHeader(const NQWebRequest* thiz, const char* header)
 {
-  return thiz->operations->getHeader(thiz, header);
+  return thiz->clazz->getHeader(thiz, header);
 }
 
 static inline void* NQWebRequest_userdata(const NQWebRequest* thiz)

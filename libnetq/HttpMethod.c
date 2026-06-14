@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/HttpMethod.h"
 
-#include <libnetq/string/CStrBase.h>
+#include <libnetq/string/StringUtil.h>
 
 NQHttpMethod NQHttpMethodParse(const char* str)
 {

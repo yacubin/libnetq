@@ -12,7 +12,7 @@
 
 #include <libnetq/VA.h>
 #include <libnetq/List.h>
-#include <libnetq/StringPrint.h>
+#include <libnetq/string/StringPrint.h>
 #include <libnetq/web/WebWriter.h>
 
 #ifdef __cplusplus

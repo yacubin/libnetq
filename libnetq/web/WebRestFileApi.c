@@ -8,8 +8,11 @@
  */
 
 #include "config.h"
-#include "libnetq/web/FileSytemGetRequest.h"
+#include "libnetq/web/WebRestFileApi.h"
 
+#include <libnetq/ErrorCode.h>
+#include <libnetq/Sprintf.h>
+#include <libnetq/string/StringUtil.h>
 #include <libnetq/HttpHeader.h>
 #include <libnetq/HttpStatus.h>
 #include <libnetq/MediaType.h>
@@ -18,8 +21,10 @@
 #include <libnetq/Dir.h>
 #include <libnetq/Path.h>
 #include <libnetq/Log.h>
+#include <libnetq/Malloc.h>
 #include <libnetq/Assert.h>
-#include <libnetq/web/WebServer.h>
+#include <libnetq/web/WebRequest.h>
+#include <libnetq/web/WebResponse.h>
 
 #define SIZE_EMPTY_STR "      -"
 #define DATETIME_EMPTY_STR "ACCESS_DENIED      "
@@ -28,6 +33,14 @@
 #define MB (KB * 1024)
 #define GB (MB * 1024)
 #define TB (GB * 1024)
+
+struct NQWebRestFileApi {
+  NQWebExecutor executor;
+  struct NQWebRequestListener mainListener;
+  struct NQWebRequestListener otherListener;
+  char* baseDir;
+  char* baseUrl;
+};
 
 static void printFileSize(char* buf, size_t len, uint64_t fileSize)
 {
@@ -64,25 +77,34 @@ static void printFileSize(char* buf, size_t len, uint64_t fileSize)
   }
 }
 
-int NQFileSystemGetRequest(const char* urlPrefix, NQWebRequest* request, NQWebResponse* response)
+static const char* getRelativePath(const char* baseUrl, const char* url)
 {
+  size_t baseUrlLength = NQStrlen(baseUrl);
+  size_t urlLength = NQStrlen(url);
+
+  if (urlLength < baseUrlLength || memcmp(url, baseUrl, baseUrlLength) != 0)
+    return NULL;
+
+  return url + baseUrlLength;
+}
+
+static int onGetRequest(NQWebRequest* request, NQWebResponse* response)
+{
+  struct NQWebRestFileApi* fileApi = (struct NQWebRestFileApi*)request->userdata;
+
   NQWebServer* server = NQWebRequest_server(request);
 
   const char* url = NQWebRequest_url(request);
-  size_t urlLength = NQStrlen(url);
+  const char* relativePath = getRelativePath(fileApi->baseUrl, url);
 
-  size_t urlPrefixLength = strlen(urlPrefix);
-  if (urlLength < urlPrefixLength || memcmp(url, urlPrefix, urlPrefixLength) != 0 || strstr(url, "//") != NULL) {
-    NQWebResponse_setHeader(response, NQHTTP_HEADER_LOCATION, urlPrefix);
+  if (relativePath == NULL || strstr(url, "//") != NULL) {
+    NQWebResponse_setHeader(response, NQHTTP_HEADER_LOCATION, fileApi->baseUrl);
     return NQ_HTTP_MOVED_PERMANENTLY;
   }
 
-  const char* pathSuffix = url + urlPrefixLength;
-  const char* baseDir = (const char*)request->userdata;
-
   NQStringPrint pathBuf;
   NQStringPrint_init(&pathBuf);
-  if (NQStringPrint_printf(&pathBuf, "%s/%s", baseDir, pathSuffix) < 0) {
+  if (NQStringPrint_printf(&pathBuf, "%s%s", fileApi->baseDir, relativePath) < 0) {
     NQStringPrint_finalize(&pathBuf);
     return NQ_HTTP_INTERNAL_SERVER_ERROR;
   }
@@ -159,7 +181,7 @@ int NQFileSystemGetRequest(const char* urlPrefix, NQWebRequest* request, NQWebRe
   NQWebResponse_printf(response, "<h1>Index of %s</h1>", url);
   NQWebResponse_printf(response, "<hr><pre>");
 
-  if (strcmp(urlPrefix, url) != 0) {
+  if (*relativePath != '\0') {
     NQWebResponse_printf(response, "<a href=\"../\">..</a>\n");
   }
 
@@ -205,4 +227,80 @@ int NQFileSystemGetRequest(const char* urlPrefix, NQWebRequest* request, NQWebRe
 
   NQStringPrint_finalize(&pathBuf);
   return NQ_HTTP_OK;
+}
+
+static int onFsInit(NQWebRequest* request, void* data)
+{
+  struct NQWebRestFileApi* fileApi = NQ_CONTAINER_OF(data, struct NQWebRestFileApi, executor);
+  request->userdata = fileApi;
+  return 0;
+}
+
+static const NQWebRequestOperations kFsOps = {
+  .init = onFsInit,
+  .handler = onGetRequest,
+};
+
+static int restApiInit(NQWebExecutor* executor, void* data)
+{
+  int ret;
+  struct NQWebRestFileParams* params = (struct NQWebRestFileParams*)data;
+  struct NQWebRestFileApi* fileApi = NQ_CONTAINER_OF(executor, struct NQWebRestFileApi, executor);
+
+  fileApi->baseDir = NQCStrFormat("%s/", params->baseDir);
+  if (fileApi->baseDir == NULL) {
+    return -NQ_ENOMEM;
+  }
+
+  fileApi->baseUrl = NQCStrFormat("%s/", params->baseUrl);
+  if (fileApi->baseUrl == NULL) {
+    NQCStrFree(fileApi->baseDir);
+    return -NQ_ENOMEM;
+  }
+
+  ret = NQWebExecutor_addRequestListener(&fileApi->executor, &fileApi->mainListener, &kFsOps, fileApi, NQ_HTTP_GET, "%s", params->baseUrl);
+  if (ret) {
+    NQCStrFree(fileApi->baseDir);
+    NQCStrFree(fileApi->baseUrl);
+    return ret;
+  }
+
+  ret = NQWebExecutor_addRequestListener(&fileApi->executor, &fileApi->otherListener, &kFsOps, fileApi, NQ_HTTP_GET, "%s/*", params->baseUrl);
+  if (ret) {
+    NQWebExecutor_removeRequestListener(&fileApi->executor, &fileApi->mainListener);
+    NQCStrFree(fileApi->baseDir);
+    NQCStrFree(fileApi->baseUrl);
+    return ret;
+  }
+
+  return 0;
+}
+
+static void restApiRelease(NQWebExecutor* executor)
+{
+  struct NQWebRestFileApi* fileApi = NQ_CONTAINER_OF(executor, struct NQWebRestFileApi, executor);
+
+  NQWebExecutor_removeRequestListener(&fileApi->executor, &fileApi->otherListener);
+  NQWebExecutor_removeRequestListener(&fileApi->executor, &fileApi->mainListener);
+
+  NQCStrFree(fileApi->baseDir);
+  NQCStrFree(fileApi->baseUrl);
+}
+
+static const struct NQWebExecutorOperations kWebRestEnvOps = {
+  .init = restApiInit,
+  .release = restApiRelease,
+};
+
+NQWebRestFileApi* NQWebRestFileApiCreate(NQWebServer* server, const struct NQWebRestFileParams* params)
+{
+  if (params->baseUrl == NULL || params->baseDir == NULL)
+    return NULL;
+
+  return (NQWebRestFileApi*)NQWebServer_createExecutor(server, sizeof(struct NQWebRestFileApi), &kWebRestEnvOps, (void*)params);
+}
+
+void NQWebRestFileApiDestroy(NQWebServer* server, NQWebRestFileApi* fileApi)
+{
+  NQWebServer_destroyExecutor(server, &fileApi->executor);
 }

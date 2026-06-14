@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/sql/SQLite.h"
 
-#ifdef NQ_USE_SQLITE3_SQLITE
+#ifdef NQCONFIG_USE_SQLITE3_SQLITE
 
 #include <libnetq/Limits.h>
 #include <libnetq/Assert.h>

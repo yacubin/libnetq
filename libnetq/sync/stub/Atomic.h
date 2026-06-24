@@ -1,44 +1,37 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
  */
 
-#include "config.h"
-#include "libnetq/Atomic.h"
+#ifndef _LIBNETQ_SYNC_STUB_ATOMIC_H
+#define _LIBNETQ_SYNC_STUB_ATOMIC_H
 
-#include <libnetq/Compiler.h>
-#include <libnetq/OS.h>
-#include <libnetq/CPU.h>
+#include <libnetq/Basic.h>
 
-#ifdef NQ_OS_WINDOWS
-#include <windows.h>
-#endif
+typedef struct NQAtomic NQAtomic;
+typedef struct NQAtomic64 NQAtomic64;
 
-int32_t NQAtomic32_addFetch(NQAtomic32* thiz, int32_t i)
+struct NQAtomic {
+  int32_t counter;
+};
+
+struct NQAtomic64 {
+  int64_t counter;
+};
+
+static inline int32_t __NQAtomic_addFetch(NQAtomic* thiz, int32_t i)
 {
-#if defined(HAVE_ATOMIC_BUILTINS)
-  return __atomic_add_fetch(&thiz->counter, i, __ATOMIC_SEQ_CST);
-
-#elif defined(HAVE_SYNC_BUILTINS)
-  return __sync_add_and_fetch(&thiz->counter, i);
-
-#else
   thiz->counter += i;
   return thiz->counter;
-
-#endif
 }
 
-void NQAtomic32_inc(NQAtomic32* thiz)
+static inline void __NQAtomic_inc(NQAtomic* thiz)
 {
-#if defined(HAVE_SYNC_BUILTINS)
-  (void)__sync_fetch_and_add(&thiz->counter, 1);
-
-#elif (defined(NQ_COMPILER_GCC) || defined(NQ_COMPILER_CLANG)) && (defined(NQ_CPU_X86) || defined(NQ_CPU_AMD64))
+#if (defined(NQ_COMPILER_GCC) || defined(NQ_COMPILER_CLANG)) && (defined(NQ_CPU_X86) || defined(NQ_CPU_AMD64))
   asm volatile("lock incl %0" : "=m" (thiz->counter) :: "memory");
 
 #elif (defined(NQ_COMPILER_GCC) || defined(NQ_COMPILER_CLANG)) && defined(NQ_CPU_ARM)
@@ -62,18 +55,15 @@ void NQAtomic32_inc(NQAtomic32* thiz)
       : "w1", "memory"
   );
 
-#elif defined(NQ_OS_WINDOWS)
-  InterlockedIncrement(&thiz->counter);
+#else
+  thiz->counter++;
 
 #endif
 }
 
-void NQAtomic32_dec(NQAtomic32* thiz)
+static inline void __NQAtomic_dec(NQAtomic* thiz)
 {
-#if defined(HAVE_SYNC_BUILTINS)
-  (void)__sync_sub_and_fetch(&thiz->counter, 1);
-
-#elif (defined(NQ_COMPILER_GCC) || defined(NQ_COMPILER_CLANG)) && (defined(NQ_CPU_X86) || defined(NQ_CPU_AMD64))
+#if (defined(NQ_COMPILER_GCC) || defined(NQ_COMPILER_CLANG)) && (defined(NQ_CPU_X86) || defined(NQ_CPU_AMD64))
   asm volatile("lock decl %0" : "=m" (thiz->counter) :: "memory");
 
 #elif (defined(NQ_COMPILER_GCC) || defined(NQ_COMPILER_CLANG)) && defined(NQ_CPU_ARM)
@@ -96,27 +86,22 @@ void NQAtomic32_dec(NQAtomic32* thiz)
       : "memory"
   );
 
-#elif defined(NQ_OS_WINDOWS)
-  InterlockedDecrement(&thiz->counter);
+#else
+  thiz->counter--;
 
 #endif
 }
 
-bool NQAtomic32_compareExchange(NQAtomic32* thiz, int32_t* expected, int32_t desired)
+static inline int32_t __NQAtomic_cmpxchg(NQAtomic* thiz, int32_t oldVal, int32_t newVal)
 {
-#if defined(HAVE_ATOMIC_BUILTINS)
-  return __atomic_compare_exchange_n(&thiz->counter, expected, desired, true, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+  int32_t prev = thiz->counter;
+  if (prev == oldVal)
+    thiz->counter = newVal;
+  return prev;
+}
 
-#elif defined(HAVE_SYNC_BUILTINS)
-  int32_t old = __sync_val_compare_and_swap(&thiz->counter, *expected, desired);
-  if (old == *expected)
-    return true;
-  else {
-    *expected = old;
-    return false;
-  }
-
-#else
+static inline bool __NQAtomic_compareExchange(NQAtomic* thiz, int32_t* expected, int32_t desired)
+{
   if (thiz->counter == *expected) {
     thiz->counter = desired;
     return true;
@@ -125,15 +110,16 @@ bool NQAtomic32_compareExchange(NQAtomic32* thiz, int32_t* expected, int32_t des
     *expected = thiz->counter;
     return false;
   }
-
-#endif
 }
 
-void NQCompilerFence(void)
+static inline void __NQCompilerFence(void)
 {
-#if defined(NQ_OS_WINDOWS) && !defined(NQ_COMPILER_GCC)
-  _ReadWriteBarrier();
-#else
   asm volatile("" ::: "memory");
-#endif
 }
+
+static inline void __NQCompilerFence(void)
+{
+  asm volatile("" ::: "memory");
+}
+
+#endif /* _LIBNETQ_SYNC_STUB_ATOMIC_H */

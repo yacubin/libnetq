@@ -45,14 +45,14 @@ find_library(AtomicOps_LIBRARY
 mark_as_advanced(AtomicOps_INCLUDE_DIR AtomicOps_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(AtomicOps DEFAULT_MSG AtomicOps_INCLUDE_DIR AtomicOps_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(AtomicOps REQUIRED_VARS AtomicOps_LIBRARY AtomicOps_INCLUDE_DIR)
 if (ATOMICOPS_FOUND)
   set(AtomicOps_FOUND TRUE)
 endif ()
 
 if (AtomicOps_FOUND)
-  set(AtomicOps_LIBRARIES ${AtomicOps_LIBRARY})
-  set(AtomicOps_INCLUDE_DIRS ${AtomicOps_INCLUDE_DIR})
+  set(AtomicOps_INCLUDE_DIRS "${AtomicOps_INCLUDE_DIR}")
+  set(AtomicOps_LIBRARIES "${AtomicOps_LIBRARY}")
 endif ()
 
 if (AtomicOps_FOUND AND NOT TARGET AtomicOps::AtomicOps)

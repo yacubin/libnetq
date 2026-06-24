@@ -10,8 +10,7 @@
 #include "config.h"
 #include "libnetq/Env.h"
 
-#include <libnetq/OS.h>
-#include <libnetq/String.h>
+#include <libnetq/string/StringUtil.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Math.h>
 #include <libnetq/Assert.h>
@@ -20,11 +19,9 @@
 #include <windows.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/UTF.h>
-#include <libnetq/string/CStrBase.h>
 #endif
 
 #ifdef NQ_OS_UNIX
-#include <stdlib.h>
 #include <unistd.h> // for environ
 #endif
 
@@ -77,7 +74,7 @@ int NQEnvGet(const char* name, char* value, size_t n)
   if (val == NULL)
     return -1;
 
-  len = strlen(val);
+  len = NQStrlen(val);
   if (len > NQ_INT32_MAX) {
     NQ_ASSERT_NOT_REACHED();
     return -1;

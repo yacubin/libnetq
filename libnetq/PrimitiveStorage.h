@@ -27,17 +27,17 @@ struct NQPrimitiveStorage {
 NQ_EXPORT void NQPrimitiveStorage_init(NQPrimitiveStorage*, NQPrimitiveStorage* parent);
 NQ_EXPORT void NQPrimitiveStorage_finalize(NQPrimitiveStorage*);
 
-NQ_EXPORT size_t NQPrimitiveStorage_getBool(NQPrimitiveStorage*, const char* name, bool* value);
+NQ_EXPORT bool NQPrimitiveStorage_getBool(NQPrimitiveStorage*, const char* name, bool* value);
 NQ_EXPORT bool NQPrimitiveStorage_setBool(NQPrimitiveStorage*, const char* name, bool value);
 
-NQ_EXPORT size_t NQPrimitiveStorage_getUint32(NQPrimitiveStorage*, const char* name, uint32_t* value);
+NQ_EXPORT bool NQPrimitiveStorage_getUint32(NQPrimitiveStorage*, const char* name, uint32_t* value);
 NQ_EXPORT bool NQPrimitiveStorage_setUint32(NQPrimitiveStorage*, const char* name, uint32_t value);
 
-NQ_EXPORT size_t NQPrimitiveStorage_getString(NQPrimitiveStorage*, const char* name, char* buffer, size_t size);
+NQ_EXPORT bool NQPrimitiveStorage_getString(NQPrimitiveStorage*, const char* name, const char** value);
 NQ_EXPORT bool NQPrimitiveStorage_setString(NQPrimitiveStorage*, const char* name, const char* value);
 
-typedef size_t (NQPrimitiveStorageHandler) (void* userdata, NQPrimitiveType type, char* buffer, size_t size);
-NQ_EXPORT bool NQPrimitiveStorage_setHandle(NQPrimitiveStorage*, const char* name, NQPrimitiveStorageHandler* handler, void* userdata);
+//typedef size_t (NQPrimitiveStorageHandler) (void* userdata, NQPrimitiveType type, char* buffer, size_t size);
+//NQ_EXPORT bool NQPrimitiveStorage_setHandle(NQPrimitiveStorage*, const char* name, NQPrimitiveStorageHandler* handler, void* userdata);
 
 #ifdef __cplusplus
 }

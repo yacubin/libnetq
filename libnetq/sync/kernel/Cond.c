@@ -16,6 +16,8 @@
 #include <linux/sched.h>
 #include <linux/sched/signal.h>
 
+#include <libnetq/ErrorCode.h>
+
 void NQCond_init(NQCond* cond)
 {
   init_waitqueue_head(&cond->waitQueue);
@@ -49,9 +51,9 @@ bool NQCond_waitfor(NQCond* cond, NQMutex* mutex, uint32_t msecs)
   finish_wait(&cond->waitQueue, &wait);
 
   if (timeout == 0)
-    ret = -ETIMEDOUT;
+    ret = -NQ_ETIMEDOUT;
   else if (signal_pending(current))
-    ret = -ERESTARTSYS;
+    ret = -NQ_ERESTARTSYS;
 
   return ret;
 }

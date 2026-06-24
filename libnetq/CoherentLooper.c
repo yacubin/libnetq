@@ -18,10 +18,10 @@
 
 struct CoherentLooperEntry {
   struct CoherentLooperEntry* next;
-  CoherentLooperData data;
+  NQCoherentLooperData data;
 };
 
-struct CoherentLooper {
+struct NQCoherentLooper {
   NQCond cond;
   NQMutex mutex;
 
@@ -35,9 +35,9 @@ struct CoherentLooper {
   struct CoherentLooperEntry* free;
 };
 
-CoherentLooper* CoherentLooper_create(void)
+NQCoherentLooper* NQCoherentLooper_create(void)
 {
-  CoherentLooper* thiz = (CoherentLooper*)NQMalloc(sizeof(CoherentLooper));
+  NQCoherentLooper* thiz = (NQCoherentLooper*)NQMalloc(sizeof(NQCoherentLooper));
   if (thiz == NULL)
     return NULL;
 
@@ -68,7 +68,7 @@ static void deleteEntryChain(struct CoherentLooperEntry* entry)
   }
 }
 
-void CoherentLooper_destroy(CoherentLooper* thiz)
+void NQCoherentLooper_destroy(NQCoherentLooper* thiz)
 {
   deleteEntryChain(thiz->first);
   deleteEntryChain(thiz->free);
@@ -79,7 +79,7 @@ void CoherentLooper_destroy(CoherentLooper* thiz)
   NQFree(thiz);
 }
 
-void CoherentLooper_stop(CoherentLooper* thiz)
+void NQCoherentLooper_stop(NQCoherentLooper* thiz)
 {
   NQMutex_lock(&thiz->mutex);
   if (!thiz->stopLoop) {
@@ -89,7 +89,7 @@ void CoherentLooper_stop(CoherentLooper* thiz)
   NQMutex_unlock(&thiz->mutex);
 }
 
-bool CoherentLooper_call(CoherentLooper* thiz, void* userdata, NQExecuteCallback* execute, NQDestroyCallback* destroy)
+bool NQCoherentLooper_call(NQCoherentLooper* thiz, void* userdata, NQExecuteCallback* execute, NQDestroyCallback* destroy)
 {
   if (execute == NULL) {
     NQ_ASSERT_NOT_REACHED();
@@ -156,7 +156,7 @@ bool CoherentLooper_call(CoherentLooper* thiz, void* userdata, NQExecuteCallback
   return true;
 }
 
-bool CoherentLooper_wait(CoherentLooper* thiz, CoherentLooperData* data)
+bool NQCoherentLooper_wait(NQCoherentLooper* thiz, NQCoherentLooperData* data)
 {
   bool ret = false;
 

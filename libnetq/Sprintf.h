@@ -19,5 +19,8 @@
 #include <stdio.h>
 #endif
 
+#define NQSprintf sprintf
+#define NQSnprintf snprintf
+
 #endif /* _LIBNETQ_SPRINTF_H */
 

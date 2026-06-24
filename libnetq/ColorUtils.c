@@ -55,7 +55,7 @@ void NQBgraToGrayLine(uint32_t width, const uint8_t* in, uint8_t* out)
 
 void NQBgrxToGrayLine(uint32_t width, const uint8_t* in, uint8_t* out)
 {
-  return NQBgraToGrayLine(width, in, out);
+  NQBgraToGrayLine(width, in, out);
 }
 
 static void grayToXgxLine(uint32_t width, const uint8_t* in, uint8_t* out)
@@ -68,12 +68,12 @@ static void grayToXgxLine(uint32_t width, const uint8_t* in, uint8_t* out)
 
 void NQGrayToRgbLine(uint32_t width, const uint8_t* in, uint8_t* out)
 {
-  return grayToXgxLine(width, in, out);
+  grayToXgxLine(width, in, out);
 }
 
 void NQGrayToBgrLine(uint32_t width, const uint8_t* in, uint8_t* out)
 {
-  return grayToXgxLine(width, in, out);
+  grayToXgxLine(width, in, out);
 }
 
 void NQGrayToMonochromeLine(uint32_t width, const uint8_t* in, uint8_t* out)
@@ -98,17 +98,17 @@ static void xgxaToXgxLine(uint32_t width, const uint8_t* in, uint8_t* out)
 
 void NQRgbaToRgbLine(uint32_t width, const uint8_t* in, uint8_t* out)
 {
-  return xgxaToXgxLine(width, in, out);
+  xgxaToXgxLine(width, in, out);
 }
 
 void NQBgraToBgrLine(uint32_t width, const uint8_t* in, uint8_t* out)
 {
-  return xgxaToXgxLine(width, in, out);
+  xgxaToXgxLine(width, in, out);
 }
 
 void NQRgbxToRgbLine(uint32_t width, const uint8_t* in, uint8_t* out)
 {
-  return xgxaToXgxLine(width, in, out);
+  xgxaToXgxLine(width, in, out);
 }
 
 void NQBgrxToBgrLine(uint32_t width, const uint8_t* in, uint8_t* out)
@@ -128,22 +128,22 @@ static void reverseXgxaToXgxLine(uint32_t width, const uint8_t* in, uint8_t* out
 
 void NQRgbaToBgrLine(uint32_t width, const uint8_t* in, uint8_t* out)
 {
-  return reverseXgxaToXgxLine(width, in, out);
+  reverseXgxaToXgxLine(width, in, out);
 }
 
 void NQBgraToRgbLine(uint32_t width, const uint8_t* in, uint8_t* out)
 {
-  return reverseXgxaToXgxLine(width, in, out);
+  reverseXgxaToXgxLine(width, in, out);
 }
 
 void NQRgbxToBgrLine(uint32_t width, const uint8_t* in, uint8_t* out)
 {
-  return reverseXgxaToXgxLine(width, in, out);
+  reverseXgxaToXgxLine(width, in, out);
 }
 
 void NQBgrxToRgbLine(uint32_t width, const uint8_t* in, uint8_t* out)
 {
-  return reverseXgxaToXgxLine(width, in, out);
+  reverseXgxaToXgxLine(width, in, out);
 }
 
 static void reverseXgxToXgxLine(uint32_t width, const uint8_t* in, uint8_t* out)
@@ -158,12 +158,12 @@ static void reverseXgxToXgxLine(uint32_t width, const uint8_t* in, uint8_t* out)
 
 void NQRgbToBgrLine(uint32_t width, const uint8_t* in, uint8_t* out)
 {
-  return reverseXgxToXgxLine(width, in, out);
+  reverseXgxToXgxLine(width, in, out);
 }
 
 void NQBgrToRgbLine(uint32_t width, const uint8_t* in, uint8_t* out)
 {
-  return reverseXgxToXgxLine(width, in, out);
+  reverseXgxToXgxLine(width, in, out);
 }
 
 static void xgxToXgxaLine(uint32_t width, const uint8_t* in, uint8_t* out)

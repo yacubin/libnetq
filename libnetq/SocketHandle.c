@@ -53,7 +53,7 @@ static int listen(NQSocketHandle, int) { return -1; }
 
 #ifdef NQ_OS_WINDOWS
 #define WIN32_LEAN_AND_MEAN
-#include <libnetq/Once.h>
+#include <libnetq/sync/Once.h>
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>

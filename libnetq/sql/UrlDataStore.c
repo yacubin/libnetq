@@ -14,8 +14,7 @@
 #include <libnetq/Log.h>
 #include <libnetq/Math.h>
 #include <libnetq/Path.h>
-#include <libnetq/String.h>
-#include <libnetq/StringPrint.h>
+#include <libnetq/string/StringPrint.h>
 #include <libnetq/crypto/BCrypt.h>
 
 #define FILES_TABLE  "files"

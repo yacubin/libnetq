@@ -29,13 +29,13 @@ unset(LibArchive_FIND_LIBRARIES)
 mark_as_advanced(LibArchive_INCLUDE_DIR LibArchive_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibArchive DEFAULT_MSG LibArchive_INCLUDE_DIR LibArchive_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibArchive REQUIRED_VARS LibArchive_LIBRARY LibArchive_INCLUDE_DIR)
 if (LIBARCHIVE_FOUND)
   set(LibArchive_FOUND TRUE)
 endif ()
 
 if (LibArchive_FOUND)
-  set(LibArchive_INCLUDE_DIRS ${LibArchive_INCLUDE_DIR})
+  set(LibArchive_INCLUDE_DIRS "${LibArchive_INCLUDE_DIR}")
   set(LibArchive_LIBRARIES "${LibArchive_LIBRARY}")
 endif()
 

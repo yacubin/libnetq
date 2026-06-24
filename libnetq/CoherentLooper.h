@@ -19,19 +19,19 @@ extern "C" {
 typedef void (NQExecuteCallback) (void* userdata);
 typedef void (NQDestroyCallback) (void* userdata);
 
-typedef struct CoherentLooperData {
+typedef struct NQCoherentLooperData {
   void* userdata;
   NQExecuteCallback* execute;
   NQDestroyCallback* destroy;
-} CoherentLooperData;
+} NQCoherentLooperData;
 
-typedef struct CoherentLooper CoherentLooper;
+typedef struct NQCoherentLooper NQCoherentLooper;
 
-CoherentLooper* CoherentLooper_create(void);
-void CoherentLooper_destroy(CoherentLooper*);
-void CoherentLooper_stop(CoherentLooper*);
-bool CoherentLooper_call(CoherentLooper*, void* userdata, NQExecuteCallback* execute, NQDestroyCallback* destroy);
-bool CoherentLooper_wait(CoherentLooper*, CoherentLooperData* data);
+NQ_EXPORT NQCoherentLooper* NQCoherentLooper_create(void);
+NQ_EXPORT void NQCoherentLooper_destroy(NQCoherentLooper*);
+NQ_EXPORT void NQCoherentLooper_stop(NQCoherentLooper*);
+NQ_EXPORT bool NQCoherentLooper_call(NQCoherentLooper*, void* userdata, NQExecuteCallback* execute, NQDestroyCallback* destroy);
+NQ_EXPORT bool NQCoherentLooper_wait(NQCoherentLooper*, NQCoherentLooperData* data);
 
 #ifdef __cplusplus
 }

@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/Time.h"
 
-#include <libnetq/String.h>
+#include <libnetq/string/String.h>
 #include <libnetq/Sprintf.h>
 #include <libnetq/ConstExpr.h>
 #include <libnetq/Assert.h>
@@ -417,5 +417,5 @@ NQTimeMs NQWinFileTimeToTimeMs(uint32_t highDateTime, uint32_t lowDateTime)
 
 void NQWinFileTimeToTimeSpec(uint32_t highDateTime, uint32_t lowDateTime, NQTimeSpec* ts)
 {
-  return winFileTimeToTimeSpec(highDateTime, lowDateTime, ts);
+  winFileTimeToTimeSpec(highDateTime, lowDateTime, ts);
 }

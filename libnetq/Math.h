@@ -11,6 +11,7 @@
 #define _LIBNETQ_MATH_H
 
 #include <libnetq/Basic.h>
+#include <libnetq/MinMax.h>
 
 #ifdef NQ_OS_KERNEL
 #include <linux/math.h>
@@ -44,11 +45,6 @@ extern "C" {
 #define M_SQRT2 1.41421356237309504880
 #endif
 #define NQ_SQRT2 M_SQRT2
-
-#define NQGetMin(a, b) ((a) > (b) ? (b) : (a))
-#define NQGetMax(a, b) ((a) < (b) ? (b) : (a))
-#define NQGetClamp(_value, _min, _max) (_value > _min ? (_value < _max ? _value : _max) : _min)
-#define NQGetDiff(a, b) (NQGetMax(a, b) - NQGetMin(a, b))
 
 /* Greatest Common Divisor */
 NQ_EXPORT int64_t nq_gcd64(int64_t a, int64_t b);

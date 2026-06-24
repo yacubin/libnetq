@@ -10,6 +10,9 @@
 /* File descriptor name used for logging output */
 #cmakedefine NQ_ENV_LOGFD "@NQ_ENV_LOGFD@"
 
+/* Define to 1 if you have the <errno.h> header file. */
+#cmakedefine HAVE_ERRNO_H 1
+
 /* Define to 1 if you have the <stddef.h> header file. */
 #cmakedefine HAVE_STDDEF_H 1
 
@@ -94,11 +97,11 @@
 /* Define if pthread_setname_np() has 2 args */
 #cmakedefine HAVE_PTHREAD_SETNAME_NP_2ARG 1
 
-/* Have GCC built-in __atomic_* primitives */
-#cmakedefine HAVE_ATOMIC_BUILTINS 1
+/* Define if you have CivetWeb */
+#cmakedefine WITH_CIVETWEB 1
 
-/* Have Intel __sync_* atomic primitives */
-#cmakedefine HAVE_SYNC_BUILTINS 1
+/* Define if you have MHD */
+#cmakedefine WITH_MHD 1
 
 /* Define if you have OLE32 */
 #cmakedefine01 WITH_OLE32

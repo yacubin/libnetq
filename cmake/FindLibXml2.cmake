@@ -47,14 +47,14 @@ find_library(LibXml2_LIBRARY
 mark_as_advanced(LibXml2_INCLUDE_DIR LibXml2_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibXml2 DEFAULT_MSG LibXml2_INCLUDE_DIR LibXml2_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibXml2 REQUIRED_VARS LibXml2_LIBRARY LibXml2_INCLUDE_DIR)
 if (LIBXML2_FOUND)
   set(LibXml2_FOUND TRUE)
 endif ()
 
 if (LibXml2_FOUND)
-  set(LibXml2_INCLUDE_DIRS ${LibXml2_INCLUDE_DIR})
-  set(LibXml2_LIBRARIES ${LibXml2_LIBRARY})
+  set(LibXml2_INCLUDE_DIRS "${LibXml2_INCLUDE_DIR}")
+  set(LibXml2_LIBRARIES "${LibXml2_LIBRARY}")
 endif ()
 
 if (LibXml2_FOUND AND NOT TARGET LibXml2::LibXml2)

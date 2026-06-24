@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/regex/Regex.h"
 
-#ifdef NQ_USE_PCRE2_REGEX
+#ifdef NQCONFIG_USE_PCRE2_REGEX
 
 #include <libnetq/String.h>
 #include <libnetq/Log.h>

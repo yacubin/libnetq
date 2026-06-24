@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/random/CryptoRandom.h"
 
-#ifdef NQ_USE_PLATFORM_CRYPTORAND
+#ifdef NQCONFIG_USE_PLATFORM_CRYPTORAND
 
 #include "libnetq/random/UnlimitedRandom.h"
 

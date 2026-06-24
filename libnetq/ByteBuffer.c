@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/ByteBuffer.h"
 
-#include <libnetq/string/CStrBase.h>
+#include <libnetq/string/StringUtil.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Math.h>
 #include <libnetq/Assert.h>

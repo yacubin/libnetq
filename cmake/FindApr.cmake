@@ -57,37 +57,31 @@ find_library(Apr_LIBRARY
 
 mark_as_advanced(Apr_INCLUDE_DIR Apr_LIBRARY)
 
-if (Apr_FIND_VERSION AND Apr_INCLUDE_DIR)
-  if (EXISTS "${Apr_INCLUDE_DIR}/apr_version.h")
-    file(READ "${Apr_INCLUDE_DIR}/apr_version.h" Apr_VERSION_CONTENT)
+if (Apr_INCLUDE_DIR)
+  file(READ "${Apr_INCLUDE_DIR}/apr_version.h" Apr_VERSION_CONTENT)
 
-    string(REGEX MATCH "#define +APR_MAJOR_VERSION +([0-9]+)" _dummy "${Apr_VERSION_CONTENT}")
-    set(Apr_MAJOR_VERSION "${CMAKE_MATCH_1}")
+  string(REGEX MATCH "#define +APR_MAJOR_VERSION +([0-9]+)" _dummy "${Apr_VERSION_CONTENT}")
+  set(Apr_MAJOR_VERSION "${CMAKE_MATCH_1}")
 
-    string(REGEX MATCH "#define +APR_MINOR_VERSION +([0-9]+)" _dummy "${Apr_VERSION_CONTENT}")
-    set(Apr_MINOR_VERSION "${CMAKE_MATCH_1}")
+  string(REGEX MATCH "#define +APR_MINOR_VERSION +([0-9]+)" _dummy "${Apr_VERSION_CONTENT}")
+  set(Apr_MINOR_VERSION "${CMAKE_MATCH_1}")
 
-    string(REGEX MATCH "#define +APR_PATCH_VERSION +([0-9]+)" _dummy "${Apr_VERSION_CONTENT}")
-    set(Apr_PATCH_VERSION "${CMAKE_MATCH_1}")
+  string(REGEX MATCH "#define +APR_PATCH_VERSION +([0-9]+)" _dummy "${Apr_VERSION_CONTENT}")
+  set(Apr_PATCH_VERSION "${CMAKE_MATCH_1}")
 
-    set(Apr_VERSION "${Apr_MAJOR_VERSION}.${Apr_MINOR_VERSION}.${Apr_PATCH_VERSION}")
-    unset(Apr_VERSION_CONTENT)
-  endif ()
-
-  if ("${Apr_FIND_VERSION}" VERSION_GREATER "${Apr_VERSION}")
-    message(FATAL_ERROR "Required version (${Apr_FIND_VERSION}) is higher than found version (${Apr_VERSION})")
-  endif ()
+  set(Apr_VERSION "${Apr_MAJOR_VERSION}.${Apr_MINOR_VERSION}.${Apr_PATCH_VERSION}")
+  unset(Apr_VERSION_CONTENT)
 endif ()
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Apr DEFAULT_MSG Apr_INCLUDE_DIR Apr_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Apr REQUIRED_VARS Apr_LIBRARY Apr_INCLUDE_DIR VERSION_VAR Apr_VERSION)
 if (APR_FOUND)
   set(Apr_FOUND TRUE)
 endif ()
 
 if (Apr_FOUND)
-  set(Apr_INCLUDE_DIRS ${Apr_INCLUDE_DIR})
-  set(Apr_LIBRARIES ${Apr_LIBRARY})
+  set(Apr_INCLUDE_DIRS "${Apr_INCLUDE_DIR}")
+  set(Apr_LIBRARIES "${Apr_LIBRARY}")
 endif ()
 
 if (Apr_FOUND AND NOT TARGET Apache::Apr)

@@ -41,14 +41,14 @@ find_library(CivetWeb_LIBRARY
 mark_as_advanced(CivetWeb_INCLUDE_DIR CivetWeb_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(CivetWeb DEFAULT_MSG CivetWeb_INCLUDE_DIR CivetWeb_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(CivetWeb REQUIRED_VARS CivetWeb_LIBRARY CivetWeb_INCLUDE_DIR)
 if (CIVETWEB_FOUND)
   set(CivetWeb_FOUND TRUE)
 endif ()
 
 if (CivetWeb_FOUND)
-  set(CivetWeb_INCLUDE_DIRS ${CivetWeb_INCLUDE_DIR})
-  set(CivetWeb_LIBRARIES ${CivetWeb_LIBRARY})
+  set(CivetWeb_INCLUDE_DIRS "${CivetWeb_INCLUDE_DIR}")
+  set(CivetWeb_LIBRARIES "${CivetWeb_LIBRARY}")
 endif ()
 
 if (CivetWeb_FOUND AND NOT TARGET CivetWeb::CivetWeb)

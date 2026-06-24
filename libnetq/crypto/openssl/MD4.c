@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/crypto/MD4.h"
 
-#ifdef NQ_USE_OPENSSL_MD4
+#ifdef NQCONFIG_USE_OPENSSL_MD4
 
 #include <libnetq/Assert.h>
 

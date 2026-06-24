@@ -47,14 +47,14 @@ find_library(XmlSec1_LIBRARY
 mark_as_advanced(XmlSec1_INCLUDE_DIR XmlSec1_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(XmlSec1 DEFAULT_MSG XmlSec1_INCLUDE_DIR XmlSec1_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(XmlSec1 REQUIRED_VARS XmlSec1_LIBRARY XmlSec1_INCLUDE_DIR)
 if (XMLSEC1_FOUND)
   set(XmlSec1_FOUND TRUE)
 endif ()
 
 if (XmlSec1_FOUND)
-  set(XmlSec1_INCLUDE_DIRS ${XmlSec1_INCLUDE_DIR})
-  set(XmlSec1_LIBRARIES ${XmlSec1_LIBRARY})
+  set(XmlSec1_INCLUDE_DIRS "${XmlSec1_INCLUDE_DIR}")
+  set(XmlSec1_LIBRARIES "${XmlSec1_LIBRARY}")
 endif ()
 
 if (XmlSec1_FOUND AND NOT TARGET XmlSec1::XmlSec1)

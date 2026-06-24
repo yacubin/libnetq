@@ -60,13 +60,13 @@ unset(Leptonica_FIND_LIBRARIES)
 mark_as_advanced(Leptonica_INCLUDE_DIR Leptonica_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Leptonica DEFAULT_MSG Leptonica_INCLUDE_DIR Leptonica_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Leptonica REQUIRED_VARS Leptonica_LIBRARY Leptonica_INCLUDE_DIR VERSION_VAR Leptonica_VERSION)
 if (LEPTONICA_FOUND)
   set(Leptonica_FOUND TRUE)
 endif ()
 
 if (Leptonica_FOUND)
-  set(Leptonica_INCLUDE_DIRS ${Leptonica_INCLUDE_DIR})
+  set(Leptonica_INCLUDE_DIRS "${Leptonica_INCLUDE_DIR}")
   set(Leptonica_LIBRARIES "${Leptonica_LIBRARY}")
 endif()
 

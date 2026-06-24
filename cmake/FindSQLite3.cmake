@@ -41,27 +41,24 @@ find_library(SQLite3_LIBRARY
 
 mark_as_advanced(SQLite3_INCLUDE_DIR SQLite3_LIBRARY)
 
-if (SQLite3_FIND_VERSION)
-  file(READ sqlite3.h SQLite3_HEADER_CONTENT)
-  string(REGEX MATCH "#define +SQLITE_VERSION +\"(([0-9]+)\\.([0-9]+)\\.([0-9]+))\"" _dummy "${SQLite3_HEADER_CONTENT}")
+if (SQLite3_INCLUDE_DIR)
+  file(READ "${SQLite3_INCLUDE_DIR}/sqlite3.h" SQLite3_VERSION_CONTENT)
+  string(REGEX MATCH "#define[ \t]+SQLITE_VERSION[ \t]+\"(([0-9]+)\\.([0-9]+)\\.([0-9]+))\"" _dummy "${SQLite3_VERSION_CONTENT}")
   set(SQLite3_VERSION       "${CMAKE_MATCH_1}")
   set(SQLite3_VERSION_MAJOR "${CMAKE_MATCH_2}")
   set(SQLite3_VERSION_MINOR "${CMAKE_MATCH_3}")
   set(SQLite3_VERSION_PATCH "${CMAKE_MATCH_4}")
-  unset(SQLite3_HEADER_CONTENT)
-  if ("${SQLite3_FIND_VERSION}" VERSION_GREATER "${SQLite3_VERSION}")
-    message(FATAL_ERROR "Required version (${SQLite3_FIND_VERSION}) is higher than found version (${SQLite3_VERSION})")
-  endif ()
+  unset(SQLite3_VERSION_CONTENT)
 endif ()
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(SQLite3 DEFAULT_MSG SQLite3_INCLUDE_DIR SQLite3_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(SQLite3 REQUIRED_VARS SQLite3_LIBRARY SQLite3_INCLUDE_DIR VERSION_VAR SQLite3_VERSION)
 if (SQLITE3_FOUND)
   set(SQLite3_FOUND TRUE)
 endif ()
 
 if (SQLite3_FOUND)
-  set(SQLite3_INCLUDE_DIRS" ${SQLite3_INCLUDE_DIR}")
+  set(SQLite3_INCLUDE_DIRS "${SQLite3_INCLUDE_DIR}")
   set(SQLite3_LIBRARIES "${SQLite3_LIBRARY}")
 endif ()
 

@@ -47,14 +47,14 @@ find_library(LibEvent_LIBRARY
 mark_as_advanced(LibEvent_INCLUDE_DIR LibEvent_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibEvent DEFAULT_MSG LibEvent_INCLUDE_DIR LibEvent_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibEvent REQUIRED_VARS LibEvent_LIBRARY LibEvent_INCLUDE_DIR)
 if (LIBEVENT_FOUND)
   set(LibEvent_FOUND TRUE)
 endif ()
 
 if (LibEvent_FOUND)
-  set(LibEvent_LIBRARIES ${LibEvent_LIBRARY})
-  set(LibEvent_INCLUDE_DIRS ${LibEvent_INCLUDE_DIR})
+  set(LibEvent_INCLUDE_DIRS "${LibEvent_INCLUDE_DIR}")
+  set(LibEvent_LIBRARIES "${LibEvent_LIBRARY}")
 endif ()
 
 if (LibEvent_FOUND AND NOT TARGET LibEvent::LibEvent)

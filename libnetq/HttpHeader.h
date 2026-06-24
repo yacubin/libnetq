@@ -10,8 +10,7 @@
 #ifndef _LIBNETQ_HTTPHEADER_H
 #define _LIBNETQ_HTTPHEADER_H
 
-#include <libnetq/Basic.h>
-#include <libnetq/string/StringVec.h>
+#include <libnetq/string/StringRange.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,50 +59,42 @@ extern "C" {
 
 typedef struct NQHttpRequestLine NQHttpRequestLine;
 struct NQHttpRequestLine {
-  const char* methodData;
-  size_t methodSize;
-  const char* urlData;
-  size_t urlSize;
-  const char* versionData;
-  size_t versionSize;
+  NQStringRange method;
+  NQStringRange url;
+  NQStringRange version;
 };
 
 NQ_EXPORT bool NQHttpRequestLineParse(const char* data, size_t size, NQHttpRequestLine* result);
 
 typedef struct NQHttpStatusLine NQHttpStatusLine;
 struct NQHttpStatusLine {
-  const char* versionData;
-  size_t versionSize;
-  const char* codeData;
-  size_t codeSize;
-  const char* reasonData;
-  size_t reasonSize;
+  NQStringRange version;
+  NQStringRange code;
+  NQStringRange reason;
 };
 
 NQ_EXPORT bool NQHttpStatusLineParse(const char* data, size_t size, NQHttpStatusLine* result);
 
 typedef struct NQHttpHeaderLine NQHttpHeaderLine;
 struct NQHttpHeaderLine {
-  NQStringVec name;
-  NQStringVec value;
+  NQStringRange name;
+  NQStringRange value;
 };
 
 NQ_EXPORT bool NQHttpHeaderLineParse(const char* data, size_t size, NQHttpHeaderLine* result);
 
 typedef struct NQHttpHeaderValue NQHttpHeaderValue;
 struct NQHttpHeaderValue {
-  const char* keyData;
-  size_t keySize;
-  const char* valueData;
-  size_t valueSize;
+  NQStringRange key;
+  NQStringRange value;
 };
 
 NQ_EXPORT bool NQHttpHeaderValueParse(const char* data, size_t size, NQHttpHeaderValue* result);
 
 typedef struct NQHttpFormData NQHttpFormData;
 struct NQHttpFormData {
-  NQStringVec name;
-  NQStringVec filename;
+  NQStringRange name;
+  NQStringRange filename;
 };
 
 NQ_EXPORT bool NQHttpFormDataParse(const char* data, size_t size, NQHttpFormData* result);

@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/json/JSON.h"
 
-#ifdef NQ_USE_STUB_JSON
+#ifdef NQCONFIG_USE_STUB_JSON
 
 const char* NQJSON_package(void)
 {
@@ -211,7 +211,7 @@ bool NQJSON_arrayAdd(NQJSON* json, NQJSON* item)
   return false;
 }
 
-NQJSON* NQJSON_objectGet(NQJSON* json, const char* key)
+NQJSON* NQJSON_objectGet(const NQJSON* json, const char* key)
 {
   NQ_UNUSED_PARAM(json);
   NQ_UNUSED_PARAM(key);
@@ -223,6 +223,22 @@ bool NQJSON_objectSet(NQJSON* json, const char* key, NQJSON* item)
   NQ_UNUSED_PARAM(json);
   NQ_UNUSED_PARAM(key);
   NQ_UNUSED_PARAM(item);
+  return false;
+}
+
+bool NQJSON_objectSetBool(NQJSON* json, const char* key, bool value)
+{
+  NQ_UNUSED_PARAM(json);
+  NQ_UNUSED_PARAM(key);
+  NQ_UNUSED_PARAM(value);
+  return false;
+}
+
+bool NQJSON_objectSetInt64(NQJSON* json, const char* key, int64_t value)
+{
+  NQ_UNUSED_PARAM(json);
+  NQ_UNUSED_PARAM(key);
+  NQ_UNUSED_PARAM(value);
   return false;
 }
 
@@ -241,8 +257,6 @@ bool NQJSON_objectSetString(NQJSON* json, const char* key, const char* value)
   NQ_UNUSED_PARAM(value);
   return false;
 }
-
-typedef void NQJSON_ObjectIter;
 
 NQJSON_ObjectIter* NQJSON_objectIterFirst(NQJSON* json)
 {

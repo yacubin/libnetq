@@ -8,9 +8,9 @@
  */
 
 #include "config.h"
-#include "libnetq/StringPrint.h"
+#include "libnetq/string/StringPrint.h"
 
-#include <libnetq/string/CStrBase.h>
+#include <libnetq/string/StringUtil.h>
 #include <libnetq/Sprintf.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>

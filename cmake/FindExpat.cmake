@@ -47,14 +47,14 @@ find_library(Expat_LIBRARY
 mark_as_advanced(Expat_INCLUDE_DIR Expat_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Expat DEFAULT_MSG Expat_INCLUDE_DIR Expat_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Expat REQUIRED_VARS Expat_LIBRARY Expat_INCLUDE_DIR)
 if (EXPAT_FOUND)
   set(Expat_FOUND TRUE)
 endif ()
 
 if (Expat_FOUND)
-  set(Expat_LIBRARIES ${Expat_LIBRARY})
-  set(Expat_INCLUDE_DIRS ${Expat_INCLUDE_DIR})
+  set(Expat_INCLUDE_DIRS "${Expat_INCLUDE_DIR}")
+  set(Expat_LIBRARIES "${Expat_LIBRARY}")
 endif ()
 
 if (Expat_FOUND AND NOT TARGET Expat::Expat)

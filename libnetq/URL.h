@@ -57,7 +57,7 @@ typedef struct NQURL NQURL;
 #define NQ_URL_WSS_SCHEME        "wss"
 
 #define NQ_URL_SCHEME_SEPARATOR  "://"
-
+#define NQ_URL_DELIMITER '/'
 #define NQ_URL_PLUS_AS_SPACE (1)
 
 enum NQURLCharType {

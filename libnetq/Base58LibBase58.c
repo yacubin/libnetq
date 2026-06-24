@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/Base58.h"
 
-#ifdef NQ_USE_LIBBASE58_BASE58
+#ifdef NQCONFIG_USE_LIBBASE58_BASE58
 
 #include <libbase58.h>
 

@@ -12,7 +12,7 @@
 #include "config.h"
 #include "libnetq/UrlQuery.h"
 
-#include <libnetq/string/CStrBase.h>
+#include <libnetq/string/StringUtil.h>
 #include <libnetq/Assert.h>
 #include <libnetq/Path.h>
 #include <libnetq/Limits.h>

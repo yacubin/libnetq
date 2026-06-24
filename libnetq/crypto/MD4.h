@@ -12,7 +12,7 @@
 
 #include <libnetq/Basic.h>
 
-#if defined(NQ_USE_OPENSSL_MD5)
+#if defined(NQCONFIG_USE_OPENSSL_MD5)
 # include <openssl/md4.h>
 #else
 # include <libnetq/crypto/CryptoHash.h>
@@ -25,7 +25,7 @@ extern "C" {
 #define NQMD4_DIGEST_SIZE 16
 typedef uint8_t NQMD4Digest[NQMD4_DIGEST_SIZE];
 
-#if defined(NQ_USE_OPENSSL_MD4)
+#if defined(NQCONFIG_USE_OPENSSL_MD4)
 
 #define NQMD4 MD4_CTX
 

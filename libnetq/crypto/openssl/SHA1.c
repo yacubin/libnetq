@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/crypto/SHA1.h"
 
-#ifdef NQ_USE_OPENSSL_SHA1
+#ifdef NQCONFIG_USE_OPENSSL_SHA1
 
 #include <libnetq/Assert.h>
 

@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/URL.h"
 
-#include <libnetq/string/CStrBase.h>
+#include <libnetq/string/StringUtil.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Math.h>
@@ -43,7 +43,7 @@ struct NQURL {
 };
 
 
-#define NQ_ASCII_DEF(ch, type, ...) kNQURLChar##type,
+#define NQ_ASCII_DEF(dec, hex, ch, type, ...) kNQURLChar##type,
 const unsigned char s_urlCharTypes[] =
 {
   #include "libnetq/ASCII.def"

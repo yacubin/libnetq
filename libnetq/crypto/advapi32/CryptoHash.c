@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/crypto/CryptoHash.h"
 
-#ifdef NQ_USE_ADVAPI32_CRYPTOHASH
+#ifdef NQCONFIG_USE_ADVAPI32_CRYPTOHASH
 
 #include <libnetq/Log.h>
 
@@ -81,4 +81,4 @@ bool NQCryptoHash_final(NQCryptoHash* thiz, uint8_t* digest)
   return true;
 }
 
-#endif /* NQ_USE_ADVAPI32_CRYPTOHASH */
+#endif /* NQCONFIG_USE_ADVAPI32_CRYPTOHASH */

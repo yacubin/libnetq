@@ -12,7 +12,7 @@
 
 #include <libnetq/Basic.h>
 #include <libnetq/string/StringArray.h>
-#include <libnetq/string/StringVec.h>
+#include <libnetq/string/StringRange.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -79,9 +79,9 @@ NQ_EXPORT void NQWinPathBuilder_init(NQWinPathBuilder*);
 
 typedef struct NQPathInfo NQPathInfo;
 struct NQPathInfo {
-  NQStringVec path;
-  NQStringVec dirname;
-  NQStringVec basename;
+  NQStringRange path;
+  NQStringRange dirname;
+  NQStringRange basename;
   bool isAbsolute;
   bool isDirOnly;
   bool isNormalize;

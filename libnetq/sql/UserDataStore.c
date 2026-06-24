@@ -198,7 +198,7 @@ bool NQUserDataStoreDelete(NQSQLiteDatabase* database, const char* username)
   return result;
 }
 
-static bool userIdRequest(NQSQLiteStatement* statement, const char* username, int32_t* id)
+static bool userIdRequest(NQSQLiteStatement* statement, const char* username, uint32_t* id)
 {
   if (!NQSQLiteStatement_bindText(statement, 1, username)) {
     NQ_LOGE("Failed to bind username parameter");
@@ -217,13 +217,13 @@ static bool userIdRequest(NQSQLiteStatement* statement, const char* username, in
   }
 
   if (id) {
-    *id = NQSQLiteStatement_columnInt32(statement, 0);
+    *id = (uint32_t)NQSQLiteStatement_columnInt64(statement, 0);
   }
 
   return true;
 }
 
-bool NQUserDataStoreUserId(NQSQLiteDatabase* database, const char* username, int32_t* id)
+bool NQUserDataStoreUserId(NQSQLiteDatabase* database, const char* username, uint32_t* id)
 {
   NQSQLiteStatement* statement = NQSQLiteDatabase_prepare(database, USERID_QUERY);
   if (statement == NULL) {

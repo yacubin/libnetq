@@ -32,6 +32,7 @@
 
 /* 4xx – Client Errors */
 #define NQ_HTTP_BAD_REQUEST                   400
+#define NQ_HTTP_UNAUTHORIZED                  401
 #define NQ_HTTP_NOT_FOUND                     404
 #define NQ_HTTP_NOT_ALLOWED                   405
 #define NQ_HTTP_PRECONDITION_FAILED           412

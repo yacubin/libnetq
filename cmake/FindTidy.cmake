@@ -39,13 +39,13 @@ find_library(Tidy_LIBRARY
 mark_as_advanced(Tidy_INCLUDE_DIR Tidy_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Tidy DEFAULT_MSG Tidy_INCLUDE_DIR Tidy_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Tidy REQUIRED_VARS Tidy_LIBRARY Tidy_INCLUDE_DIR)
 if (TIDY_FOUND)
   set(Tidy_FOUND TRUE)
 endif()
 
 if (Tidy_FOUND)
-  set(Tidy_INCLUDE_DIRS ${Tidy_INCLUDE_DIR})
+  set(Tidy_INCLUDE_DIRS "${Tidy_INCLUDE_DIR}")
   set(Tidy_LIBRARIES "${Tidy_LIBRARY}")
 endif()
 

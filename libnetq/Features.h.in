@@ -1,83 +1,101 @@
+/* Have GCC built-in __atomic_* primitives */
+#cmakedefine NQCONFIG_USE_ATOMIC 1
+
+/* Have Intel __sync_* atomic primitives */
+#cmakedefine NQCONFIG_USE_SYNC_ATOMIC 1
+
 /* Use CryptoHash implementation from the Advapi32 library */
-#cmakedefine NQ_USE_ADVAPI32_CRYPTOHASH
+#cmakedefine NQCONFIG_USE_ADVAPI32_CRYPTOHASH
 
 /* Use BCrypt implementation from the OpenSSL library */
-#cmakedefine NQ_USE_OPENSSL_BCRYPT
+#cmakedefine NQCONFIG_USE_OPENSSL_BCRYPT
 
 /* Use CryptoHash implementation from the OpenSSL library */
-#cmakedefine NQ_USE_OPENSSL_CRYPTOHASH
+#cmakedefine NQCONFIG_USE_OPENSSL_CRYPTOHASH
 
 /* Use MD4 implementation from the OpenSSL library */
-#cmakedefine NQ_USE_OPENSSL_MD4
+#cmakedefine NQCONFIG_USE_OPENSSL_MD4
 
 /* Use MD5 implementation from the OpenSSL library */
-#cmakedefine NQ_USE_OPENSSL_MD5
+#cmakedefine NQCONFIG_USE_OPENSSL_MD5
 
 /* Use SHA1 implementation from the OpenSSL library */
-#cmakedefine NQ_USE_OPENSSL_SHA1
+#cmakedefine NQCONFIG_USE_OPENSSL_SHA1
 
 /* Use cypto random implementation from the OpenSSL library */
-#cmakedefine NQ_USE_OPENSSL_CRYPTORAND
+#cmakedefine NQCONFIG_USE_OPENSSL_CRYPTORAND
 
 /* Use BinaryAsset implementation from the ZLib library */
-#cmakedefine NQ_USE_ZLIB_BINARYASSET
+#cmakedefine NQCONFIG_USE_ZLIB_BINARYASSET
 
 /* Use CRC32 implementation from the ZLib library */
-#cmakedefine NQ_USE_ZLIB_CRC32
+#cmakedefine NQCONFIG_USE_ZLIB_CRC32
 
 /* Use JSON implementation from the Jansson library */
-#cmakedefine NQ_USE_JANSSON_JSON
+#cmakedefine NQCONFIG_USE_JANSSON_JSON
 
 /* Use JSON implementation from the cJSON library */
-#cmakedefine NQ_USE_CJSON_JSON
+#cmakedefine NQCONFIG_USE_CJSON_JSON
 
 /* Use Regex implementation from the PCRE2 library */
-#cmakedefine NQ_USE_PCRE2_REGEX
+#cmakedefine NQCONFIG_USE_PCRE2_REGEX
 
 /* Use XMLParser implementation from the Expat library */
-#cmakedefine NQ_USE_EXPAT_XMLPARSER
+#cmakedefine NQCONFIG_USE_EXPAT_XMLPARSER
 
 /* Use Atomic implementation from the AtomicOps library */
-#cmakedefine NQ_USE_ATOMICOPS_ATOMIC
-
-/* Use native Atomic implementation */
-#cmakedefine NQ_USE_NATIVE_ATOMIC
+#cmakedefine NQCONFIG_USE_ATOMICOPS_ATOMIC
 
 /* Use Base58 implementation from the LibBase58 library */
-#cmakedefine NQ_USE_LIBBASE58_BASE58
+#cmakedefine NQCONFIG_USE_LIBBASE58_BASE58
 
 /* Use Secp256k1 implementation from the Secp256k1 library */
-#cmakedefine NQ_USE_SECP256K1_SECP256K1
+#cmakedefine NQCONFIG_USE_SECP256K1_SECP256K1
 
 /* Use SQLite3 implementation from the SQLite library */
-#cmakedefine NQ_USE_SQLITE3_SQLITE
+#cmakedefine NQCONFIG_USE_SQLITE3_SQLITE
 
-/* Use stub for BCrypt */
-#cmakedefine NQ_USE_STUB_BCRYPT
+/* Use JWT implementation from the CJOSE library */
+#cmakedefine NQCONFIG_USE_CJOSE_JWT
 
-/* Use stub for CryptoHash */
-#cmakedefine NQ_USE_STUB_CRYPTOHASH
+/* Use JWT implementation from the LibJWT library */
+#cmakedefine NQCONFIG_USE_LIBJWT_JWT
 
-/* Use stub for CRC32 */
-#cmakedefine NQ_USE_STUB_CRC32
-
-/* Use stub for JSON */
-#cmakedefine NQ_USE_STUB_JSON
-
-/* Use stub for Regex */
-#cmakedefine NQ_USE_STUB_REGEX
-
-/* Use stub for XMLParser */
-#cmakedefine NQ_USE_STUB_XMLPARSER
-
-/* Use stub for Base58 */
-#cmakedefine NQ_USE_STUB_BASE58
-
-/* Use stub for Secp256k1 */
-#cmakedefine NQ_USE_STUB_SECP256K1
-
-/* Use stub for SQLite */
-#cmakedefine NQ_USE_STUB_SQLITE
+/* Use JWT implementation from the OpenSSL library */
+#cmakedefine NQCONFIG_USE_OPENSSL_JWT
 
 /* Use native cypto random implementation */
-#cmakedefine NQ_USE_PLATFORM_CRYPTORAND
+#cmakedefine NQCONFIG_USE_PLATFORM_CRYPTORAND
+
+/* Use stub for BCrypt */
+#cmakedefine NQCONFIG_USE_STUB_BCRYPT
+
+/* Use stub for CryptoHash */
+#cmakedefine NQCONFIG_USE_STUB_CRYPTOHASH
+
+/* Use stub for CRC32 */
+#cmakedefine NQCONFIG_USE_STUB_CRC32
+
+/* Use stub for JSON */
+#cmakedefine NQCONFIG_USE_STUB_JSON
+
+/* Use stub for Regex */
+#cmakedefine NQCONFIG_USE_STUB_REGEX
+
+/* Use stub for XMLParser */
+#cmakedefine NQCONFIG_USE_STUB_XMLPARSER
+
+/* Use stub for Base58 */
+#cmakedefine NQCONFIG_USE_STUB_BASE58
+
+/* Use stub for Secp256k1 */
+#cmakedefine NQCONFIG_USE_STUB_SECP256K1
+
+/* Use stub for SQLite */
+#cmakedefine NQCONFIG_USE_STUB_SQLITE
+
+/* Use stub for JWT */
+#cmakedefine NQCONFIG_USE_STUB_JWT
+
+/* Use standard C <errno.h> definitions and errno variable */
+#cmakedefine NQCONFIG_USE_ERRNO_H

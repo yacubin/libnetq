@@ -38,12 +38,12 @@ extern "C" {
 #define NQ_ZERO_STRING "0"
 #define NQ_ONE_STRING "1"
 
-NQ_EXPORT bool NQIsFalse(const char* s);
-NQ_EXPORT bool NQIsTrue(const char* s);
-NQ_EXPORT bool NQIsOff(const char* s);
-NQ_EXPORT bool NQIsOn(const char* s);
-NQ_EXPORT bool NQIsEnabled(const char* s);
-NQ_EXPORT bool NQIsDisabled(const char* s);
+NQ_EXPORT bool NQStrIsFalse(const char* s);
+NQ_EXPORT bool NQStrIsTrue(const char* s);
+NQ_EXPORT bool NQStrIsOff(const char* s);
+NQ_EXPORT bool NQStrIsOn(const char* s);
+NQ_EXPORT bool NQStrIsEnabled(const char* s);
+NQ_EXPORT bool NQStrIsDisabled(const char* s);
 
 typedef enum NQPrimitiveType {
   kNQBoolType,

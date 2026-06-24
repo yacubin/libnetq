@@ -27,6 +27,7 @@ NQ_HTTP_STATUS(302, "Found",                 MOVED_TEMPORARILY,          MovedTe
 NQ_HTTP_STATUS(304, "Not Modified",          NOT_MODIFIED,               NotModified)
 NQ_HTTP_STATUS(307, "Temporary Redirect",    TEMPORARY_REDIRECT,         TemporaryRedirect)
 NQ_HTTP_STATUS(400, "Bad Request",           BAD_REQUEST,                BadRequest)
+NQ_HTTP_STATUS(401, "Unauthorized",          UNAUTHORIZED,               Unauthorized)
 NQ_HTTP_STATUS(404, "Not Found",             NOT_FOUND,                  NotFound)
 NQ_HTTP_STATUS(405, "Method Not Allowed",    NOT_ALLOWED,                NotAllowed)
 NQ_HTTP_STATUS(412, "Precondition Failed",   PRECONDITION_FAILED,        PreconditionFailed)

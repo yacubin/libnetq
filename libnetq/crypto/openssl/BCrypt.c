@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/crypto/BCrypt.h"
 
-#ifdef NQ_USE_OPENSSL_BCRYPT
+#ifdef NQCONFIG_USE_OPENSSL_BCRYPT
 
 #include <openssl/evp.h>
 #include <libnetq/string/String.h>
@@ -34,4 +34,4 @@ bool NQBCryptVerifyPassword(const char* password, const void* salt, const void* 
   return bcryptHashPassword(password, salt, hash2) && CRYPTO_memcmp(hash, hash2, NQ_BCRYPT_HASHSIZE) == 0;
 }
 
-#endif /* NQ_USE_OPENSSL_BCRYPT */
+#endif /* NQCONFIG_USE_OPENSSL_BCRYPT */

@@ -10,13 +10,24 @@
 #ifndef _LIBNETQ_JSON_JSON_H
 #define _LIBNETQ_JSON_JSON_H
 
-#include <libnetq/Basic.h>
+#include <libnetq/string/StringPrint.h>
+
+#if defined(NQCONFIG_USE_CJSON_JSON)
+# include <cjson/cJSON.h>
+typedef cJSON NQJSON;
+typedef cJSON NQJSON_ObjectIter;
+#elif defined(NQCONFIG_USE_JANSSON_JSON)
+# include <jansson.h>
+typedef json_t NQJSON;
+typedef void NQJSON_ObjectIter;
+# else
+typedef void NQJSON;
+typedef void NQJSON_ObjectIter;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct NQJSON NQJSON;
 
 NQ_EXPORT const char* NQJSON_package(void);
 NQ_EXPORT const char* NQJSON_version(void);
@@ -57,13 +68,16 @@ NQ_EXPORT size_t NQJSON_stringLength(const NQJSON*);
 NQ_EXPORT size_t NQJSON_arraySize(const NQJSON*);
 NQ_EXPORT NQJSON* NQJSON_arrayAt(NQJSON*, size_t index);
 NQ_EXPORT bool NQJSON_arrayAdd(NQJSON*, NQJSON* item);
-NQ_EXPORT NQJSON* NQJSON_objectGet(NQJSON*, const char* key);
-NQ_EXPORT const char* NQJSON_objectGetString(NQJSON*, const char* key);
+NQ_EXPORT NQJSON* NQJSON_objectGet(const NQJSON*, const char* key);
+NQ_EXPORT bool NQJSON_objectGetBool(const NQJSON*, const char* name, bool* value);
+NQ_EXPORT bool NQJSON_objectGetInt64(const NQJSON*, const char* name, int64_t* value);
+NQ_EXPORT bool NQJSON_objectGetDouble(const NQJSON*, const char* name, double* value);
+NQ_EXPORT bool NQJSON_objectGetString(const NQJSON*, const char* name, const char** value);
 NQ_EXPORT bool NQJSON_objectSet(NQJSON* json, const char* key, NQJSON* item);
+NQ_EXPORT bool NQJSON_objectSetBool(NQJSON* json, const char* key, bool value);
+NQ_EXPORT bool NQJSON_objectSetInt64(NQJSON* json, const char* key, int64_t value);
 NQ_EXPORT bool NQJSON_objectSetDouble(NQJSON* json, const char* key, double value);
 NQ_EXPORT bool NQJSON_objectSetString(NQJSON* json, const char* key, const char* value);
-
-typedef void NQJSON_ObjectIter;
 
 NQ_EXPORT NQJSON_ObjectIter* NQJSON_objectIterFirst(NQJSON*);
 NQ_EXPORT NQJSON_ObjectIter* NQJSON_objectIterNext(NQJSON*, NQJSON_ObjectIter* iter);
@@ -72,6 +86,8 @@ NQ_EXPORT NQJSON* NQJSON_objectIterValue(NQJSON_ObjectIter* iter);
 
 NQ_EXPORT void NQJSON_release(NQJSON*);
 NQ_EXPORT bool NQJSON_isEqual(NQJSON* a, NQJSON* b);
+
+NQ_EXPORT bool NQJSON_dump(const NQJSON*, NQStringPrint* buffer);
 
 #ifdef __cplusplus
 }

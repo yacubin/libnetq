@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/sql/SQLite.h"
 
-#ifdef NQ_USE_STUB_SQLITE
+#ifdef NQCONFIG_USE_STUB_SQLITE
 
 const char* NQSQLiteDatabase_version(void)
 {

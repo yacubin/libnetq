@@ -27,22 +27,28 @@ extern "C" {
 
 typedef struct NQWebSocket NQWebSocket;
 
-struct NQWebSocketOperations {
+struct NQWebSocketClass {
   const char* name;
   int  (*send)    (NQWebSocket*, const uint8_t* data, size_t size, unsigned flags);
   void (*close)   (NQWebSocket*, uint16_t statusCode);
   void (*release) (NQWebSocket*);
 };
 
+typedef struct NQWebSocketOperations NQWebSocketOperations;
+struct NQWebSocketOperations {
+  int  (*init)    (NQWebSocket*, void* data);
+  void (*open)    (NQWebSocket*);
+  void (*receive) (NQWebSocket*, const uint8_t* data, size_t size, unsigned opcode);
+  void (*release) (NQWebSocket*, uint32_t reason);
+};
+
 struct NQWebSocket {
+  const struct NQWebSocketClass* clazz;
   const struct NQWebSocketOperations* operations;
 
   void* userdata;
   NQNetworkLooper* looper;
 
-  void (*onOpen)    (NQWebSocket*);
-  void (*onReceive) (NQWebSocket*, const uint8_t* data, size_t size, unsigned opcode);
-  void (*onClose)   (NQWebSocket*, uint32_t reason);
 };
 
 enum {
@@ -58,17 +64,17 @@ enum {
 
 static inline void NQWebSocket_release(NQWebSocket* thiz)
 {
-  thiz->operations->release(thiz);
+  thiz->clazz->release(thiz);
 }
 
 static inline int NQWebSocket_send(NQWebSocket* thiz, const uint8_t* data, size_t size, unsigned flags)
 {
-  return thiz->operations->send(thiz, data, size, flags);
+  return thiz->clazz->send(thiz, data, size, flags);
 }
 
 static inline void NQWebSocket_close(NQWebSocket* thiz, uint16_t statusCode)
 {
-  thiz->operations->close(thiz, statusCode);
+  thiz->clazz->close(thiz, statusCode);
 }
 
 static inline void* NQWebSocket_userdata(const NQWebSocket* thiz)
@@ -88,20 +94,20 @@ static inline NQNetworkLooper* NQWebSocket_looper(NQWebSocket* thiz)
 
 static inline void NQWebSocket_doOpen(NQWebSocket* thiz)
 {
-  if (thiz->onOpen)
-    thiz->onOpen(thiz);
+  if (thiz->operations->open)
+    thiz->operations->open(thiz);
 }
 
 static inline void NQWebSocket_doReceive(NQWebSocket* thiz, const uint8_t* data, size_t size, unsigned opcode)
 {
-  if (thiz->onReceive)
-    thiz->onReceive(thiz, data, size, opcode);
+  if (thiz->operations->receive)
+    thiz->operations->receive(thiz, data, size, opcode);
 }
 
 static inline void NQWebSocket_doClose(NQWebSocket* thiz, uint32_t reason)
 {
-  if (thiz->onClose)
-    thiz->onClose(thiz, reason);
+  if (thiz->operations->release)
+    thiz->operations->release(thiz, reason);
 }
 
 #ifdef __cplusplus

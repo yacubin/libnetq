@@ -43,14 +43,14 @@ find_library(Jansson_LIBRARY
 mark_as_advanced(Jansson_INCLUDE_DIR Jansson_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Jansson DEFAULT_MSG Jansson_INCLUDE_DIR Jansson_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Jansson REQUIRED_VARS Jansson_LIBRARY Jansson_INCLUDE_DIR)
 if (JANSSON_FOUND)
   set(Jansson_FOUND TRUE)
 endif ()
 
 if (Jansson_FOUND)
-  set(Jansson_INCLUDE_DIRS ${Jansson_INCLUDE_DIR})
-  set(Jansson_LIBRARIES ${Jansson_LIBRARY})
+  set(Jansson_INCLUDE_DIRS "${Jansson_INCLUDE_DIR}")
+  set(Jansson_LIBRARIES "${Jansson_LIBRARY}")
 endif ()
 
 if (Jansson_FOUND AND NOT TARGET Jansson::Jansson)

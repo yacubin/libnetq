@@ -13,7 +13,7 @@
 #include "config.h"
 #include "libnetq/asset/BinaryAsset.h"
 
-#ifdef NQ_USE_ZLIB_BINARYASSET
+#ifdef NQCONFIG_USE_ZLIB_BINARYASSET
 
 #include <zlib.h>
 

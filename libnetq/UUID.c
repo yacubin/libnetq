@@ -14,7 +14,7 @@
 #include <libnetq/Math.h>
 #include <libnetq/Assert.h>
 
-#if WITH_OLE32
+#if defined(WITH_OLE32)
 # include <combaseapi.h>
 #elif defined(NQ_OS_KERNEL)
 # include <linux/uuid.h>
@@ -57,7 +57,7 @@ void NQUUID_init(NQUUID* uuid, const uint8_t* data, size_t size)
 
 void NQUUID_initAsCanonical(NQUUID* uuid)
 {
-#if WITH_OLE32
+#if defined(WITH_OLE32)
   GUID newId;
   CoCreateGuid(&newId);
   uint8_t* data = uuid->data;

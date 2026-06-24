@@ -54,14 +54,14 @@ find_library(LibJpegTurbo_Jpeg_LIBRARY
 mark_as_advanced(LibJpegTurbo_INCLUDE_DIR LibJpegTurbo_TurboJpeg_LIBRARY LibJpegTurbo_Jpeg_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibJpegTurbo DEFAULT_MSG LibJpegTurbo_INCLUDE_DIR LibJpegTurbo_TurboJpeg_LIBRARY LibJpegTurbo_Jpeg_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibJpegTurbo REQUIRED_VARS LibJpegTurbo_TurboJpeg_LIBRARY LibJpegTurbo_INCLUDE_DIR LibJpegTurbo_Jpeg_LIBRARY)
 if (LIBJPEGTURBO_FOUND)
   set(LibJpegTurbo_FOUND TRUE)
 endif ()
 
 if (LibJpegTurbo_FOUND)
-  set(LibJpegTurbo_INCLUDE_DIRS ${LibJpegTurbo_INCLUDE_DIR})
-  set(LibJpegTurbo_LIBRARIES ${LibJpegTurbo_TurboJpeg_LIBRARY} ${LibJpegTurbo_Jpeg_LIBRARY})
+  set(LibJpegTurbo_INCLUDE_DIRS "${LibJpegTurbo_INCLUDE_DIR}")
+  set(LibJpegTurbo_LIBRARIES "${LibJpegTurbo_TurboJpeg_LIBRARY}" "${LibJpegTurbo_Jpeg_LIBRARY}")
 endif ()
 
 if (LibJpegTurbo_FOUND AND NOT TARGET LibJpegTurbo::LibJpegTurbo)

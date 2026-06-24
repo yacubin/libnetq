@@ -42,14 +42,14 @@ find_library(LibBase58_LIBRARY
 mark_as_advanced(LibBase58_INCLUDE_DIR LibBase58_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibBase58 DEFAULT_MSG LibBase58_INCLUDE_DIR LibBase58_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(LibBase58 REQUIRED_VARS LibBase58_LIBRARY LibBase58_INCLUDE_DIR)
 if (LIBBASEE58_FOUND)
   set(LibBase58_FOUND TRUE)
 endif ()
 
 if (LibBase58_FOUND)
-  set(LibBase58_INCLUDE_DIRS ${LibBase58_INCLUDE_DIR})
-  set(LibBase58_LIBRARIES ${LibBase58_LIBRARY})
+  set(LibBase58_INCLUDE_DIRS "${LibBase58_INCLUDE_DIR}")
+  set(LibBase58_LIBRARIES "${LibBase58_LIBRARY}")
 endif ()
 
 if (LibBase58_FOUND AND NOT TARGET Bitcoin::LibBase58)

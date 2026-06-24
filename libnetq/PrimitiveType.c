@@ -12,29 +12,29 @@
 
 #include <libnetq/string/String.h>
 
-bool NQIsFalse(const char* s)
+bool NQStrIsFalse(const char* s)
 {
   return NQStrcasecmp(s, NQ_FALSE_STRING) == 0;
 }
 
-bool NQIsTrue(const char* s)
+bool NQStrIsTrue(const char* s)
 {
   return NQStrcasecmp(s, NQ_TRUE_STRING) == 0;
 }
 
-bool NQIsOff(const char* s)
+bool NQStrIsOff(const char* s)
 {
   return NQStrcasecmp(s, NQ_OFF_STRING) == 0;
 }
 
-bool NQIsOn(const char* s)
+bool NQStrIsOn(const char* s)
 {
   return NQStrcasecmp(s, NQ_ON_STRING) == 0;
 }
 
-bool NQIsEnabled(const char* s)
+bool NQStrIsEnabled(const char* s)
 {
-  if (NQIsTrue(s) || NQIsOn(s))
+  if (NQStrIsTrue(s) || NQStrIsOn(s))
     return true;
   if (!NQStrcasecmp(s, NQ_ONE_STRING))
     return true;
@@ -42,9 +42,9 @@ bool NQIsEnabled(const char* s)
   return false;
 }
 
-bool NQIsDisabled(const char* s)
+bool NQStrIsDisabled(const char* s)
 {
-  if (NQIsFalse(s) || NQIsOff(s))
+  if (NQStrIsFalse(s) || NQStrIsOff(s))
     return true;
   if (!NQStrcasecmp(s, NQ_ZERO_STRING))
     return true;

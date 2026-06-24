@@ -12,10 +12,10 @@
 
 #ifndef NQ_OS_KERNEL
 
-#include <libnetq/Once.h>
+#include <libnetq/sync/Once.h>
 #include <libnetq/Mutex.h>
 #include <libnetq/Malloc.h>
-#include <libnetq/string/CStrBase.h>
+#include <libnetq/string/StringUtil.h>
 
 #ifdef NQ_OS_WINDOWS
 #include <windows.h>

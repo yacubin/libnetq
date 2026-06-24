@@ -12,7 +12,7 @@
 
 #include <libnetq/Basic.h>
 
-#if defined(NQ_USE_OPENSSL_MD5)
+#if defined(NQCONFIG_USE_OPENSSL_MD5)
 # include <openssl/md5.h>
 #else
 # include <libnetq/crypto/CryptoHash.h>
@@ -25,7 +25,7 @@ extern "C" {
 #define NQMD5_DIGEST_SIZE 16
 typedef uint8_t NQMD5Digest[NQMD5_DIGEST_SIZE];
 
-#if defined(NQ_USE_OPENSSL_MD5)
+#if defined(NQCONFIG_USE_OPENSSL_MD5)
 
 #define NQMD5 MD5_CTX
 

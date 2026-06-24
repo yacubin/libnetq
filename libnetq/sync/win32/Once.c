@@ -8,7 +8,7 @@
  */
 
 #include "config.h"
-#include "libnetq/Once.h"
+#include "libnetq/sync/win32/Once.h"
 
 #ifdef NQ_OS_WINDOWS
 

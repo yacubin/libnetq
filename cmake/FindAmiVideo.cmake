@@ -39,7 +39,7 @@ find_library(AmiVideo_LIBRARY
 mark_as_advanced(AmiVideo_INCLUDE_DIR AmiVideo_LIBRARY)
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(AmiVideo DEFAULT_MSG AmiVideo_INCLUDE_DIR AmiVideo_LIBRARY)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(AmiVideo REQUIRED_VARS AmiVideo_LIBRARY AmiVideo_INCLUDE_DIR)
 if (AMIVIDEO_FOUND)
   set(AmiVideo_FOUND TRUE)
 endif ()

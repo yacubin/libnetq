@@ -11,7 +11,7 @@
 #include "libnetq/io/ByteBufferChannel.h"
 
 #include <libnetq/String.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 
 size_t NQByteBufferChannel_read(NQByteBufferChannel* thiz, void* data, size_t size)
 {

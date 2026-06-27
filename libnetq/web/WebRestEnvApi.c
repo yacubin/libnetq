@@ -148,7 +148,7 @@ static const NQWebRequestOperations kGetEnvOps = {
 
 static int setEnvRequest(NQWebRequest* request, NQWebResponse* response)
 {
-  return NQ_HTTP_INTERNAL_SERVER_ERROR;
+  return NQ_HTTP_NOT_IMPLEMENTED;
 }
 
 static const NQWebRequestOperations kSetEnvOps = {

@@ -23,7 +23,7 @@ struct NQWebWriterOperations {
   int (*init)    (NQWebWriter*);
   int (*write)   (NQWebWriter*, const void* data, size_t size);
   int (*flush)   (NQWebWriter*);
-  int (*release) (NQWebWriter*);
+  void (*release) (NQWebWriter*);
 };
 
 struct NQWebWriter {
@@ -35,7 +35,9 @@ struct NQWebWriter {
 
 static inline int NQWebWriter_init(NQWebWriter* thiz)
 {
-  return thiz->operations->init(thiz);
+  if (thiz->operations->init)
+    return thiz->operations->init(thiz);
+  return 0;
 }
 
 static inline int NQWebWriter_write(NQWebWriter* thiz, const void* data, size_t size)
@@ -45,12 +47,15 @@ static inline int NQWebWriter_write(NQWebWriter* thiz, const void* data, size_t 
 
 static inline int NQWebWriter_flush(NQWebWriter* thiz)
 {
-  return thiz->operations->flush(thiz);
+  if (thiz->operations->flush)
+    return thiz->operations->flush(thiz);
+  return 0;
 }
 
-static inline int NQWebWriter_release(NQWebWriter* thiz)
+static inline void NQWebWriter_release(NQWebWriter* thiz)
 {
-  return thiz->operations->release(thiz);
+  if (thiz->operations->release)
+    thiz->operations->release(thiz);
 }
 
 #ifdef __cplusplus

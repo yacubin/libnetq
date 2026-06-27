@@ -12,7 +12,7 @@
 
 #include <libnetq/UTF.h>
 #include <libnetq/string/String.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Assert.h>
@@ -28,45 +28,209 @@ static inline char normalizeCharacter(char ch)
   return ch == NQ_WINPATH_DELIMITER ? NQ_PATH_DELIMITER : ch;
 }
 
+static inline bool isPathSegmentDelimiter(char ch)
+{
+  return ch == NQ_PATH_DELIMITER || ch == NQ_WINPATH_DELIMITER;
+}
+
+struct SegmentIterator {
+  const char* path;
+  const char* segmentData;
+  size_t segmentSize;
+  bool withStartDelimitter;
+};
+
+static void SegmentIterator_init(struct SegmentIterator* thiz, const char* path)
+{
+  thiz->path = path;
+  thiz->segmentData = path;
+  thiz->segmentSize = 0;
+  thiz->withStartDelimitter = false;
+}
+
+static bool SegmentIterator_next(struct SegmentIterator* thiz)
+{
+  if (*thiz->path == '\0')
+    return false;
+
+  thiz->withStartDelimitter = false;
+  while (*thiz->path && isPathSegmentDelimiter(*thiz->path)) {
+    thiz->withStartDelimitter = true;
+    thiz->path++;
+  }
+
+  thiz->segmentData = thiz->path;
+  while (*thiz->path && !isPathSegmentDelimiter(*thiz->path))
+    thiz->path++;
+
+  thiz->segmentSize = thiz->path - thiz->segmentData;
+  return true;
+}
+
+struct SegmentWriter {
+  char* buffer;
+  char* bufferEnd;
+  bool isAbsolute;
+  size_t segmentCount;
+  size_t pathLength;
+};
+
+static void SegmentWriter_init(struct SegmentWriter* thiz, char* buffer, size_t* length)
+{
+  thiz->buffer = buffer;
+  if (buffer == NULL)
+    thiz->bufferEnd = NULL;
+  else if (length)
+    thiz->bufferEnd = buffer + *length;
+  else
+    thiz->bufferEnd = (char*)(~(size_t)0);
+  thiz->isAbsolute = false;
+  thiz->segmentCount = 0;
+  thiz->pathLength = 0;
+}
+
+static void SegmentWriter_add(struct SegmentWriter* thiz, bool hasDelimitter, const char* segment, size_t length)
+{
+  if (thiz->segmentCount == 0 && hasDelimitter) {
+    if (thiz->buffer < thiz->bufferEnd)
+      *thiz->buffer++ = NQ_PATH_DELIMITER;
+    thiz->pathLength++;
+    thiz->isAbsolute = true;
+  }
+
+  thiz->segmentCount++;
+
+  if (length == 0 || (length == 1 && segment[0] == '.'))
+    return;
+
+  if (length == 2 && segment[0] == '.' && segment[1] == '.') {
+    // TODO: ".."
+    return;
+  }
+
+  if (thiz->pathLength > 0 && (thiz->pathLength != 1 || !thiz->isAbsolute)) {
+    if (thiz->buffer < thiz->bufferEnd)
+      *thiz->buffer++ = NQ_PATH_DELIMITER;
+    thiz->pathLength++;
+  }
+
+  size_t size = NQGetMin(length, thiz->bufferEnd - thiz->buffer);
+  if (size != 0) {
+    memmove(thiz->buffer, segment, size);
+    thiz->buffer += size;
+  }
+
+  thiz->pathLength += length;
+}
+
+static NQ_ALWAYS_INLINE
+void pathJoin1(const char* path1, char* buf, size_t* len)
+{
+  struct SegmentWriter wr;
+  SegmentWriter_init(&wr, buf, len);
+
+  struct SegmentIterator sr;
+  SegmentIterator_init(&sr, path1);
+
+  while (SegmentIterator_next(&sr))
+    SegmentWriter_add(&wr, sr.withStartDelimitter, sr.segmentData, sr.segmentSize);
+
+  if (len != NULL)
+    *len = wr.pathLength;
+}
+
+static NQ_ALWAYS_INLINE
+void pathJoin2(const char* path1, const char* path2, char* buf, size_t* len)
+{
+  struct SegmentWriter wr;
+  SegmentWriter_init(&wr, buf, len);
+
+  struct SegmentIterator sr;
+
+  SegmentIterator_init(&sr, path1);
+  while (SegmentIterator_next(&sr))
+    SegmentWriter_add(&wr, sr.withStartDelimitter, sr.segmentData, sr.segmentSize);
+
+  SegmentIterator_init(&sr, path2);
+  while (SegmentIterator_next(&sr))
+    SegmentWriter_add(&wr, sr.withStartDelimitter, sr.segmentData, sr.segmentSize);
+
+  if (len != NULL)
+    *len = wr.pathLength;
+}
+
+static NQ_ALWAYS_INLINE
+void pathJoin3(const char* path1, const char* path2, const char* path3, char* buf, size_t* len)
+{
+  struct SegmentWriter wr;
+  SegmentWriter_init(&wr, buf, len);
+
+  struct SegmentIterator sr;
+
+  SegmentIterator_init(&sr, path1);
+  while (SegmentIterator_next(&sr))
+    SegmentWriter_add(&wr, sr.withStartDelimitter, sr.segmentData, sr.segmentSize);
+  SegmentIterator_init(&sr, path2);
+  while (SegmentIterator_next(&sr))
+    SegmentWriter_add(&wr, sr.withStartDelimitter, sr.segmentData, sr.segmentSize);
+  SegmentIterator_init(&sr, path3);
+  while (SegmentIterator_next(&sr))
+    SegmentWriter_add(&wr, sr.withStartDelimitter, sr.segmentData, sr.segmentSize);
+
+  if (len != NULL)
+    *len = wr.pathLength;
+}
+
+static NQ_ALWAYS_INLINE
+void pathResolve2(const char* path1, const char* path2, char* buf, size_t* len)
+{
+  if (NQIsAbsolutePath(path2))
+    pathJoin1(path2, buf, len);
+  else
+    pathJoin2(path1, path2, buf, len);
+}
+
+static NQ_ALWAYS_INLINE
+void pathResolve3(const char* path1, const char* path2, const char* path3, char* buf, size_t* len)
+{
+  if (NQIsAbsolutePath(path3))
+    pathJoin1(path3, buf, len);
+  else if (NQIsAbsolutePath(path2))
+    pathJoin2(path2, path3, buf, len);
+  else
+    pathJoin3(path1, path2, path3, buf, len);
+}
+
 NQPath* NQPath_create(const char* path)
 {
-  size_t length = strlen(path);
+  size_t length;
+  pathJoin1(path, NULL, &length);
   NQPath* thiz = NQStringArray16_alloc(length);
   if (thiz == NULL)
     return NULL;
-
-  char* ptr = thiz->characters;
-  for (size_t i = 0; i < length; i++) {
-    *ptr++ = normalizeCharacter(path[i]);
-  }
-
+  pathJoin1(path, thiz->characters, &length);
   return thiz;
 }
 
 NQPath* NQPath_fromJoin2(const char* path1, const char* path2)
 {
-  size_t len1 = strlen(path1);
-  size_t len2 = strlen(path2);
-
-  size_t length = len1 + 1 + len2;
-  if (length < len1 || length < len2)
-    return NULL;
-
+  size_t length;
+  pathJoin2(path1, path2, NULL, &length);
   NQPath* thiz = NQStringArray16_alloc(length);
   if (thiz == NULL)
     return NULL;
+  pathJoin2(path1, path2, thiz->characters, &length);
+  return thiz;
+}
 
-  char* ptr = thiz->characters;
-  for (size_t i = 0; i < len1; i++) {
-    *ptr++ = normalizeCharacter(path1[i]);
-  }
-
-  *ptr++ = NQ_PATH_DELIMITER;
-
-  for (size_t i = 0; i < len2; i++) {
-    *ptr++ = normalizeCharacter(path2[i]);
-  }
-
+NQPath* NQPath_fromResolve2(const char* path1, const char* path2)
+{
+  size_t length;
+  pathResolve2(path1, path2, NULL, &length);
+  NQPath* thiz = NQStringArray16_alloc(length);
+  if (thiz == NULL)
+    return NULL;
+  pathResolve2(path1, path2, thiz->characters, &length);
   return thiz;
 }
 
@@ -118,32 +282,6 @@ static inline bool pathBuilderExpandCapacity(NQPathBuilder* thiz, size_t newMinC
   return pathBuilderReserveCapacity(thiz, pathBuilderNextCapacity(thiz, newMinCapacity));
 }
 
-static bool pathBuilderAdd(NQPathBuilder* thiz, const char* path, bool withDelimeter)
-{
-  size_t length = NQStrlen(path);
-  if (length == 0)
-    return true;
-
-  size_t newSize = thiz->length + 1 + length + 1;
-  if (newSize < thiz->length)
-    return false;
-
-  if (newSize > thiz->capacity) {
-    if (!pathBuilderExpandCapacity(thiz, newSize))
-      return false;
-  }
-
-  char* ptr = thiz->characters + thiz->length;
-  if (withDelimeter)
-    *ptr++ = NQ_PATH_DELIMITER;
-  for (size_t i = 0; i < length; i++)
-    *ptr++ = normalizeCharacter(path[i]);
-  *ptr = '\0';
-
-  thiz->length = (uint16_t)(ptr - thiz->characters);
-  return true;
-}
-
 void NQPathBuilder_init(NQPathBuilder* thiz)
 {
   pathBuilderInit(thiz);
@@ -152,47 +290,76 @@ void NQPathBuilder_init(NQPathBuilder* thiz)
 bool NQPathBuilder_initPath(NQPathBuilder* thiz, const char* path1)
 {
   pathBuilderInit(thiz);
-  return pathBuilderAdd(thiz, path1, false);
+
+  size_t length;
+  pathJoin1(path1, NULL, &length);
+  if (!pathBuilderReserveCapacity(thiz, length + 1))
+    return false;
+
+  pathJoin1(path1, thiz->characters, &length);
+  thiz->characters[length] = '\0';
+  thiz->length = (uint16_t)length;
+  return true;
 }
 
 bool NQPathBuilder_initJoin2(NQPathBuilder* thiz, const char* path1, const char* path2)
 {
   pathBuilderInit(thiz);
-  if (!pathBuilderAdd(thiz, path1, false))
+
+  size_t length;
+  pathJoin2(path1, path2, NULL, &length);
+  if (!pathBuilderReserveCapacity(thiz, length + 1))
     return false;
-  if (NQPathBuilder_join(thiz, path2))
-    return true;
-  pathBuilderFinalize(thiz);
-  return false;
+
+  pathJoin2(path1, path2, thiz->characters, &length);
+  thiz->characters[length] = '\0';
+  thiz->length = (uint16_t)length;
+  return true;
 }
 
 bool NQPathBuilder_initJoin3(NQPathBuilder* thiz, const char* path1, const char* path2, const char* path3)
 {
   pathBuilderInit(thiz);
-  if (!pathBuilderAdd(thiz, path1, false))
+
+  size_t length;
+  pathJoin3(path1, path2, path3, NULL, &length);
+  if (!pathBuilderReserveCapacity(thiz, length + 1))
     return false;
-  if (NQPathBuilder_join(thiz, path2) && NQPathBuilder_join(thiz, path3))
-    return true;
-  pathBuilderFinalize(thiz);
-  return false;
+
+  pathJoin3(path1, path2, path3, thiz->characters, &length);
+  thiz->characters[length] = '\0';
+  thiz->length = (uint16_t)length;
+  return true;
 }
 
 bool NQPathBuilder_initResolve2(NQPathBuilder* thiz, const char* path1, const char* path2)
 {
-  if (NQIsAbsolutePath(path2))
-    return NQPathBuilder_initPath(thiz, path2);
-  else
-    return NQPathBuilder_initJoin2(thiz, path1, path2);
+  pathBuilderInit(thiz);
+
+  size_t length;
+  pathResolve2(path1, path2, NULL, &length);
+  if (!pathBuilderReserveCapacity(thiz, length + 1))
+    return false;
+
+  pathResolve2(path1, path2, thiz->characters, &length);
+  thiz->characters[length] = '\0';
+  thiz->length = (uint16_t)length;
+  return true;
 }
 
 bool NQPathBuilder_initResolve3(NQPathBuilder* thiz, const char* path1, const char* path2, const char* path3)
 {
-  if (NQIsAbsolutePath(path3))
-    return NQPathBuilder_initPath(thiz, path3);
-  else if (NQIsAbsolutePath(path2))
-    return NQPathBuilder_initJoin2(thiz, path2, path3);
-  else
-    return NQPathBuilder_initJoin3(thiz, path1, path2, path3);
+  pathBuilderInit(thiz);
+
+  size_t length;
+  pathResolve3(path1, path2, path3, NULL, &length);
+  if (!pathBuilderReserveCapacity(thiz, length + 1))
+    return false;
+
+  pathResolve3(path1, path2, path3, thiz->characters, &length);
+  thiz->characters[length] = '\0';
+  thiz->length = (uint16_t)length;
+  return true;
 }
 
 void NQPathBuilder_finalize(NQPathBuilder* thiz)
@@ -208,15 +375,39 @@ void NQPathBuilder_clear(NQPathBuilder* thiz, const char* path)
 
 bool NQPathBuilder_join(NQPathBuilder* thiz, const char* path)
 {
-  if (thiz->length != 0 && thiz->characters[thiz->length - 1] != NQ_PATH_DELIMITER)
-    return pathBuilderAdd(thiz, path, true);
-  else
-    return pathBuilderAdd(thiz, path, false);
+  size_t length;
+  pathJoin2(thiz->characters, path, NULL, &length);
+  if (!pathBuilderReserveCapacity(thiz, length + 1))
+    return false;
+
+  pathJoin2(thiz->characters, path, thiz->characters, &length);
+  thiz->characters[length] = '\0';
+  thiz->length = (uint16_t)length;
+  return true;
 }
 
 bool NQPathBuilder_add(NQPathBuilder* thiz, const char* text)
 {
-  return pathBuilderAdd(thiz, text, false);
+  size_t length = NQStrlen(text);
+  if (length == 0)
+    return true;
+
+  size_t newSize = thiz->length + length + 1;
+  if (newSize < thiz->length)
+    return false;
+
+  if (newSize > thiz->capacity) {
+    if (!pathBuilderExpandCapacity(thiz, newSize))
+      return false;
+  }
+
+  char* ptr = thiz->characters + thiz->length;
+  for (size_t i = 0; i < length; i++)
+    *ptr++ = normalizeCharacter(text[i]);
+  *ptr = '\0';
+
+  thiz->length = (uint16_t)(ptr - thiz->characters);
+  return true;
 }
 
 void NQPathBuilder_removeLastSegment(NQPathBuilder* thiz)
@@ -361,7 +552,7 @@ size_t NQGetAbsolutePath(char* buffer, size_t n, const char* path)
   // https://chromium.googlesource.com/native_client/nacl-newlib/+/a9ae3c60b36dea3d8a10e18b1b6db952d21268c2/newlib/libc/sys/linux/realpath.c
   //realpath(const char *path, char *resolved_path);
   //  NQIsAbsolutePath(path)
-  size_t len = strlen(path);
+  size_t len = NQStrlen(path);
   size_t sz = NQGetMin(n, len + 1);
   memcpy(buffer, path, sz);
   return len;

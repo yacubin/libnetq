@@ -11,19 +11,11 @@
 #define _LIBNETQ_VERSION_H
 
 #include <libnetq/Basic.h>
+#include <libnetq/GenVersion.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define LIBNETQ_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
-#define LIBNETQ_VERSION_MINOR @PROJECT_VERSION_MINOR@
-#define LIBNETQ_VERSION_MICRO @PROJECT_VERSION_PATCH@
-
-#define LIBNETQ_VERSION "@PROJECT_VERSION@"
-
-/* Library Version Code */
-#define NQ_VERSION_CODE @NQ_VERSION_CODE@
 
 typedef uint32_t NQVersionCode;
 

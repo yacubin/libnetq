@@ -14,7 +14,7 @@
 #include <libnetq/BufferBuilder.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 #include <libnetq/Sprintf.h>
 #include <libnetq/Assert.h>
 #include <libnetq/WebSocketTypes.h>

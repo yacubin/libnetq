@@ -14,7 +14,7 @@
 #include "libnetq/DispatchQueue.h"
 
 #include <libnetq/Limits.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Assert.h>
 

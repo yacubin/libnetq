@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -16,7 +16,7 @@
   macro(__riscv64)      \
   macro(__riscv_atomic) \
   macro(__riscv_mul)    \
-  macro(__riscv_muldiv  \
+  macro(__riscv_muldiv)  \
   macro(__riscv_flen)
 
 #if  defined (__riscv)        \
@@ -40,10 +40,8 @@
 # else
 #  error Not supported RISC-V bit size
 # endif
-#elif defined(__riscv64) || defined(__LP64__)
+#elif defined(__riscv64)
 # define NQ_CPU_64BIT 1
-#else
-# define NQ_CPU_32BIT 1
 #endif
 
 #endif

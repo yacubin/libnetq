@@ -12,7 +12,7 @@
 
 #include <libnetq/Assert.h>
 #include <libnetq/BitOps.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 #include <libnetq/ConstExpr.h>
 
 #define CHUNK_BITS 7

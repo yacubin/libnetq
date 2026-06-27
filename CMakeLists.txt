@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.14
+project(libnetq VERSION 1.0.15
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -126,6 +126,21 @@ if (LNQ_WITH_ADVAPI32 OR HAVE_ADVAPI32)
   endif ()
 endif ()
 
+set(HAVE_PSAPI FALSE)
+set(WITH_PSAPI OFF)
+check_include_files("windows.h;psapi.h" HAVE_PSAPI_H)
+if (HAVE_PSAPI_H)
+  set(HAVE_PSAPI TRUE)
+endif ()
+if (LNQ_WITH_PSAPI OR HAVE_PSAPI)
+  LNQ_FEATURE_DEFINE(WITH_PSAPI "Allow compilation with Psapi library")
+  if (NOT LNQ_WITH_PSAPI STREQUAL "AUTO")
+    set(WITH_PSAPI ${LNQ_WITH_PSAPI})
+  elseif (LNQ_LIBRARY_TYPE STREQUAL "SHARED" OR WIN32)
+    set(WITH_PSAPI ON)
+  endif ()
+endif ()
+
 LNQ_ADD_LIBRARY(ZLIB)
 LNQ_ADD_LIBRARY(OpenSSL)
 LNQ_ADD_LIBRARY(Jansson)
@@ -151,6 +166,7 @@ if (LibJWT_FOUND AND LibJWT_VERSION VERSION_GREATER_EQUAL "3.0.0")
   endif ()
 endif ()
 
+check_include_file(dirent.h HAVE_DIRENT_H)
 check_include_file(errno.h HAVE_ERRNO_H)
 check_include_file(stddef.h HAVE_STDDEF_H)
 check_include_file(stdio.h HAVE_STDIO_H)
@@ -477,9 +493,11 @@ set(libnetq_HEADERS
   libnetq/web/JsonRpcResponse.h
   libnetq/web/JsonRpcTypes.h
   libnetq/web/UrlHost.h
+  libnetq/web/WebEnvView.h
+  libnetq/web/WebFileUrlMap.h
+  libnetq/web/WebFileView.h
   libnetq/web/WebRestArchApi.h
   libnetq/web/WebRestEnvApi.h
-  libnetq/web/WebRestFileApi.h
   libnetq/web/WebRestUsersApi.h
   libnetq/web/WebRequest.h
   libnetq/web/WebResponse.h
@@ -531,6 +549,7 @@ set(libnetq_HEADERS
   libnetq/DispatchQueue.h
   libnetq/Endian.h
   libnetq/Env.h
+  libnetq/Errno.def
   libnetq/ErrorCode.h
   libnetq/Event.h
   libnetq/EventTarget.h
@@ -613,6 +632,7 @@ set(libnetq_HEADERS
   libnetq/UTF.h
   libnetq/UUID.h
   libnetq/VA.h
+  libnetq/Version.h
   libnetq/WakeOnLan.h
   libnetq/WebSocketCalcAccept.h
   libnetq/WebSocketFrame.h
@@ -719,9 +739,11 @@ set(libnetq_SOURCES
   libnetq/web/HttpStatistics.c
   libnetq/web/JsonRpcResponse.c
   libnetq/web/UrlHost.c
+  libnetq/web/WebEnvView.c
+  libnetq/web/WebFileUrlMap.c
+  libnetq/web/WebFileView.c
   libnetq/web/WebRestArchApi.c
   libnetq/web/WebRestEnvApi.c
-  libnetq/web/WebRestFileApi.c
   libnetq/web/WebRestUsersApi.c
   libnetq/web/WebResponse.c
   libnetq/web/WebServer.c
@@ -879,8 +901,8 @@ set(libnetq_CMAKEFILES
 
 set(libnetq_DATAFILES
   config.h.in
-  libnetq/Features.h.in
-  libnetq/Version.h.in
+  libnetq/GenConfig.h.in
+  libnetq/GenVersion.h.in
   LICENSE
   README.md
   )
@@ -1042,6 +1064,12 @@ if (CMAKE_SYSTEM_NAME MATCHES "Generic")
   if (HAVE_ERRNO_H)
     set(NQCONFIG_USE_ERRNO_H 1)
   endif ()
+  if (HAVE_STRING_H)
+    set(NQCONFIG_USE_STRING_H 1)
+  endif ()
+  if (HAVE_DIRENT_H)
+    set(NQCONFIG_USE_DIRENT_H 1)
+  endif ()
 endif ()
 
 if (WITH_PTHREAD)
@@ -1058,6 +1086,10 @@ endif ()
 
 if (WITH_ADVAPI32)
   list(APPEND libnetq_LIBRARIES advapi32)
+endif ()
+
+if (WITH_PSAPI)
+  list(APPEND libnetq_LIBRARIES psapi)
 endif ()
 
 if (WITH_OPENSSL)
@@ -1113,13 +1145,13 @@ if (WITH_MHD)
 endif ()
 
 configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/config.h" @ONLY)
-configure_file(libnetq/Version.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/Version.h" @ONLY)
-configure_file(libnetq/Features.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/Features.h" @ONLY)
+configure_file(libnetq/GenConfig.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/GenConfig.h" @ONLY)
+configure_file(libnetq/GenVersion.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/GenVersion.h" @ONLY)
 
 list(APPEND libnetq_GENERATED
   "${CMAKE_CURRENT_BINARY_DIR}/config.h"
-  "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/Version.h"
-  "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/Features.h"
+  "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/GenConfig.h"
+  "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/GenVersion.h"
   )
 
 source_group(TREE "${CMAKE_CURRENT_BINARY_DIR}" FILES ${libnetq_GENERATED})
@@ -1138,8 +1170,8 @@ add_library(LibNetQ::LibNetQ ALIAS libnetq)
 
 install(
   FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/Version.h"
-    "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/Features.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/GenConfig.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/GenVersion.h"
   DESTINATION
     "${CMAKE_INSTALL_INCLUDEDIR}/libnetq"
   )
@@ -1178,3 +1210,4 @@ message(STATUS "SQLite3  . . . . . . . . . . . . . . . . . . ${WITH_SQLITE3} (HA
 message(STATUS "CJOSE  . . . . . . . . . . . . . . . . . . . ${WITH_CJOSE} (HAVE ${HAVE_CJOSE})")
 message(STATUS "LibJWT . . . . . . . . . . . . . . . . . . . ${WITH_LIBJWT} (HAVE ${HAVE_LIBJWT})")
 message(STATUS "MHD  . . . . . . . . . . . . . . . . . . . . ${WITH_MHD} (HAVE ${HAVE_MHD})")
+message(STATUS "Psapi  . . . . . . . . . . . . . . . . . . . ${WITH_PSAPI} (HAVE ${HAVE_PSAPI})")

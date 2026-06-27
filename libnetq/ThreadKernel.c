@@ -17,7 +17,7 @@
 
 #include <libnetq/Malloc.h>
 #include <libnetq/String.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 
 #include <linux/kthread.h>
 #include <linux/delay.h>

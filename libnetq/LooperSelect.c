@@ -18,7 +18,7 @@
 
 #include <libnetq/LooperSource.h>
 #include <libnetq/String.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/EventWakeup.h>
 #include <libnetq/Time.h>

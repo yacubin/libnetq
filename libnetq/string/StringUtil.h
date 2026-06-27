@@ -42,6 +42,11 @@ static inline bool NQCStrIsNullOrEmpty(const char* str)
   return str == NULL || NQCStrIsEmpty(str);
 }
 
+static inline const char* NQCStrEmptyIfNull(const char* str)
+{
+  return str == NULL ? NQCStrEmpty() : str;
+}
+
 static inline bool NQCStrIsEqual(const char* str1, const char* str2, size_t len2)
 {
   return NQStrncmp(str2, str1, len2) == 0 && str1[len2] == '\0';

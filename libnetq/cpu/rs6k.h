@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -29,6 +29,7 @@
 
 #define NQ_CPU_RS6000 1
 #define NQ_CPU_NAME "RS/6000"
+#define NQ_CPU_BIG_ENDIAN 1
 
 #endif
 

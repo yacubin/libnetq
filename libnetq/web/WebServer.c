@@ -25,7 +25,7 @@
 #include <libnetq/UrlPath.h>
 #include <libnetq/MediaType.h>
 #include <libnetq/Assert.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 #include <libnetq/ErrorCode.h>
 #include <libnetq/random/CryptoRandom.h>
 #include <libnetq/web/WebRequest.h>
@@ -65,14 +65,16 @@ static NQWebServerOperations* g_builtinOpsList[] = {
 #if defined(WITH_CIVETWEB)
   &kCivetWebServerOperations,
 #endif
+
+  NULL
 };
 
 static const NQWebServerOperations* defaultOperations(void)
 {
   if (!NQListHead_isEmpty(&g_registredOpsList))
     return NQ_CONTAINER_OF(g_registredOpsList.next, struct NQWebServerOperations, list);
-  if (NQ_ARRAY_LENGTH(g_builtinOpsList))
-    return g_builtinOpsList[0];
+  if (*g_builtinOpsList)
+    return *g_builtinOpsList;
   return NULL;
 }
 
@@ -212,7 +214,7 @@ void NQWebServer_finalize(NQWebServer* thiz)
   }
 
   while (!NQListHead_isEmpty(&thiz->moduleList)) {
-    NQWebExecutor* entry = NQ_CONTAINER_OF(thiz->moduleList.prev, struct NQWebExecutor, list);
+    NQWebExecutor* entry = NQ_CONTAINER_OF(thiz->moduleList.next, struct NQWebExecutor, list);
     moduleEntryRelease(thiz, entry);
   }
 
@@ -220,7 +222,7 @@ void NQWebServer_finalize(NQWebServer* thiz)
     NQKeyVal_release(thiz->mimetypes);
 
   while (!NQListHead_isEmpty(&thiz->executors)) {
-    NQWebExecutor* entry = NQ_CONTAINER_OF(thiz->executors.prev, struct NQWebExecutor, list);
+    NQWebExecutor* entry = NQ_CONTAINER_OF(thiz->executors.next, struct NQWebExecutor, list);
     NQListHead_remove(&entry->list);
     NQFree(entry);
   }

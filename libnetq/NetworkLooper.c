@@ -21,7 +21,7 @@
 #include <libnetq/Limits.h>
 #include <libnetq/Time.h>
 #include <libnetq/Assert.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 
 enum {
   kTimerInFreeState,

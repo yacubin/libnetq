@@ -15,7 +15,6 @@
 
 #include <libnetq/String.h>
 #include <libnetq/Malloc.h>
-#include <libnetq/Math.h>
 #include <libnetq/Limits.h>
 
 struct NQBaseValue {

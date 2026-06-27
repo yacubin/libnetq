@@ -14,6 +14,7 @@
 #include <libnetq/String.h>
 #include <libnetq/Log.h>
 #include <libnetq/Limits.h>
+#include <libnetq/MinMax.h>
 
 typedef void DBCObject;
 typedef uint32_t DBCClassId;
@@ -420,11 +421,12 @@ bool DBCRanges_add(DBCContext* context, DBCRanges* thiz, uint32_t first, uint32_
       newPointer[1].first = first;
       newPointer[1].second = second;
       thiz->rangePointer = newPointer;
+      thiz->capacity = kDBCRangesStartCapacity;
     }
   }
   else {
     if (thiz->capacity <= thiz->count) {
-      uint16_t newCapacity = (uint16_t)((size_t)thiz->capacity * 2 / 3);
+      size_t newCapacity = (size_t)thiz->capacity * 3 / 2;
       if (kDBCRangesMaxSize < newCapacity)
         newCapacity = kDBCArrayMaxSize;
 
@@ -437,6 +439,7 @@ bool DBCRanges_add(DBCContext* context, DBCRanges* thiz, uint32_t first, uint32_
 
       DBCFree(context, thiz->rangePointer);
       thiz->rangePointer = newPointer;
+      thiz->capacity = newCapacity;
     }
     thiz->rangePointer[thiz->count].first = first;
     thiz->rangePointer[thiz->count].second = second;
@@ -780,19 +783,16 @@ static bool DBCAttrDefines_reserve(DBCContext* context, DBCAttrDefines* thiz, si
 bool DBCAttrDefines_add(DBCContext* context, DBCAttrDefines* thiz, NQDBCAttrProto* attr)
 {
   if (thiz->capacity <= thiz->size) {
-    if (kDBCArrayMaxSize == thiz->capacity)
+    if (kDBCArrayMaxSize <= thiz->capacity)
       return false;
 
-    uint16_t newCapacity;
+    size_t newCapacity;
     if (thiz->capacity == 0)
       newCapacity = kDBCArrayStartCapacity;
     else
-      newCapacity = (uint16_t)((size_t)thiz->capacity * 2 / 3);
+      newCapacity = NQGetMin((size_t)thiz->capacity * 3 / 2, kDBCArrayMaxSize);
 
-    if (newCapacity < thiz->capacity)
-      newCapacity = kDBCArrayMaxSize;
-
-    if (!DBCAttrDefines_reserve(context, thiz, newCapacity))
+    if (!DBCAttrDefines_reserve(context, thiz, (uint16_t)newCapacity))
       return false;
   }
 
@@ -860,20 +860,17 @@ static bool DBCAttrMap_reserve(DBCContext* context, DBCAttrMap* thiz, size_t new
 static bool DBCAttrMap_add(DBCContext* context, DBCAttrMap* thiz, NQDBCAttribute* attr)
 {
   if (thiz->capacity <= thiz->size) {
-    if (kDBCArrayMaxSize == thiz->capacity) {
+    if (kDBCArrayMaxSize <= thiz->capacity) {
       return false;
     }
 
-    uint16_t newCapacity;
+    size_t newCapacity;
     if (thiz->capacity == 0)
       newCapacity = kDBCArrayStartCapacity;
     else
-      newCapacity = (uint16_t)((size_t)thiz->capacity * 2 / 3);
+      newCapacity = NQGetMin((size_t)thiz->capacity * 3 / 2, kDBCArrayMaxSize);
 
-    if (newCapacity < thiz->capacity)
-      newCapacity = kDBCArrayMaxSize;
-
-    if (!DBCAttrMap_reserve(context, thiz, newCapacity)) {
+    if (!DBCAttrMap_reserve(context, thiz, (uint16_t)newCapacity)) {
       return false;
     }
   }
@@ -1338,14 +1335,17 @@ static void NQDBCDocument_deinit(NQDBCDocument* thiz)
 {
   DBCContext* context = &thiz->context;
 
-  DBCString_finalize(context, &thiz->version);
-  DBCArray_finalize(context, &thiz->netNodes);
-  DBCArray_finalize(context, &thiz->messages);
-  DBCArray_finalize(context, &thiz->envVars);
-  DBCArray_finalize(context, &thiz->valTables);
   DBCArray_finalize(context, &thiz->sigTypes);
+  DBCArray_finalize(context, &thiz->valTables);
+  DBCArray_finalize(context, &thiz->envVars);
+  DBCArray_finalize(context, &thiz->messages);
+  DBCArray_finalize(context, &thiz->netNodes);
 
   DBCAttrDefines_finalize(context, &thiz->context.attrProtos);
+
+  DBCSymbols_finalize(context, &thiz->symbols);
+  DBCString_finalize(context, &thiz->version);
+
   DBCObjectAttr_finalize(context, &thiz->base);
 }
 
@@ -1664,7 +1664,7 @@ bool NQDBCNetNode_setComment(NQDBCNetNode* thiz, const char* comment)
   return DBCString_setCharacters(thiz->base.context, &thiz->base.comment, comment);
 }
 
-bool NQDBCNetNode_getAttrInt(const NQDBCDocument* thiz, const char* name, int64_t* result)
+bool NQDBCNetNode_getAttrInt(const NQDBCNetNode* thiz, const char* name, int64_t* result)
 {
   return DBCObjectAttr_getAttrInt(&thiz->base, name, result);
 }
@@ -1981,8 +1981,8 @@ bool NQDBCSignal_addMultiplexerRange(NQDBCSignal* thiz, uint32_t first, uint32_t
 
 NQDBCEnvVar* NQDBCEnvVar_create(DBCContext* context, const char* name, const NQDBCEnvInfo* info)
 {
-  size_t nlenz = strlen(name) + 1;
-  size_t ulenz = strlen(info->unit) + 1;
+  size_t nlenz = NQStrlen(name) + 1;
+  size_t ulenz = NQStrlen(info->unit) + 1;
 
   NQDBCEnvVar* thiz = (NQDBCEnvVar*)DBCAlloc(context, sizeof(struct NQDBCEnvVar) + nlenz + ulenz);
   if (thiz == NULL)
@@ -2018,6 +2018,8 @@ static void NQDBCEnvVar_deinit(NQDBCEnvVar* thiz)
   DBCContext* context = thiz->base.context;
 
   DBCArray_finalize(context, &thiz->accessNodes);
+  if (thiz->valTable != NULL)
+    DBCObject_release(thiz->valTable);
 
   DBCObjectAttr_finalize(context, &thiz->base);
 }
@@ -2452,7 +2454,7 @@ NQDBCValTable* NQDBCValTable_create(DBCContext* context, const char* name, const
 
   NQDBCValTable* thiz = (NQDBCValTable*)DBCAlloc(context, totalInBytes);
   if (thiz == NULL)
-    return false;
+    return NULL;
 
   DBCObjectBase_init(context, &thiz->base, kNQDBCValTableIndex);
 
@@ -2494,16 +2496,16 @@ void NQDBCValTable_release(NQDBCValTable* thiz)
 
 NQDBCSigType* NQDBCSigType_create(DBCContext* context, const char* name, const NQDBCSigInfo* info, double defaultValue)
 {
-  size_t nlenz = strlen(name) + 1;
-  size_t ulenz = strlen(info->unit) + 1;
+  size_t nlenz = NQStrlen(name) + 1;
+  size_t ulenz = NQStrlen(info->unit) + 1;
 
-  NQDBCSigType* thiz = (NQDBCSigType*)DBCAlloc(context, sizeof(struct NQDBCSigType) + nlenz + ulenz);
+  NQDBCSigType* thiz = (NQDBCSigType*)DBCAlloc(context, sizeof(*thiz) + nlenz + ulenz);
   if (thiz == NULL)
     return NULL;
 
   DBCObjectBase_init(context, &thiz->base, kNQDBCSigTypeIndex);
 
-  char* str = (char*)thiz + sizeof(struct NQDBCSignal);
+  char* str = (char*)thiz + sizeof(*thiz);
   memcpy(str, name, nlenz);
   thiz->base.name = str;
 

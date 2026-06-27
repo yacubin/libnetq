@@ -25,7 +25,7 @@ static inline int NQOnce_call(NQOnce* once, NQOnceCallback callback)
 {
   NQ_UNUSED_PARAM(once);
   NQ_UNUSED_PARAM(callback);
-  return NQ_ENOTSUP;
+  return -NQ_ENOTSUPP;
 }
 
 #endif /* _LIBNETQ_SYNC_STUB_ONCE_H */

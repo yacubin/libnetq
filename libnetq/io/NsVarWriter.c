@@ -12,7 +12,7 @@
 
 #include <libnetq/String.h>
 #include <libnetq/CType.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Assert.h>
 #include <libnetq/Malloc.h>
@@ -50,7 +50,7 @@ void NQNsVarWriter_init(NQNsVarWriter* thiz, const struct NQNsVarWriterEntry* en
 
 int NQNsVarWriter_write(NQNsVarWriter* thiz, const void* data, size_t size)
 {
-  int res = NQGetMin(NQ_INT32_MIN, size);
+  int res = NQGetMin(NQ_INT32_MAX, size);
 
   const char* ptr = (const char*)data;
   const char* end = ptr + res;
@@ -110,7 +110,7 @@ int NQNsVarWriter_write(NQNsVarWriter* thiz, const void* data, size_t size)
           thiz->current = NULL;
           break;
         }
-        if (strcmp(thiz->current->name, thiz->buffer + 2) == 0)
+        if (NQStrcmp(thiz->current->name, thiz->buffer + 2) == 0)
           break;
         thiz->current++;
       }

@@ -1368,7 +1368,7 @@ static void initAttrDefineMessageHex(DBCMachine* thiz, NQDBCSection* section)
 
 static void initAttrRelDefineMessageHex(DBCMachine* thiz, NQDBCSection* section)
 {
-  initAttrDefineHex(thiz, kNQDBCSectionAttrDefinition, kNQDBCObjectMessage, section);
+  initAttrDefineHex(thiz, kNQDBCSectionAttrRelDefinition, kNQDBCObjectMessage, section);
 }
 
 static void initAttrDefineMessageFloat(DBCMachine* thiz, NQDBCSection* section)
@@ -1662,7 +1662,7 @@ static void initValueEnvVar(DBCMachine* thiz, NQDBCSection* section)
 {
   section->envVarValue.type = kNQDBCSectionEnvVarValue;
   section->envVarValue.name = DBCMachine_shiftCIdentifier(thiz);
-  section->envVarValue.valDesc = DBCMachine_shiftDescriptions(thiz, &section->signalValue.count);
+  section->envVarValue.valDesc = DBCMachine_shiftDescriptions(thiz, &section->envVarValue.count);
 }
 
 static void initExMultiplex(DBCMachine* thiz, NQDBCSection* section)
@@ -1724,7 +1724,7 @@ static const struct DBCOpcode s_environment_variables[] = {
 };
 
 static const struct DBCOpcode s_environment_variables_data[] = {
-  { 0, '1', STRING_ ":" UINTEGER_ ";", &initEnvVarData }
+  { 0, '1', KEYWORD_ ":" UINTEGER_ ";", &initEnvVarData }
 };
 
 static const struct DBCOpcode s_signal_types[] = {
@@ -2004,6 +2004,7 @@ static int NQDBCParser_next(NQDBCParser* thiz, const char** start, const char* e
 {
   int ret;
   bool repeat;
+  uint32_t keywordMask;
   DBCToken token;
   NQDBCSection section;
 
@@ -2048,10 +2049,11 @@ static int NQDBCParser_next(NQDBCParser* thiz, const char** start, const char* e
         return kNQDBCErrorSectionKeyword;
       }
 
+      keywordMask = (1 << thiz->currentSection->identifier);
       switch (thiz->currentSection->required) {
       case '?':
       case '1':
-        if (thiz->keywordUseMap & (1 << thiz->currentSection->identifier))
+        if (thiz->keywordUseMap & keywordMask)
           return thiz->currentSection->errorCode;
         break;
 
@@ -2063,6 +2065,7 @@ static int NQDBCParser_next(NQDBCParser* thiz, const char** start, const char* e
         return thiz->currentSection->errorCode;
       }
 
+      thiz->keywordUseMap |= keywordMask;
       thiz->hasMachine = true;
       DBCMachine_init(&thiz->machine, thiz->currentSection->entry);
       break;

@@ -12,7 +12,7 @@
 
 #ifdef NQCONFIG_USE_ZLIB_CRC32
 
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 #include <libnetq/Limits.h>
 
 #include <zlib.h>

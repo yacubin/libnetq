@@ -347,7 +347,7 @@ static inline bool writeDouble(NQJSONWriter* thiz, double val)
     return false;
 
   char buf[32];
-  int length = sprintf(buf, "%f", val);
+  int length = snprintf(buf, sizeof(buf), "%f", val);
   if (length < 0 || length >= sizeof(buf))
     return false;
 

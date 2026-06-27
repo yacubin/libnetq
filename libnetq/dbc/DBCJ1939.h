@@ -107,7 +107,7 @@ NQ_EXPORT void NQDBCJ1939DM1_setRSL(NQDBCJ1939DM1* dm1, uint8_t state, uint8_t f
 NQ_EXPORT void NQDBCJ1939DM1_setAWL(NQDBCJ1939DM1* dm1, uint8_t state, uint8_t flash);
 NQ_EXPORT void NQDBCJ1939DM1_setPL(NQDBCJ1939DM1* dm1, uint8_t state, uint8_t flash);
 NQ_EXPORT bool NQDBCJ1939DM1_addDTC(NQDBCJ1939DM1* dm1, int spn, uint8_t fmi, uint8_t oc);
-NQ_EXPORT size_t NQDBCJ1939DM1_write(const NQDBCJ1939DM1* dm1, uint8_t* buffer, size_t n);
+NQ_EXPORT size_t NQDBCJ1939DM1_read(const NQDBCJ1939DM1* dm1, void* data, size_t size);
 
 #define NQDBCJ1939_TP_PACKEGE_MAX 256u
 #define NQDBCJ1939_TP_DATA_SIZE_MAX ((NQDBCJ1939_TP_PACKEGE_MAX - 1u) * 7u)

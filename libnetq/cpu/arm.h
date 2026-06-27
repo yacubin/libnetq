@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -65,6 +65,8 @@
   || defined (__ARM_ARCH_7R__)   \
   || defined (__ARM_ARCH_7M__)   \
   || defined (__ARM_ARCH_7S__)   \
+  || defined (__TARGET_ARCH_ARM)   \
+  || defined (__TARGET_ARCH_THUMB) \
   || defined (_ARM)              \
   || defined (_M_ARM)            \
   || defined (_M_ARMT)

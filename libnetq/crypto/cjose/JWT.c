@@ -16,7 +16,6 @@
 
 #include <libnetq/string/String.h>
 #include <libnetq/Malloc.h>
-#include <libnetq/Math.h>
 #include <libnetq/ErrorCode.h>
 #include <libnetq/Log.h>
 

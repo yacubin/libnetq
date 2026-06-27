@@ -602,7 +602,7 @@ int NQSocketSendTo6(NQSocketHandle handle, const uint8_t* buf, size_t len, int f
 int NQSocketPair(int domain, int type, int protocol, NQSocketHandle sock[2])
 {
 #ifdef NQ_OS_KERNEL
-  return -NQ_ENOTSUP;
+  return -NQ_ENOTSUPP;
 #endif
 
 #ifdef NQ_OS_WINDOWS

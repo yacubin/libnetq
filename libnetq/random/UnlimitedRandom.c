@@ -53,7 +53,7 @@ int NQGetUnlimitedRandom(void* data, size_t size)
 
 #elif defined(NQ_OS_DARWIN)
   if (CCRandomGenerateBytes(data, size) != kCCSuccess)
-    return -NQ_ENOTSUP;
+    return -NQ_ENOTSUPP;
   return 0;
 
 #elif defined(NQ_OS_UNIX)
@@ -101,7 +101,7 @@ int NQGetUnlimitedRandom(void* data, size_t size)
   return 0;
 
 #else
-  return -NQ_ENOTSUP;
+  return -NQ_ENOTSUPP;
 
 #endif
 }

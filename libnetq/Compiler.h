@@ -171,8 +171,25 @@
 #define NQ_ATTRIBUTE_WPRINTF(formatIndex, argumentsIndex)
 #endif
 
-#if defined(__SSE__) || defined(__SSE2__) || defined(NQ_COMPILER_MSVC)
+#if  defined(__SSE__) \
+  || defined(__SSE_MATH__) \
+  || (defined(_M_IX86_FP) && (_M_IX86_FP >= 1))
 #define NQ_HAS_COMPILER_SSE
+#endif
+
+#if  defined(__SSE2__) \
+  || defined(__SSE2_MATH__) \
+  || (defined(_M_IX86_FP) && (_M_IX86_FP >= 2))
+#define NQ_HAS_COMPILER_SSE2
+#endif
+
+#if defined(NQ_COMPILER_MINGW) || defined(NQ_COMPILER_MSVC)
+#ifndef NQ_HAS_COMPILER_SSE
+#define NQ_HAS_COMPILER_SSE
+#endif
+#ifndef NQ_HAS_COMPILER_SSE2
+#define NQ_HAS_COMPILER_SSE2
+#endif
 #endif
 
 #define NQ_FILE __FILE__

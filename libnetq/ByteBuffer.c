@@ -12,7 +12,7 @@
 
 #include <libnetq/string/StringUtil.h>
 #include <libnetq/Malloc.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 #include <libnetq/Assert.h>
 #include <libnetq/Limits.h>
 

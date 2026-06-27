@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/FileHandle.h"
 
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 #include <libnetq/Limits.h>
 
 int64_t NQFileReadn(NQFileHandle handle, uint8_t* data, int64_t size)

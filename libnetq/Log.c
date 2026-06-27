@@ -12,7 +12,7 @@
 
 #include <libnetq/String.h>
 #include <libnetq/Sprintf.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 #include <libnetq/Time.h>
 #include <libnetq/Abort.h>
 #include <libnetq/ErrorCode.h>

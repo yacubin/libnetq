@@ -11,7 +11,8 @@
 #include "libnetq/dbc/DBCJ1939.h"
 
 #include <libnetq/Assert.h>
-#include <libnetq/String.h>
+#include <libnetq/string/String.h>
+#include <libnetq/MinMax.h>
 
 #define NQDBC_DS_BAM 32
 #define NQDBC_PGN_TPCM 60416
@@ -62,7 +63,7 @@ void NQDBCJ1939DM1_setPL(NQDBCJ1939DM1* dm1, uint8_t state, uint8_t flash)
 
 bool NQDBCJ1939DM1_addDTC(NQDBCJ1939DM1* dm1, int spn, uint8_t fmi, uint8_t oc)
 {
-  if (sizeof(dm1->data) <= (dm1->size + 4))
+  if (sizeof(dm1->data) < (dm1->size + 4))
     return false;
 
   uint8_t* data = &dm1->data[dm1->size];
@@ -74,10 +75,9 @@ bool NQDBCJ1939DM1_addDTC(NQDBCJ1939DM1* dm1, int spn, uint8_t fmi, uint8_t oc)
   return true;
 }
 
-size_t NQDBCJ1939DM1_write(const NQDBCJ1939DM1* dm1, uint8_t* buffer, size_t n)
+size_t NQDBCJ1939DM1_read(const NQDBCJ1939DM1* dm1, void* data, size_t size)
 {
-  size_t size = (n < dm1->size) ? n : dm1->size;
-  memcpy(buffer, dm1->data, size);
+  memcpy(data, dm1->data, NQGetMin(dm1->size, size));
   return dm1->size;
 }
 
@@ -244,7 +244,7 @@ bool NQDBCCanFrame_append(NQDBCCanFrame* frame, const uint8_t* data, size_t size
   if ((sizeof(frame->data) - frame->size) < size)
     return false;
 
-  memcpy(frame->data, data, size);
+  memcpy(frame->data + frame->size, data, size);
   frame->size += (uint8_t)size;
   return true;
 }

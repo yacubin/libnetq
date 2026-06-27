@@ -61,8 +61,8 @@ typedef struct NQDataTime {
   int isDST;
 } NQDataTime;
 
-void NQDataTime_init(NQDataTime*);
-void NQDataTime_initLocalTime(NQDataTime*);
+NQ_EXPORT void NQDataTime_init(NQDataTime*);
+NQ_EXPORT void NQDataTime_initLocalTime(NQDataTime*);
 
 #define NQ_TIME_MAX NQ_INT64_MAX
 

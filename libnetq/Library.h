@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -41,6 +41,15 @@ typedef void* NQSymbol;
 NQ_EXPORT NQLibrary NQLibraryOpen(const char* path);
 NQ_EXPORT void NQLibraryClose(NQLibrary handle);
 NQ_EXPORT NQSymbol NQLibraryGetSymbol(NQLibrary handle, const char* name);
+
+typedef struct NQLibraryInfo NQLibraryInfo;
+struct NQLibraryInfo {
+  const char* filename;
+  void* baseAddr;
+};
+
+NQ_EXPORT int NQLibraryInfoLoad(NQLibraryInfo*, const void* addr);
+NQ_EXPORT void NQLibraryInfoFinalize(NQLibraryInfo*);
 
 #ifdef __cplusplus
 }

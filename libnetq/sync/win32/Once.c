@@ -23,7 +23,7 @@ int NQOnce_call(NQOnce* once, NQOnceCallback callback)
 {
   if (InitOnceExecuteOnce(once, InitHandleFunction, callback, NULL))
     return 0;
-  return (int)GetLastError();
+  return -(int)GetLastError();
 }
 
 #endif /* NQ_OS_WINDOWS */

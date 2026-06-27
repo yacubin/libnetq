@@ -142,7 +142,7 @@ int NQJWT_token(NQJWT* thiz, char* buffer, size_t length)
   NQ_UNUSED_PARAM(thiz);
   NQ_UNUSED_PARAM(buffer);
   NQ_UNUSED_PARAM(length);
-  return -NQ_ENOTSUP;
+  return -NQ_ENOTSUPP;
 }
 
 #endif

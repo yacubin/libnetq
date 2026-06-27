@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -27,12 +27,6 @@
 #define NQ_CPU_NAME "AMD64"
 #define NQ_CPU_ABI "x86_64"
 #define NQ_CPU_LITTLE_ENDIAN 1
-
-#ifdef __LP64__
-#define NQ_CPU_64BIT 1
-#else
-#define NQ_CPU_32BIT 1
-#endif
 
 #endif
 

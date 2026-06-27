@@ -11,7 +11,8 @@
 #include "libnetq/Base16.h"
 
 #include <libnetq/CType.h>
-#include <libnetq/string/StringUtil.h>
+#include <libnetq/string/String.h>
+#include <libnetq/ErrorCode.h>
 
 static const char lowerDigits[17] = "0123456789abcdef";
 static const char upperDigits[17] = "0123456789ABCDEF";
@@ -19,10 +20,10 @@ static const char upperDigits[17] = "0123456789ABCDEF";
 int NQBase16Encode(const uint8_t* inStart, const uint8_t* inEnd, char* outStart, char* outEnd, int flags)
 {
   if (inStart == NULL)
-    return -1;
+    return -NQ_EINVAL;
 
   if (inEnd == NULL)
-    inEnd = inStart + strlen((const char*)inStart);
+    inEnd = inStart + NQStrlen((const char*)inStart);
 
   int result = (inEnd - inStart) * 2;
   if (outStart == NULL)
@@ -55,14 +56,14 @@ int NQBase16Decode(const char* inStart, const char* inEnd, uint8_t* outStart, ui
   NQ_UNUSED_PARAM(flags);
 
   if (inStart == NULL)
-    return -1;
+    return -NQ_EINVAL;
 
   if (inEnd == NULL)
     inEnd = inStart + strlen((const char*)inStart);
 
   int result = (inEnd - inStart);
   if (result & 1)
-    return -1;
+    return -NQ_EINVAL;
   result /= 2;
 
   if (outStart == NULL)
@@ -70,14 +71,15 @@ int NQBase16Decode(const char* inStart, const char* inEnd, uint8_t* outStart, ui
 
   while (inStart < inEnd) {
     char upperCharacter = *inStart++;
+    if (!NQIsHexDigit(upperCharacter))
+      return -NQ_EINVAL;
     char lowerCharacter = *inStart++;
-    if (!NQIsHexDigit(upperCharacter) || !NQIsHexDigit(lowerCharacter)) {
-      return -1;
-    }
+    if (!NQIsHexDigit(lowerCharacter))
+      return -NQ_EINVAL;
+
     if (outStart && outStart < outEnd) {
       *outStart++ = NQToHexValue(upperCharacter) << 4 | NQToHexValue(lowerCharacter);
     }
-    inStart++;
   }
 
   return result;

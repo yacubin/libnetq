@@ -65,6 +65,8 @@
   || defined (__ARM_ARCH_7R__)   \
   || defined (__ARM_ARCH_7M__)   \
   || defined (__ARM_ARCH_7S__)   \
+  || defined (__TARGET_ARCH_ARM)   \
+  || defined (__TARGET_ARCH_THUMB) \
   || defined (_ARM)              \
   || defined (_M_ARM)            \
   || defined (_M_ARMT)

@@ -8,7 +8,7 @@
  */
 
 #include "config.h"
-#include "libnetq/web/WebRestFileApi.h"
+#include "libnetq/web/WebFileView.h"
 
 #include <libnetq/ErrorCode.h>
 #include <libnetq/Sprintf.h>
@@ -34,7 +34,7 @@
 #define GB (MB * 1024)
 #define TB (GB * 1024)
 
-struct NQWebRestFileApi {
+struct NQWebFileView {
   NQWebExecutor executor;
   struct NQWebRequestListener mainListener;
   struct NQWebRequestListener otherListener;
@@ -90,7 +90,7 @@ static const char* getRelativePath(const char* baseUrl, const char* url)
 
 static int onGetRequest(NQWebRequest* request, NQWebResponse* response)
 {
-  struct NQWebRestFileApi* fileApi = (struct NQWebRestFileApi*)request->userdata;
+  struct NQWebFileView* fileApi = (struct NQWebFileView*)request->userdata;
 
   NQWebServer* server = NQWebRequest_server(request);
 
@@ -231,7 +231,7 @@ static int onGetRequest(NQWebRequest* request, NQWebResponse* response)
 
 static int onFsInit(NQWebRequest* request, void* data)
 {
-  struct NQWebRestFileApi* fileApi = NQ_CONTAINER_OF(data, struct NQWebRestFileApi, executor);
+  struct NQWebFileView* fileApi = NQ_CONTAINER_OF(data, struct NQWebFileView, executor);
   request->userdata = fileApi;
   return 0;
 }
@@ -244,10 +244,17 @@ static const NQWebRequestOperations kFsOps = {
 static int restApiInit(NQWebExecutor* executor, void* data)
 {
   int ret;
-  struct NQWebRestFileParams* params = (struct NQWebRestFileParams*)data;
-  struct NQWebRestFileApi* fileApi = NQ_CONTAINER_OF(executor, struct NQWebRestFileApi, executor);
+  struct NQWebFileViewParams* params = (struct NQWebFileViewParams*)data;
+  struct NQWebFileView* fileApi = NQ_CONTAINER_OF(executor, struct NQWebFileView, executor);
 
-  fileApi->baseDir = NQCStrFormat("%s/", params->baseDir);
+  NQPathBuilder pathBld;
+  if (!NQPathBuilder_initResolve2(&pathBld, NQWebServer_workDir(executor->server), params->baseDir)) {
+    return -NQ_ENOMEM;
+  }
+
+  fileApi->baseDir = NQCStrFormat("%s/", NQPathBuilder_characters(&pathBld));
+  NQPathBuilder_finalize(&pathBld);
+
   if (fileApi->baseDir == NULL) {
     return -NQ_ENOMEM;
   }
@@ -278,7 +285,7 @@ static int restApiInit(NQWebExecutor* executor, void* data)
 
 static void restApiRelease(NQWebExecutor* executor)
 {
-  struct NQWebRestFileApi* fileApi = NQ_CONTAINER_OF(executor, struct NQWebRestFileApi, executor);
+  struct NQWebFileView* fileApi = NQ_CONTAINER_OF(executor, struct NQWebFileView, executor);
 
   NQWebExecutor_removeRequestListener(&fileApi->executor, &fileApi->otherListener);
   NQWebExecutor_removeRequestListener(&fileApi->executor, &fileApi->mainListener);
@@ -287,20 +294,20 @@ static void restApiRelease(NQWebExecutor* executor)
   NQCStrFree(fileApi->baseUrl);
 }
 
-static const struct NQWebExecutorOperations kWebRestEnvOps = {
+static const struct NQWebExecutorOperations kWebFileViewOps = {
   .init = restApiInit,
   .release = restApiRelease,
 };
 
-NQWebRestFileApi* NQWebRestFileApiCreate(NQWebServer* server, const struct NQWebRestFileParams* params)
+NQWebFileView* NQWebFileViewCreate(NQWebServer* server, const struct NQWebFileViewParams* params)
 {
   if (params->baseUrl == NULL || params->baseDir == NULL)
     return NULL;
 
-  return (NQWebRestFileApi*)NQWebServer_createExecutor(server, sizeof(struct NQWebRestFileApi), &kWebRestEnvOps, (void*)params);
+  return (NQWebFileView*)NQWebServer_createExecutor(server, sizeof(struct NQWebFileView), &kWebFileViewOps, (void*)params);
 }
 
-void NQWebRestFileApiDestroy(NQWebServer* server, NQWebRestFileApi* fileApi)
+void NQWebFileViewDestroy(NQWebServer* server, NQWebFileView* fileApi)
 {
   NQWebServer_destroyExecutor(server, &fileApi->executor);
 }

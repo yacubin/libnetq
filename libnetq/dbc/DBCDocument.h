@@ -125,7 +125,7 @@ NQ_EXPORT size_t NQDBCNetNode_attributeCount(const NQDBCNetNode*);
 NQ_EXPORT NQDBCAttribute* NQDBCNetNode_attributeAt(const NQDBCNetNode*, size_t index);
 NQ_EXPORT bool NQDBCNetNode_setComment(NQDBCNetNode*, const char* comment);
 
-NQ_EXPORT bool NQDBCNetNode_getAttrInt(const NQDBCDocument*, const char* name, int64_t* result);
+NQ_EXPORT bool NQDBCNetNode_getAttrInt(const NQDBCNetNode*, const char* name, int64_t* result);
 NQ_EXPORT bool NQDBCNetNode_setAttrInt(NQDBCNetNode*, const char* name, int64_t value);
 NQ_EXPORT bool NQDBCNetNode_getAttrFloat(const NQDBCNetNode*, const char* name, double* result);
 NQ_EXPORT bool NQDBCNetNode_setAttrFloat(NQDBCNetNode*, const char* name, double value);

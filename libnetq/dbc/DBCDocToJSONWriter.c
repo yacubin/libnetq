@@ -77,7 +77,8 @@ bool NQDBCSignalWriteTo(const NQDBCSignal* thiz, NQJSONWriter* writer)
         return false;
       for (size_t i = 0; i < attributeCount; i++) {
         const NQDBCAttribute* attr = NQDBCSignal_attributeAt(thiz, i);
-        NQDBCAttributeWriteTo(attr, writer);
+        if (!NQDBCAttributeWriteTo(attr, writer))
+          return false;
       }
       if (!NQJSONWriter_writeObjectEnd(writer))
         return false;
@@ -249,7 +250,8 @@ bool NQDBCDocumentWriteTo(const NQDBCDocument* thiz, const char* filename, NQJSO
   const char* busType = NULL;
   NQDBCDocument_getAttrString(thiz, "BusType", &busType);
 
-  NQJSONWriter_writeObjectBegin(writer);
+  if (!NQJSONWriter_writeObjectBegin(writer))
+    return false;
 
   // Name
   {
@@ -276,7 +278,8 @@ bool NQDBCDocumentWriteTo(const NQDBCDocument* thiz, const char* filename, NQJSO
         return false;
       for (size_t i = 0; i < attributeCount; i++) {
         const NQDBCAttribute* attr = NQDBCDocument_attributeAt(thiz, i);
-        NQDBCAttributeWriteTo(attr, writer);
+        if (!NQDBCAttributeWriteTo(attr, writer))
+          return false;
       }
       if (!NQJSONWriter_writeObjectEnd(writer))
         return false;
@@ -359,9 +362,7 @@ bool NQDBCDocumentWriteTo(const NQDBCDocument* thiz, const char* filename, NQJSO
     }
   }
 
-  NQJSONWriter_writeObjectEnd(writer);
-
-  return true;
+  return NQJSONWriter_writeObjectEnd(writer);
 }
 
 bool NQDBCMessageWriteTo(const NQDBCMessage* thiz, bool isJ1939, NQJSONWriter* writer)

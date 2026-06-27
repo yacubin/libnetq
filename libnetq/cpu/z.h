@@ -20,6 +20,8 @@
 #define NQ_CPU_ZARCH 1
 #define NQ_CPU_NAME "z/Architecture"
 #define NQ_CPU_ABI "zarch"
+#define NQ_CPU_BIG_ENDIAN 1
+#define NQ_CPU_64BIT 1
 
 #endif
 

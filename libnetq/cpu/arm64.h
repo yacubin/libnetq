@@ -20,6 +20,7 @@
 #define NQ_CPU_ARM64 1
 #define NQ_CPU_NAME "ARM64"
 #define NQ_CPU_ABI "arm64-v8a"
+#define NQ_CPU_LITTLE_ENDIAN 1
 #define NQ_CPU_64BIT 1
 
 #endif

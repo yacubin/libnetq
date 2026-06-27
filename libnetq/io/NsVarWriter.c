@@ -110,7 +110,7 @@ int NQNsVarWriter_write(NQNsVarWriter* thiz, const void* data, size_t size)
           thiz->current = NULL;
           break;
         }
-        if (strcmp(thiz->current->name, thiz->buffer + 2) == 0)
+        if (NQStrcmp(thiz->current->name, thiz->buffer + 2) == 0)
           break;
         thiz->current++;
       }

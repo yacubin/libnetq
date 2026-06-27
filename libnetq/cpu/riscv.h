@@ -16,7 +16,7 @@
   macro(__riscv64)      \
   macro(__riscv_atomic) \
   macro(__riscv_mul)    \
-  macro(__riscv_muldiv  \
+  macro(__riscv_muldiv)  \
   macro(__riscv_flen)
 
 #if  defined (__riscv)        \

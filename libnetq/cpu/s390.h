@@ -19,6 +19,7 @@
 
 #define NQ_CPU_S390 1
 #define NQ_CPU_NAME "System/390"
+#define NQ_CPU_BIG_ENDIAN 1
 
 #if defined(__s390x__)
 #define NQ_CPU_ABI "s390x"

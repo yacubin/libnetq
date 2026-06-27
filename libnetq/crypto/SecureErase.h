@@ -15,7 +15,7 @@
 #ifdef NQ_OS_WINDOWS
 #include <windows.h>
 #else
-#include <libnetq/string/CStrBase.h>
+#include <libnetq/string/String.h>
 #include <libnetq/Atomic.h>
 #endif
 

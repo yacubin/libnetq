@@ -34,6 +34,7 @@
   || defined(_R4000)          \
   || defined(_R5900)          \
   || defined(__mips)          \
+  || defined(__mips64)        \
   || defined(__MIPS__)        \
   || defined(_MIPS_ISA)       \
   || defined(_MIPS_ISA_MIPS1) \

@@ -99,3 +99,6 @@
 
 /* Use standard C <errno.h> definitions and errno variable */
 #cmakedefine NQCONFIG_USE_ERRNO_H
+
+/* Use standard C <string.h> definitions and errno variable */
+#cmakedefine NQCONFIG_USE_STRING_H

@@ -12,19 +12,18 @@
 
 #include <libnetq/Basic.h>
 
-#ifdef NQ_OS_KERNEL
+#if defined(NQ_OS_KERNEL)
 #include <linux/string.h>
-#else
+#define NQ_HAVE_ARCH_STRLEN 1
+#define NQ_HAVE_ARCH_STRRCHR 1
+#elif defined(NQ_OS_WINDOWS) || defined(NQ_OS_UNIX) || defined(NQCONFIG_USE_STRING_H)
 #include <string.h>
+#define NQ_HAVE_ARCH_STRLEN 1
+#define NQ_HAVE_ARCH_STRRCHR 1
 #endif
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#ifndef NQ_OS_UNKNOWN
-#define NQ_HAVE_ARCH_STRLEN 1
-#define NQ_HAVE_ARCH_STRRCHR 1
 #endif
 
 #if defined(NQ_COMPILER_MSVC)

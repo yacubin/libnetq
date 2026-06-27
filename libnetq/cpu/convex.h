@@ -28,6 +28,7 @@
 #define NQ_CPU_CONVEX 1
 #define NQ_CPU_NAME "Convex"
 #define NQ_CPU_ABI "convex"
+#define NQ_CPU_BIG_ENDIAN 1
 #define NQ_CPU_32BIT 1
 
 #endif

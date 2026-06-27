@@ -20,6 +20,8 @@
 #define NQ_CPU_S370 1
 #define NQ_CPU_NAME "System/370"
 #define NQ_CPU_ABI "s370"
+#define NQ_CPU_BIG_ENDIAN 1
+#define NQ_CPU_32BIT 1
 
 #endif
 

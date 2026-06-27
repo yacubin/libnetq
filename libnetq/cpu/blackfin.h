@@ -24,6 +24,7 @@
 #define NQ_CPU_BFIN 1
 #define NQ_CPU_NAME "Blackfin"
 #define NQ_CPU_ABI "blackfin"
+#define NQ_CPU_LITTLE_ENDIAN 1
 #define NQ_CPU_32BIT 1
 
 #endif

@@ -29,6 +29,7 @@
 
 #define NQ_CPU_NAME "SuperH"
 #define NQ_CPU_ABI "superh"
+#define NQ_CPU_SH 1
 
 #endif
 

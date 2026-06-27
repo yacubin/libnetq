@@ -36,6 +36,50 @@
 #include <libnetq/cpu/x86.h>
 #include <libnetq/cpu/z.h>
 
+#if defined(__BYTE_ORDER__)
+# if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#  if defined(NQ_CPU_LITTLE_ENDIAN)
+#   error "Conflicting CPU endianness: NQ_CPU_LITTLE_ENDIAN defined but __BYTE_ORDER__ is big-endian"
+#  elif !defined(NQ_CPU_BIG_ENDIAN)
+#   define NQ_CPU_BIG_ENDIAN 1
+#  endif
+# elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#  if defined(NQ_CPU_BIG_ENDIAN)
+#   error "Conflicting CPU endianness: NQ_CPU_BIG_ENDIAN defined but __BYTE_ORDER__ is little-endian"
+#  elif !defined(NQ_CPU_LITTLE_ENDIAN)
+#   define NQ_CPU_LITTLE_ENDIAN 1
+#  endif
+# else
+#  error "Unsupported byte order: only big-endian and little-endian are supported"
+# endif
+#endif
+
+#ifdef __SIZEOF_POINTER__
+# if __SIZEOF_POINTER__ == 8
+#  if defined(NQ_CPU_32BIT)
+#   error "Conflicting CPU architecture: NQ_CPU_32BIT defined but pointer size is 64-bit"
+#  elif !defined(NQ_CPU_64BIT)
+#   define NQ_CPU_64BIT 1
+#  endif
+# elif __SIZEOF_POINTER__ == 4
+#  if defined(NQ_CPU_64BIT)
+#   error "Conflicting CPU architecture: NQ_CPU_64BIT defined but pointer size is 32-bit"
+#  elif !defined(NQ_CPU_32BIT)
+#   define NQ_CPU_32BIT 1
+#  endif
+# else
+#   error "Unsupported pointer size: only 32-bit and 64-bit architectures are supported"
+# endif
+#endif
+
+# ifdef __LP64__
+#  if defined(NQ_CPU_32BIT)
+#   error "Conflicting CPU architecture: NQ_CPU_32BIT defined but pointer size is 64-bit"
+#  elif !defined(NQ_CPU_64BIT)
+#   define NQ_CPU_64BIT 1
+#  endif
+# endif
+
 #ifndef NQ_CPU_NAME
 # define NQ_CPU_NAME "Unknown"
 #endif
@@ -48,12 +92,8 @@
 # define NQ_CPU_LITTLE_ENDIAN 1
 #endif
 
-#if !defined(NQ_CPU_32BIT) && !defined(NQ_CPU_64BIT)
-# ifdef __LP64__
-#  define NQ_CPU_64BIT 1
-# else
-#  define NQ_CPU_32BIT 1
-# endif
+#if !defined(NQ_CPU_64BIT) && !defined(NQ_CPU_32BIT)
+# define NQ_CPU_32BIT 1
 #endif
 
 #ifdef __cplusplus

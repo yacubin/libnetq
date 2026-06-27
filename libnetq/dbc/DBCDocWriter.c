@@ -104,6 +104,8 @@ static bool onParserSection(void* userdata, const NQDBCSection* section) {
     size_t i;
     for (i = 0; i < section->netNodes.count; i++) {
       NQDBCNetNode* netNode = NQDBCDocument_createNetNode(thiz->document, section->netNodes.names[i]);
+      if (netNode == NULL)
+        return false;
       if (!NQDBCDocument_addNetNode(thiz->document, netNode)) {
         NQDBCNetNode_release(netNode);
         return false;
@@ -163,6 +165,8 @@ static bool onParserSection(void* userdata, const NQDBCSection* section) {
     size_t i;
     for (i = 0; i < section->messageTransmitter.count; i++) {
       NQDBCNetNode* transmitter = NQDBCDocument_findNetNode(thiz->document, section->messageTransmitter.transmitters[i]);
+      if (transmitter == NULL)
+        return false;
       if (!NQDBCMessage_addTransmitter(message, transmitter))
         return false;
     }
@@ -278,6 +282,10 @@ static bool onParserSection(void* userdata, const NQDBCSection* section) {
       size_t i;
       for (i = 0; i < section->envVar.count; i++) {
         NQDBCNetNode* netNode = NQDBCDocument_findNetNode(thiz->document, section->envVar.accessNode[i]);
+        if (netNode == NULL) {
+          NQDBCEnvVar_release(envVar);
+          return false;
+        }
         if (!NQDBCEnvVar_addAccessNode(envVar, netNode)) {
           NQDBCEnvVar_release(envVar);
           return false;
@@ -338,7 +346,7 @@ static bool onParserSection(void* userdata, const NQDBCSection* section) {
   }
    
   case kNQDBCSectionEnvVarValue: {
-    NQDBCEnvVar* envVar = NQDBCDocument_findEnvVar(thiz->document, section->envVarData.name);
+    NQDBCEnvVar* envVar = NQDBCDocument_findEnvVar(thiz->document, section->envVarValue.name);
     if (envVar == NULL)
       return false;
 
@@ -405,7 +413,7 @@ static bool onParserSection(void* userdata, const NQDBCSection* section) {
       }
       const char* signalName = section->comment.target.signal.name;
       NQDBCSignal* signal = NQDBCMessage_findSignal(message, signalName);
-      if (message == NULL) {
+      if (signal == NULL) {
         NQ_LOGW("Can't find '%s' Signal of %u message", signalName, messageId);
         return true;
       }
@@ -670,13 +678,7 @@ static bool onParserSection(void* userdata, const NQDBCSection* section) {
         return NQDBCEnvVar_setAttrInt(envVar, section->attr.name, section->attr.value.vInt);
 
       case kNQDBCVariantFloat:
-        if (!NQDBCEnvVar_setAttrFloat(envVar, section->attr.name, section->attr.value.vFloat)) {
-          NQ_LOGW("Can't set %f value to attribute '%s'", section->attr.value.vFloat, section->attr.name);
-        }
-        break;
-
-      case kNQDBCVariantString:
-        if (!NQDBCEnvVar_setAttrString(envVar, section->attr.name, section->attr.value.vString))
+        if (NQDBCEnvVar_setAttrFloat(envVar, section->attr.name, section->attr.value.vFloat))
           return true;
 
         attrValueInfo.type = kNQDBCAttrValueFloat;
@@ -689,6 +691,20 @@ static bool onParserSection(void* userdata, const NQDBCSection* section) {
         }
 
         NQ_LOGW("Created '%s' FLOAT attribute for EnvVar", section->attr.name);
+        return NQDBCEnvVar_setAttrFloat(envVar, section->attr.name, section->attr.value.vFloat);
+
+      case kNQDBCVariantString:
+        if (NQDBCEnvVar_setAttrString(envVar, section->attr.name, section->attr.value.vString))
+          return true;
+
+        attrValueInfo.type = kNQDBCAttrValueString;
+
+        if (!NQDBCDocument_defineEnvVarAttr(thiz->document, section->attr.name, &attrValueInfo)) {
+          NQ_LOGE("Can't create '%s' STRING attribute for EnvVar", section->attr.name);
+          return false;
+        }
+
+        NQ_LOGW("Created '%s' STRING attribute for EnvVar", section->attr.name);
         return NQDBCEnvVar_setAttrString(envVar, section->attr.name, section->attr.value.vString);
 
       default:

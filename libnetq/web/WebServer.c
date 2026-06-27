@@ -65,14 +65,16 @@ static NQWebServerOperations* g_builtinOpsList[] = {
 #if defined(WITH_CIVETWEB)
   &kCivetWebServerOperations,
 #endif
+
+  NULL
 };
 
 static const NQWebServerOperations* defaultOperations(void)
 {
   if (!NQListHead_isEmpty(&g_registredOpsList))
     return NQ_CONTAINER_OF(g_registredOpsList.next, struct NQWebServerOperations, list);
-  if (NQ_ARRAY_LENGTH(g_builtinOpsList))
-    return g_builtinOpsList[0];
+  if (*g_builtinOpsList)
+    return *g_builtinOpsList;
   return NULL;
 }
 

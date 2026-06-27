@@ -34,6 +34,6 @@ char* NQStrrchr(const char* s, int c)
       res = p;
     }
   }
-  return res;
+  return (char*)res;
 }
 #endif

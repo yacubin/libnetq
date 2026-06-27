@@ -38,6 +38,7 @@
 #if  defined (__ppc)           \
   || defined (__powerpc)       \
   || defined (__powerpc__)     \
+  || defined (__powerpc64__)   \
   || defined (__POWERPC__)     \
   || defined (__ppc__)         \
   || defined (__ppc64__)       \
@@ -60,12 +61,6 @@
 
 #define NQ_CPU_PPC 1
 #define NQ_CPU_NAME "PowerPC"
-
-#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
-#define NQ_CPU_BIG_ENDIAN 1
-#else
-#define NQ_CPU_LITTLE_ENDIAN 1
-#endif
 
 #if  defined(__powerpc64__) \
   || defined(__ppc64__)     \

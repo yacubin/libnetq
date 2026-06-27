@@ -29,6 +29,7 @@
 
 #define NQ_CPU_RS6000 1
 #define NQ_CPU_NAME "RS/6000"
+#define NQ_CPU_BIG_ENDIAN 1
 
 #endif
 

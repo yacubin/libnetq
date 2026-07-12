@@ -64,7 +64,7 @@ NQ_EXPORT INT NQGetCmdShow(void);
 
 NQ_EXPORT void NQMainArgumentsFinalize(void);
 
-NQArguments* NQArgumentsGetMain(void);
+NQ_EXPORT NQArguments* NQArgumentsGetMain(void);
 
 NQ_EXPORT const char* NQArgGetStringOr(const char* arg, const char* key, const char* defval);
 NQ_EXPORT bool NQArgGetBoolOr(const char* arg, const char* key, bool defval);

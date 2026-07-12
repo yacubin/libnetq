@@ -12,7 +12,6 @@
 
 #include <libnetq/string/StringUtil.h>
 #include <libnetq/Limits.h>
-#include <libnetq/Math.h>
 #include <libnetq/Assert.h>
 
 #ifdef NQ_OS_WINDOWS
@@ -184,7 +183,12 @@ void NQEnviron_destroy(NQEnviron* thiz)
 const NQEnvironIter* NQEnviron_begin(const NQEnviron* thiz)
 {
 #if defined(NQ_OS_WINDOWS)
-  return *((LPWCH)thiz) ? (NQEnvironIter*)thiz : NULL;
+  LPWCH lpvEnv = (LPWCH)thiz;
+  if (*lpvEnv == 0xfeff)
+    lpvEnv++;
+  if (*lpvEnv == 0)
+    return NULL;
+  return (NQEnvironIter*)lpvEnv;
 #elif defined(NQ_OS_UNIX)
   return *((char**)thiz) ? (NQEnvironIter*)thiz : NULL;
 #else

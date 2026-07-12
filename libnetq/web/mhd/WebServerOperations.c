@@ -187,7 +187,7 @@ static int websocketSend2(struct MHDWebSocket* thiz, const uint8_t* data, size_t
 
   struct BufferEntry* entry = (struct BufferEntry*)NQMalloc(sizeof(*entry));
   if (entry == NULL)
-    return NQ_ENOMEM;
+    return -NQ_ENOMEM;
 
   entry->opcode = opcode;
   NQListHead_init(&entry->list);

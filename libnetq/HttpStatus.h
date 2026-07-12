@@ -27,7 +27,9 @@
 /* 3xx – Redirection */
 #define NQ_HTTP_MOVED_PERMANENTLY             301
 #define NQ_HTTP_MOVED_TEMPORARILY             302
+#define NQ_HTTP_SEE_OTHER                     303
 #define NQ_HTTP_NOT_MODIFIED                  304
+#define NQ_HTTP_USE_PROXY                     305
 #define NQ_HTTP_TEMPORARY_REDIRECT            307
 
 /* 4xx – Client Errors */
@@ -35,8 +37,10 @@
 #define NQ_HTTP_UNAUTHORIZED                  401
 #define NQ_HTTP_NOT_FOUND                     404
 #define NQ_HTTP_NOT_ALLOWED                   405
+#define NQ_HTTP_PROXY_AUTHENTICATION_REQUIRED 407
 #define NQ_HTTP_PRECONDITION_FAILED           412
 #define NQ_HTTP_REQUEST_ENTITY_TOO_LARGE      413
+#define NQ_HTTP_RANGE_NOT_SATISFIABLE         416
 #define NQ_HTTP_EXPECTATION_FAILED            417
 #define NQ_HTTP_UPGRADE_REQUIRED              426
 

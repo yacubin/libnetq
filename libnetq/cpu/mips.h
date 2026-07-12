@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -34,6 +34,7 @@
   || defined(_R4000)          \
   || defined(_R5900)          \
   || defined(__mips)          \
+  || defined(__mips64)        \
   || defined(__MIPS__)        \
   || defined(_MIPS_ISA)       \
   || defined(_MIPS_ISA_MIPS1) \

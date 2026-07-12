@@ -20,7 +20,7 @@ int NQBase58Encode(const void* inData, size_t inSize, char* outData, size_t outS
   NQ_UNUSED_PARAM(inSize);
   NQ_UNUSED_PARAM(outData);
   NQ_UNUSED_PARAM(outSize);
-  return -NQ_ENOTSUP;
+  return -NQ_ENOTSUPP;
 }
 
 int NQBase58Decode(const char* inData, size_t inSize, void* outData, size_t outSize)
@@ -29,7 +29,7 @@ int NQBase58Decode(const char* inData, size_t inSize, void* outData, size_t outS
   NQ_UNUSED_PARAM(inSize);
   NQ_UNUSED_PARAM(outData);
   NQ_UNUSED_PARAM(outSize);
-  return -NQ_ENOTSUP;
+  return -NQ_ENOTSUPP;
 }
 
 #endif /* USE_STUB_BASE58 */

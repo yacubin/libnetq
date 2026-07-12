@@ -70,7 +70,10 @@ bool NQWebResponse_setHeader(NQWebResponse* thiz, const char* header, const char
   if (!NQStrcmp(NQHTTP_HEADER_CONTENT_TYPE, header)) {
     NQWebWriter* writerChain = NQWebServer_createWriterChain(thiz->server, value, thiz->request);
     if (writerChain) {
-      writerChain->next = thiz->firstWriter;
+      NQWebWriter* lastWriter = writerChain;
+      while (lastWriter->next)
+        lastWriter = lastWriter->next;
+      lastWriter->next = thiz->firstWriter;
       thiz->firstWriter = writerChain;
     }
   }

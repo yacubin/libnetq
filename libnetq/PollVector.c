@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -17,7 +17,7 @@
 #include <libnetq/Assert.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/String.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 
 #define MIN_CAPACITY (16)
 

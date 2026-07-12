@@ -11,7 +11,7 @@
 #include "libnetq/UUID.h"
 
 #include <libnetq/String.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 #include <libnetq/Assert.h>
 
 #if defined(WITH_OLE32)

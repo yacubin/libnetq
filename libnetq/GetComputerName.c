@@ -12,7 +12,7 @@
 
 #ifdef NQ_OS_KERNEL
 #include <linux/utsname.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 #define NQ_COMPUTER_NAME_MAX (__NEW_UTS_LEN + 1)
 #endif
 

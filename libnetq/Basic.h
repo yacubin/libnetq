@@ -10,7 +10,7 @@
 #ifndef _LIBNETQ_BASIC_H
 #define _LIBNETQ_BASIC_H
 
-#include <libnetq/Features.h>
+#include <libnetq/GenConfig.h>
 #include <libnetq/Export.h>
 #include <libnetq/Types.h>
 #include <libnetq/Compiler.h>

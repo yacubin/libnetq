@@ -27,6 +27,7 @@ typedef struct NQStringArray16 NQPath;
 
 NQ_EXPORT NQPath* NQPath_create(const char* path);
 NQ_EXPORT NQPath* NQPath_fromJoin2(const char* path1, const char* path2);
+NQ_EXPORT NQPath* NQPath_fromResolve2(const char* path1, const char* path2);
 
 static inline void NQPath_destroy(NQPath* thiz)
 {

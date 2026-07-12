@@ -22,7 +22,7 @@ int NQGetStat(const char* path, NQStat* st)
 
   err = kern_path(path, LOOKUP_FOLLOW, &p);
   if (err)
-      return err;
+    return err;
 
   err = vfs_getattr(&p, st, STATX_BASIC_STATS, AT_STATX_SYNC_AS_STAT);
 

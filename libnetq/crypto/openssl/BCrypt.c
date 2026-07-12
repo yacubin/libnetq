@@ -13,7 +13,9 @@
 #ifdef NQCONFIG_USE_OPENSSL_BCRYPT
 
 #include <openssl/evp.h>
+
 #include <libnetq/string/String.h>
+#include <libnetq/crypto/SecureErase.h>
 
 #define NQ_BCRYPT_ITER 100000
 
@@ -30,8 +32,10 @@ bool NQBCryptHashPassword(const char* password, const void* salt, void* hash)
 
 bool NQBCryptVerifyPassword(const char* password, const void* salt, const void* hash)
 {
-  uint8_t hash2[NQ_BCRYPT_HASHSIZE];
-  return bcryptHashPassword(password, salt, hash2) && CRYPTO_memcmp(hash, hash2, NQ_BCRYPT_HASHSIZE) == 0;
+  uint8_t buffer[NQ_BCRYPT_HASHSIZE];
+  bool result = bcryptHashPassword(password, salt, buffer) && CRYPTO_memcmp(hash, buffer, NQ_BCRYPT_HASHSIZE) == 0;
+  NQSecureErase(buffer, sizeof(buffer));
+  return result;
 }
 
 #endif /* NQCONFIG_USE_OPENSSL_BCRYPT */

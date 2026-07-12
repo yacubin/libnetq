@@ -13,16 +13,27 @@
 #include "config.h"
 #include "libnetq/Dir.h"
 
-#include <libnetq/OS.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Path.h>
 #include <libnetq/Assert.h>
 
-#ifdef NQ_OS_KERNEL
+#if defined(NQ_OS_UNIX) || defined(NQCONFIG_USE_DIRENT_H)
+#define USE_UNIX_DIR 1
+#elif defined(NQ_OS_KERNEL)
+#define USE_KERNEL_DIR 1
+#elif defined(NQ_OS_WINDOWS)
+#define USE_WINDOWS_DIR 1
+#endif
+
+#ifdef USE_KERNEL_DIR
 #include <linux/namei.h>
 #endif
 
-#ifdef NQ_OS_WINDOWS
+#ifdef USE_UNIX_DIR
+#include <dirent.h>
+#endif
+
+#ifdef USE_WINDOWS_DIR
 #include <windows.h>
 enum {
   NQ_DIR_OPEN_MODE,
@@ -31,25 +42,21 @@ enum {
 };
 #endif
 
-#ifdef NQ_OS_UNIX
-#include <dirent.h>
-#endif
-
 struct NQDir {
 
-#ifdef NQ_OS_KERNEL
+#ifdef USE_KERNEL_DIR
   struct path path;
   struct dentry* iter;
 #endif
 
-#ifdef NQ_OS_WINDOWS
+#ifdef USE_WINDOWS_DIR
   HANDLE handle;
   WIN32_FIND_DATAW data;
   uint8_t mode;
   char path[(MAX_PATH * 5) / 2]; /* 1/2 */
 #endif
 
-#ifdef NQ_OS_UNIX
+#ifdef USE_UNIX_DIR
   DIR* handle;
   struct dirent* dp;
 #endif
@@ -59,7 +66,7 @@ NQDir* NQDir_open(const char* pathname)
 {
   NQDir* dir;
 
-#ifdef NQ_OS_KERNEL
+#ifdef USE_KERNEL_DIR
   struct path path;
   struct dentry* first;
   struct dentry* iter;
@@ -100,7 +107,7 @@ NQDir* NQDir_open(const char* pathname)
   path_put(&path);
 #endif
 
-#ifdef NQ_OS_WINDOWS
+#ifdef USE_WINDOWS_DIR
   WCHAR winpath[MAX_PATH];
   size_t n = NQWinPathFrom(winpath, MAX_PATH, pathname);
   if (n == 0 || n > (MAX_PATH - 3))
@@ -125,7 +132,7 @@ NQDir* NQDir_open(const char* pathname)
   NQFree(dir);
 #endif
 
-#ifdef NQ_OS_UNIX
+#ifdef USE_UNIX_DIR
   DIR* handle = opendir(pathname);
   if (handle == NULL)
     return NULL;
@@ -148,7 +155,7 @@ NQDir* NQDir_open(const char* pathname)
 
 bool NQDir_next(NQDir* dir)
 {
-#ifdef NQ_OS_KERNEL
+#ifdef USE_KERNEL_DIR
   struct dentry* prev;
   struct dentry* iter;
 
@@ -172,7 +179,7 @@ bool NQDir_next(NQDir* dir)
     return true;
 #endif
 
-#ifdef NQ_OS_WINDOWS
+#ifdef USE_WINDOWS_DIR
   if (dir->mode == NQ_DIR_EOF_MODE)
     return false;
 
@@ -188,7 +195,7 @@ bool NQDir_next(NQDir* dir)
   dir->mode = NQ_DIR_EOF_MODE;
 #endif
 
-#ifdef NQ_OS_UNIX
+#ifdef USE_UNIX_DIR
   if (dir->dp == NULL)
     return false;
 
@@ -202,16 +209,16 @@ bool NQDir_next(NQDir* dir)
 
 void NQDir_close(NQDir* dir)
 {
-#ifdef NQ_OS_KERNEL
+#ifdef USE_KERNEL_DIR
   dput(dir->iter);
   path_put(&dir->path);
 #endif
 
-#ifdef NQ_OS_WINDOWS
+#ifdef USE_WINDOWS_DIR
   FindClose(dir->handle);
 #endif
 
-#ifdef NQ_OS_UNIX
+#ifdef USE_UNIX_DIR
   closedir(dir->handle);
 #endif
 
@@ -220,17 +227,17 @@ void NQDir_close(NQDir* dir)
 
 const char* NQDir_name(NQDir* dir)
 {
-#ifdef NQ_OS_KERNEL
+#ifdef USE_KERNEL_DIR
   if (dir->iter != NULL)
     return dir->iter->d_name.name;
 #endif
 
-#ifdef NQ_OS_WINDOWS
+#ifdef USE_WINDOWS_DIR
   if (dir->mode == NQ_DIR_NEXT_MODE)
     return dir->path;
 #endif
 
-#ifdef NQ_OS_UNIX
+#ifdef USE_UNIX_DIR
   if (dir->dp != NULL)
     return dir->dp->d_name;
 #endif
@@ -240,17 +247,17 @@ const char* NQDir_name(NQDir* dir)
 
 bool NQDir_isFile(NQDir* dir)
 {
-#ifdef NQ_OS_KERNEL
+#ifdef USE_KERNEL_DIR
   if (dir->iter != NULL)
     return d_is_file(dir->iter);
 #endif
 
-#ifdef NQ_OS_WINDOWS
+#ifdef USE_WINDOWS_DIR
   if (dir->mode == NQ_DIR_NEXT_MODE)
     return dir->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? false : true;
 #endif
 
-#ifdef NQ_OS_UNIX
+#ifdef USE_UNIX_DIR
   if (dir->dp != NULL)
     return dir->dp->d_type == DT_REG;
 #endif
@@ -260,17 +267,17 @@ bool NQDir_isFile(NQDir* dir)
 
 bool NQDir_isDirectory(NQDir* dir)
 {
-#ifdef NQ_OS_KERNEL
+#ifdef USE_KERNEL_DIR
   if (dir->iter != NULL)
     return d_is_dir(dir->iter);
 #endif
 
-#ifdef NQ_OS_WINDOWS
+#ifdef USE_WINDOWS_DIR
   if (dir->mode == NQ_DIR_NEXT_MODE)
     return dir->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? true : false;
 #endif
 
-#ifdef NQ_OS_UNIX
+#ifdef USE_UNIX_DIR
   if (dir->dp != NULL)
     return dir->dp->d_type == DT_DIR;
 #endif

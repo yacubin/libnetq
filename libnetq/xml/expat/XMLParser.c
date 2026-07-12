@@ -17,7 +17,7 @@
 
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 #include <libnetq/Log.h>
 
 #include <expat.h>

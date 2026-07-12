@@ -11,7 +11,7 @@
 #define _LIBNETQ_IO_DATAREADER_H
 
 #include <libnetq/Endian.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
 #include <libnetq/Limits.h>
 #include <libnetq/BufferBuilder.h>
 
@@ -105,10 +105,11 @@ static inline bool NQDataReader_readAll(NQDataReader* thiz, void* data, size_t s
 
 static inline bool NQDataReader_readUint8(NQDataReader* thiz, uint8_t* value)
 {
-  if (thiz->ptr > thiz->end)
+  if (thiz->ptr >= thiz->end)
     return false;
   if (value != NULL)
-    *value = *thiz->ptr++;
+    *value = *thiz->ptr;
+  thiz->ptr++;
   return true;
 }
 

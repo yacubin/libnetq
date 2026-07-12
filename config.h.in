@@ -52,11 +52,14 @@
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #cmakedefine HAVE_SYS_STAT_H 1
 
-/* Define to 1 if you have the <wincrypt.h> header file. */
+/* Define to 1 if you have the <combaseapi.h> header file. */
 #cmakedefine HAVE_COMBASEAPI_H 1
 
-/* Define to 1 if you have the <combaseapi.h> header file. */
+/* Define to 1 if you have the <wincrypt.h> header file. */
 #cmakedefine HAVE_WINCRYPT_H 1
+
+/* Define to 1 if you have the <psapi.h> header file. */
+#cmakedefine HAVE_PSAPI_H 1
 
 /* Define if struct tm has a tm_gmtoff member */
 #cmakedefine HAVE_TM_GMTOFF 1
@@ -104,7 +107,10 @@
 #cmakedefine WITH_MHD 1
 
 /* Define if you have OLE32 */
-#cmakedefine01 WITH_OLE32
+#cmakedefine WITH_OLE32 1
+
+/* Define if you have PSAPI */
+#cmakedefine WITH_PSAPI 1
 
 /* Define to 2 if the system does not provide POSIX.1 features except with
 this defined. */

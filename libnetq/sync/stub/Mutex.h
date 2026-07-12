@@ -23,19 +23,19 @@ struct NQMutex {
 static inline int NQMutex_init(NQMutex* thiz)
 {
   NQ_UNUSED_PARAM(thiz);
-  return NQ_ENOTSUP;
+  return -NQ_ENOTSUPP;
 }
 
 static inline int NQMutex_finalize(NQMutex* thiz)
 {
   NQ_UNUSED_PARAM(thiz);
-  return NQ_ENOTSUP;
+  return -NQ_ENOTSUPP;
 }
 
 static inline int NQMutex_lock(NQMutex* thiz)
 {
   NQ_UNUSED_PARAM(thiz);
-  return NQ_ENOTSUP;
+  return -NQ_ENOTSUPP;
 }
 
 static inline bool NQMutex_trylock(NQMutex* thiz)
@@ -47,7 +47,7 @@ static inline bool NQMutex_trylock(NQMutex* thiz)
 static inline int NQMutex_unlock(NQMutex* thiz)
 {
   NQ_UNUSED_PARAM(thiz);
-  return NQ_ENOTSUP;
+  return -NQ_ENOTSUPP;
 }
 
 #endif /* _LIBNETQ_SYNC_STUB_MUTEX_H */

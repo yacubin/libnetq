@@ -23,7 +23,6 @@
 #include <libnetq/Malloc.h>
 #include <libnetq/Base64.h>
 #include <libnetq/Assert.h>
-#include <libnetq/Math.h>
 #include <libnetq/Log.h>
 
 struct HMACStruct {

@@ -31,7 +31,7 @@ int NQRWLock_rdlock(NQRWLock* rwlock)
 
 int NQRWLock_tryrdlock(NQRWLock* rwlock)
 {
-  return down_read_trylock(rwlock) ? 0 : -EBUSY;
+  return down_read_trylock(rwlock) ? 0 : -NQ_EBUSY;
 }
 
 int NQRWLock_wrlock(NQRWLock* rwlock)
@@ -42,7 +42,7 @@ int NQRWLock_wrlock(NQRWLock* rwlock)
 
 int NQRWLock_trywrlock(NQRWLock* rwlock)
 {
-  return down_write_trylock(rwlock) ? 0 : -EBUSY;
+  return down_write_trylock(rwlock) ? 0 : -NQ_EBUSY;
 }
 
 int NQRWLock_unlock(NQRWLock* rwlock)

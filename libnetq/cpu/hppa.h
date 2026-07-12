@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -39,7 +39,20 @@
 #define NQ_CPU_NAME "HP/PA RISC"
 #define NQ_CPU_ABI "hppa"
 #define NQ_CPU_BIG_ENDIAN 1
-#define NQ_CPU_64BIT 1
+
+#if defined(_PA_RISC1_0) \
+ || defined(_PA_RISC1_1) \
+ || defined(__HPPA11__)  \
+ || defined(__PA7100__)
+# define NQ_CPU_32BIT 1
+#endif
+
+#if  defined(_PA_RISC2_0)  \
+  || defined(__RISC2_0__)  \
+  || defined(__HPPA20__)   \
+  || defined(__PA8000__)
+# define NQ_CPU_64BIT 1
+#endif
 
 #endif
 

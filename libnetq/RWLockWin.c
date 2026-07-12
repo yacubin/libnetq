@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -12,6 +12,7 @@
 
 #ifdef NQ_OS_WINDOWS
 
+#include <libnetq/ErrorCode.h>
 #include <libnetq/Assert.h>
 
 #define NQ_RWLOCK_MODE_NONE 0
@@ -41,7 +42,7 @@ int NQRWLock_rdlock(NQRWLock* rwlock)
 int NQRWLock_tryrdlock(NQRWLock* rwlock)
 {
   if (!TryAcquireSRWLockShared(&rwlock->native))
-    return -1;
+    return -NQ_EBUSY;
   rwlock->mode = NQ_RWLOCK_MODE_SHARED;
   return 0;
 }
@@ -56,7 +57,7 @@ int NQRWLock_wrlock(NQRWLock* rwlock)
 int NQRWLock_trywrlock(NQRWLock* rwlock)
 {
   if (!TryAcquireSRWLockExclusive(&rwlock->native))
-    return -1;
+    return -NQ_EBUSY;
   rwlock->mode = NQ_RWLOCK_MODE_EXLUSIVE;
   return 0;
 }

@@ -147,7 +147,7 @@ int NQRemoveFile(const char* path)
     return -(int)GetLastError();
   return 0;
 #else
-  return -NQ_ENOTSUP;
+  return -NQ_ENOTSUPP;
 #endif
 }
 

@@ -1,0 +1,22 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2026  Yurii Yakubin (yurii.yakubin@gmail.com)
+ *
+ * Permission is granted to use, copy, modify, and distribute this software
+ * under the MIT License. See LICENSE file for details.
+ */
+
+#ifndef _LIBNETQ_GENVERSION_H
+#define _LIBNETQ_GENVERSION_H
+
+#define LIBNETQ_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define LIBNETQ_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define LIBNETQ_VERSION_MICRO @PROJECT_VERSION_PATCH@
+
+#define LIBNETQ_VERSION "@PROJECT_VERSION@"
+
+/* Library Version Code */
+#define NQ_VERSION_CODE @NQ_VERSION_CODE@
+
+#endif /* _LIBNETQ_GENVERSION_H */

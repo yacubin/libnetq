@@ -37,14 +37,15 @@ typedef int NQErrorCode;
 # define NQ_EWOULDBLOCK      EWOULDBLOCK
 # define NQ_ERANGE           ERANGE
 # define NQ_EIO              EIO
+# define NQ_ENAMETOOLONG     ENAMETOOLONG
 
 #if defined(NQ_OS_KERNEL)
-# define NQ_ENOTSUP          ENOTSUPP
+# define NQ_ENOTSUPP         ENOTSUPP
 # define NQ_ERESTARTSYS      ERESTARTSYS
 #endif
 
 #if defined(NQ_OS_UNIX) || defined(NQCONFIG_USE_ERRNO_H)
-# define NQ_ENOTSUP          ENOTSUP
+# define NQ_ENOTSUPP         ENOTSUP
 # define NQ_ERESTARTSYS      EINTR
 #endif
 
@@ -55,12 +56,13 @@ typedef int NQErrorCode;
 # define NQ_EINVAL           ERROR_INVALID_PARAMETER
 # define NQ_ENOSYS           ERROR_CALL_NOT_IMPLEMENTED
 # define NQ_ETIMEDOUT        ERROR_TIMEOUT
-# define NQ_ENOTSUP          ERROR_NOT_SUPPORTED
+# define NQ_ENOTSUPP         ERROR_NOT_SUPPORTED
 # define NQ_EINPROGRESS      WSAEINPROGRESS
 # define NQ_EWOULDBLOCK      WSAEWOULDBLOCK
 # define NQ_ERESTARTSYS      ERROR_OPERATION_ABORTED
 # define NQ_ERANGE           ERROR_INSUFFICIENT_BUFFER
 # define NQ_EIO              ERROR_IO_DEVICE
+# define NQ_ENAMETOOLONG     ERROR_FILENAME_EXCED_RANGE
 
 #endif
 

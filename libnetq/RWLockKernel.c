@@ -12,6 +12,8 @@
 
 #ifdef NQ_OS_KERNEL
 
+#include <libnetq/ErrorCode.h>
+
 int NQRWLock_init(NQRWLock* rwlock)
 {
   init_rwsem(rwlock);

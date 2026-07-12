@@ -183,15 +183,6 @@
 #define NQ_HAS_COMPILER_SSE2
 #endif
 
-#if defined(NQ_COMPILER_MINGW) || defined(NQ_COMPILER_MSVC)
-#ifndef NQ_HAS_COMPILER_SSE
-#define NQ_HAS_COMPILER_SSE
-#endif
-#ifndef NQ_HAS_COMPILER_SSE2
-#define NQ_HAS_COMPILER_SSE2
-#endif
-#endif
-
 #define NQ_FILE __FILE__
 #define NQ_LINE __LINE__
 #define NQ_DATE __DATE__

@@ -10,7 +10,7 @@
 #ifndef _LIBNETQ_LOOPERSOURCE_H
 #define _LIBNETQ_LOOPERSOURCE_H
 
-#include <libnetq/Basic.h>
+#include <libnetq/SocketHandle.h>
 
 #ifdef NQ_OS_ANDROID
 #include <android/input.h>
@@ -21,7 +21,6 @@
 #endif
 
 #include <libnetq/Event.h>
-#include <libnetq/SocketHandle.h>
 #include <libnetq/FileHandle.h>
 
 #ifdef __cplusplus
@@ -70,7 +69,7 @@ struct NQInputEvent {
   AInputEvent* inputEvent;
 };
 
-NQ_EXPORT AInputQueue* NQLooperSource_getInputQueue(const NQLooperSource* src);
+NQ_EXPORT bool NQLooperSource_getInputQueue(const NQLooperSource* src, AInputQueue** result);
 #endif
 
 
@@ -80,7 +79,7 @@ struct NQHandleEvent {
   HANDLE handle;
 };
 
-NQ_EXPORT HANDLE NQLooperSource_getNativeHandle(const NQLooperSource* src);
+NQ_EXPORT bool NQLooperSource_getNativeHandle(const NQLooperSource* src, HANDLE* result);
 #endif
 
 
@@ -89,7 +88,7 @@ struct NQFDEvent {
   int fd;
 };
 
-NQ_EXPORT int NQLooperSource_getFileDescriptor(const NQLooperSource* src);
+NQ_EXPORT bool NQLooperSource_getFileDescriptor(const NQLooperSource* src, int* result);
 
 
 struct NQSocketEvent {
@@ -97,7 +96,7 @@ struct NQSocketEvent {
   NQSocketHandle socket;
 };
 
-NQ_EXPORT NQSocketHandle NQLooperSource_getSocketHandle(const NQLooperSource* src);
+NQ_EXPORT bool NQLooperSource_getSocketHandle(const NQLooperSource* src, NQSocketHandle* result);
 
 
 NQ_EXPORT void NQLooperSource_destroy(NQLooperSource* src);

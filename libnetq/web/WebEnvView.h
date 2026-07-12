@@ -8,7 +8,7 @@
  */
 
 #ifndef _LIBNETQ_WEB_WEBENVVIEW_H
-#define _LIBNETQ_WEB_WebEnvView_H
+#define _LIBNETQ_WEB_WEBENVVIEW_H
 
 #include <libnetq/web/WebServer.h>
 
@@ -30,4 +30,4 @@ NQ_EXPORT void NQWebEnvViewDestroy(NQWebServer* server, NQWebEnvView*);
 }
 #endif
 
-#endif /* _LIBNETQ_WEB_WebEnvView_H */
+#endif /* _LIBNETQ_WEB_WEBENVVIEW_H */

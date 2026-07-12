@@ -133,7 +133,7 @@ static void NQSpyNode_onSocketSend(NQSpyNode* node, NQSocketHandle sock)
 
   if (node->state == SOCK_INIT_STATE) {
     int value;
-    NQSocketGetIntOpt(node->sock, NQ_SOCKOPT_ERROR, &value);
+    NQSocketGetOptInt(node->sock, NQ_SOL_SOCKET, NQ_SO_ERROR, &value);
     if (value == 0) {
       node->state = SOCK_OPEN_STATE;
       NQSpyModuleList_doRemoteConnect(&node->server->modules, &node->client);
@@ -275,24 +275,30 @@ static void NQSpyServer_onSocketAccept(NQSpyServer* server, NQSocketHandle sock)
   if (NQSocketAccept(server->sock, &clientEndpoint, &clientSocket) < 0)
     return;
 
-  if (NQSpyConnectionList_isEmpty(&server->connFreeList) || !NQSocketSetBoolOpt(clientSocket, NQ_SOCKOPT_NONBLOCK, true)) {
+  if (NQSpyConnectionList_isEmpty(&server->connFreeList)) {
     NQSocketClose(clientSocket);
     return;
   }
 
-  if (NQSocketOpen(NQ_AF_INET4, NQ_SOCK_STREAM, 0, &remoteSocket) != 0) {
+  if (NQSocketSetNonBlocking(clientSocket, true) != 0) {
     NQSocketClose(clientSocket);
     return;
   }
 
-  if (!NQSocketSetBoolOpt(remoteSocket, NQ_SOCKOPT_NONBLOCK, true)) {
+  if (NQSocketOpen(NQ_AF_INET, NQ_SOCK_STREAM, 0, &remoteSocket) != 0) {
     NQSocketClose(clientSocket);
+    return;
+  }
+
+  if (NQSocketSetNonBlocking(remoteSocket, true) != 0) {
+    NQSocketClose(clientSocket);
+    NQSocketClose(remoteSocket);
     return;
   }
 
   remoteEndpoint = server->remoteEndpoint;
   ret = NQSocketConnect(remoteSocket, &remoteEndpoint);
-  if (ret != 0 && ret != NQ_EINPROGRESS && ret != NQ_EWOULDBLOCK) {
+  if (ret != 0 && ret != -NQ_EINPROGRESS && ret != -NQ_EWOULDBLOCK) {
     NQSocketClose(clientSocket);
     NQSocketClose(remoteSocket);
     return;
@@ -386,10 +392,10 @@ static int NQSpyServer_runImpl(NQSpyServer* server)
   if (ret < 0)
     return ret;
 
-  if (!NQSocketSetBoolOpt(server->sock, NQ_SOCKOPT_NONBLOCK, true))
+  if (NQSocketSetNonBlocking(server->sock, true) != 0)
     return -1;
 
-  if (!NQSocketSetBoolOpt(server->sock, NQ_SOCKOPT_REUSEADDR, true))
+  if (NQSocketSetOptBool(server->sock, NQ_SOL_SOCKET, NQ_SO_REUSEADDR, true) != 0)
     return -1;
 
   ret = NQSocketBind(server->sock, &server->clientEndpoint);

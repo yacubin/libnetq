@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.15
+project(libnetq VERSION 1.0.16
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -441,12 +441,11 @@ set(libnetq_HEADERS
   libnetq/json/JSONTypes.h
   libnetq/json/JSONWriter.h
 
-  libnetq/net/kernel/SocketHandle.h
-  libnetq/net/posix/SocketHandle.h
-  libnetq/net/stub/SocketHandle.h
-  libnetq/net/win32/SocketHandle.h
   libnetq/net/ChunkBuffer.h
+  libnetq/net/Socket.h
   libnetq/net/NetBufferQueue.h
+  libnetq/net/Netinet.h
+  libnetq/net/PlatformSocket.h
   libnetq/net/SpyModule.h
   libnetq/net/SpyModuleList.h
   libnetq/net/SpyServer.h
@@ -601,7 +600,6 @@ set(libnetq_HEADERS
   libnetq/Path.h
   libnetq/PlatformLooper.h
   libnetq/PlatformPoll.h
-  libnetq/PlatformSocket.h
   libnetq/Poll.h
   libnetq/PollVector.h
   libnetq/PrimitiveStorage.h
@@ -613,7 +611,6 @@ set(libnetq_HEADERS
   libnetq/RWLock.h
   libnetq/Signal.h
   libnetq/Sleep.h
-  libnetq/Socket.h
   libnetq/SocketHandle.h
   libnetq/Sprintf.h
   libnetq/SQL.h
@@ -697,10 +694,6 @@ set(libnetq_SOURCES
   libnetq/json/JSON.c
   libnetq/json/JSONWriter.c
 
-  libnetq/net/kernel/SocketHandle.c
-  libnetq/net/posix/SocketHandle.c
-  libnetq/net/stub/SocketHandle.c
-  libnetq/net/win32/SocketHandle.c
   libnetq/net/ChunkBuffer.c
   libnetq/net/NetBufferQueue.c
   libnetq/net/SpyModuleList.c
@@ -773,6 +766,7 @@ set(libnetq_SOURCES
   libnetq/DispatchQueue.c
   libnetq/Endian.c
   libnetq/Env.c
+  libnetq/ErrorCode.c
   libnetq/EventTarget.c
   libnetq/EventWakeup.c
   libnetq/Executable.c
@@ -824,7 +818,6 @@ set(libnetq_SOURCES
   libnetq/RWLockWin.c
   libnetq/Signal.c
   libnetq/Sleep.c
-  libnetq/Socket.c
   libnetq/SocketHandle.c
   libnetq/Tarball.c
   libnetq/ThreadDataPosix.c
@@ -1044,6 +1037,10 @@ endif ()
 
 if (WITH_CIVETWEB)
   list(APPEND libnetq_LIBRARIES CivetWeb::CivetWeb)
+endif ()
+
+if (CMAKE_SYSTEM_NAME MATCHES "Android")
+  list(APPEND libnetq_LIBRARIES android log)
 endif ()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Darwin")

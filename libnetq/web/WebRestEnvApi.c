@@ -110,7 +110,6 @@ static int getEnvRequest(NQWebRequest* request, NQWebResponse* response)
     NQJSONWriter_writeObjectEnd(&writer);
   }
   else {
-    bool noMemory = false;
     char* ptr;
 
     NQByteBuffer buf2;

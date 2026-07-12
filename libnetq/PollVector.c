@@ -126,7 +126,7 @@ void NQPollVector_action(NQPollVector* thiz)
 
 bool NQPollVector_add(NQPollVector* thiz, NQSocketHandle handle, NQPollActionHandler action, NQPollDestroyHandler destroy, void* userdata)
 {
-  if (handle == NQ_INVALID_SOCKET || action == NULL)
+  if (action == NULL)
     return false;
 
   if (thiz->size == NQ_UINT16_MAX)

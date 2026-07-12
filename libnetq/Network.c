@@ -10,7 +10,7 @@
 #include "config.h"
 #include "libnetq/Network.h"
 
-#include <libnetq/String.h>
+#include <libnetq/string/String.h>
 #include <libnetq/Sprintf.h>
 #include <libnetq/Strtox.h>
 #include <libnetq/Limits.h>
@@ -176,7 +176,7 @@ bool NQIPv4EndPoint_parse2(NQIPv4EndPoint* ep4, const char* s, size_t n)
 
 void NQEndPoint_init4(NQEndPoint* ep, const uint8_t data[4], uint16_t port)
 {
-  ep->family = NQ_AF_INET4;
+  ep->family = NQ_AF_INET;
   ep->ip4ep.port = port;
   memcpy(ep->ip4ep.address.data, data, sizeof(ep->ip4ep.address.data));
 }
@@ -196,7 +196,7 @@ bool NQEndPoint_parse(NQEndPoint* ep, const char* s)
 bool NQEndPoint_parse2(NQEndPoint* ep, const char* s, size_t len)
 {
   if (NQIPv4EndPoint_parse2(&ep->ip4ep, s, len)) {
-    ep->family = NQ_AF_INET4;
+    ep->family = NQ_AF_INET;
     return true;
   }
   return false;
@@ -204,7 +204,7 @@ bool NQEndPoint_parse2(NQEndPoint* ep, const char* s, size_t len)
 
 int NQEndPoint_sprintf(const NQEndPoint* ep, char* s, size_t n)
 {
-  if (ep->family == NQ_AF_INET4)
+  if (ep->family == NQ_AF_INET)
     return NQIPv4EndPoint_sprintf(&ep->ip4ep, s, n);
 
   if (s != NULL && n != 0)

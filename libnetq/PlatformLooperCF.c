@@ -12,6 +12,7 @@
 
 #ifdef NQ_OS_DARWIN
 
+#include <libnetq/Time.h>
 #include <libnetq/Assert.h>
 
 void NQPlatformLooper_init(NQPlatformLooper* thiz)

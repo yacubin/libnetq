@@ -10,7 +10,7 @@
 #ifndef _LIBNETQ_NETWORK_H
 #define _LIBNETQ_NETWORK_H
 
-#include <libnetq/Basic.h>
+#include <libnetq/net/Socket.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,15 +55,8 @@ typedef struct NQIPv6EndPoint {
   NQIPv6Address address;
 } NQIPv6EndPoint;
 
-typedef uint16_t NQAddressFamily;
-enum {
-  NQ_AF_NONE,
-  NQ_AF_INET4,
-  NQ_AF_INET6,
-};
-
 typedef struct NQEndPoint {
-  NQAddressFamily family;
+  int family;
   union {
     NQIPv4EndPoint ip4ep;
     NQIPv6EndPoint ip6ep;

@@ -1851,7 +1851,7 @@ bool NQDBCSignal_isUnsigned(const NQDBCSignal* thiz)
   return thiz->info.isUnsigned;
 }
 
-#ifdef NQ_HAS_COMPILER_SSE
+#ifdef NQ_USE_FLOATING_POINT
 double NQDBCSignal_factor(const NQDBCSignal* thiz)
 {
   return thiz->info.factor;

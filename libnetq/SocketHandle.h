@@ -10,72 +10,67 @@
 #ifndef _LIBNETQ_SOCKETHANDLE_H
 #define _LIBNETQ_SOCKETHANDLE_H
 
+#include <libnetq/net/Netinet.h>
 #include <libnetq/Network.h>
 
-#ifdef NQ_OS_KERNEL
-#include <libnetq/net/kernel/SocketHandle.h>
-#endif
-
-#ifdef NQ_OS_UNIX
-#include <libnetq/net/posix/SocketHandle.h>
-#endif
-  
-#ifdef NQ_OS_WINDOWS
-#include <libnetq/net/win32/SocketHandle.h>
-#endif
-
-#ifdef NQ_OS_UNKNOWN
-#include <libnetq/net/stub/SocketHandle.h>
+#if defined(NQ_OS_KERNEL)
+typedef struct socket* NQSocketHandle;
+#elif defined(NQ_OS_UNIX)
+typedef int NQSocketHandle;
+#elif defined(NQ_OS_WINDOWS)
+typedef uintptr_t NQSocketHandle;
+#else
+typedef void* NQSocketHandle;
 #endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-enum {
-  NQ_SOCK_STREAM,
-  NQ_SOCK_DGRAM,
-};
-
-enum {
-  NQ_IPPROTO_IP,
-  NQ_IPPROTO_TCP,
-  NQ_IPPROTO_UDP,
-};
-
-enum {
-  NQ_SD_RECV,
-  NQ_SD_SEND,
-  NQ_SD_BOTH
-};
-
-enum {
-  NQ_SOCKOPT_NONBLOCK,
-  NQ_SOCKOPT_ERROR,
-  NQ_SOCKOPT_REUSEADDR,
-  NQ_SOCKOPT_BROADCAST,
-  NQ_SOCKOPT_TCPNODELAY,
-};
-
-#define NQSocketIsValid(handle) ((handle) != NQ_INVALID_SOCKET)
-
-NQ_EXPORT int NQSocketOpen(int domain, int type, int protocol, NQSocketHandle* result);
-NQ_EXPORT int NQSocketSend(NQSocketHandle handle, const uint8_t* buf, size_t len, int flags);
-NQ_EXPORT int NQSocketRecv(NQSocketHandle handle, uint8_t* buf, size_t len, int flags);
+NQ_EXPORT int NQSocketOpen(int family, int type, int protocol, NQSocketHandle* result);
 NQ_EXPORT void NQSocketClose(NQSocketHandle handle);
+NQ_EXPORT int NQSocketSend(NQSocketHandle handle, const void* buf, size_t len, int flags);
+NQ_EXPORT int NQSocketRecv(NQSocketHandle handle, void* buf, size_t len, int flags);
+
+NQ_EXPORT int NQSocketGetOpt(NQSocketHandle handle, int level, int optname, void* optval, int* optlen);
+NQ_EXPORT int NQSocketSetOpt(NQSocketHandle handle, int level, int optname, const void* optval, int optlen);
+
+static inline int NQSocketGetOptBool(NQSocketHandle handle, int level, int optname, bool* value)
+{
+  int val;
+  int len = sizeof(val);
+  int ret = NQSocketGetOpt(handle, level, optname, &val, &len);
+  if (ret == 0) {
+    *value = val ? true : false;
+  }
+  return ret;
+}
+
+static inline int NQSocketSetOptBool(NQSocketHandle handle, int level, int optname, bool value)
+{
+  int val = value ? 1 : 0;
+  return NQSocketSetOpt(handle, level, optname, &val, sizeof(val));
+}
+
+static inline int NQSocketGetOptInt(NQSocketHandle handle, int level, int optname, int* value)
+{
+  int len = sizeof(*value);
+  return NQSocketGetOpt(handle, level, optname, value, &len);
+}
+
+static inline int NQSocketSetOptInt(NQSocketHandle handle, int level, int optname, int value)
+{
+  return NQSocketSetOpt(handle, level, optname, &value, sizeof(value));
+}
+
+static inline int NQSocketSetNoDelay(NQSocketHandle handle, bool value)
+{
+  return NQSocketSetOptBool(handle, NQ_IPPROTO_TCP, NQ_TCP_NODELAY, value);
+}
 
 NQ_EXPORT int NQSocketShutdown(NQSocketHandle handle, int how);
-NQ_EXPORT bool NQSocketGetOpt(NQSocketHandle handle, int level, int id, void* value, uint32_t* length);
-NQ_EXPORT bool NQSocketSetOpt(NQSocketHandle handle, int level, int id, const void* value, uint32_t length);
-NQ_EXPORT bool NQSocketGetDataOpt(NQSocketHandle handle, int opt, void* value, uint32_t* length);
-NQ_EXPORT bool NQSocketSetDataOpt(NQSocketHandle handle, int opt, const void* value, uint32_t length);
-NQ_EXPORT bool NQSocketGetBoolOpt(NQSocketHandle handle, int opt, bool* value);
-NQ_EXPORT bool NQSocketSetBoolOpt(NQSocketHandle handle, int opt, bool value);
-NQ_EXPORT bool NQSocketGetIntOpt(NQSocketHandle handle, int opt, int* value);
-NQ_EXPORT bool NQSocketSetIntOpt(NQSocketHandle handle, int opt, int value);
-
-NQ_EXPORT bool NQSocketSetNonBlocking(NQSocketHandle handle, bool value);
-NQ_EXPORT bool NQSocketSetNoDelay(NQSocketHandle handle, bool value);
+NQ_EXPORT int NQSocketSetNonBlocking(NQSocketHandle handle, bool value);
+NQ_EXPORT bool NQSocketIsSelectable(NQSocketHandle handle);
 
 NQ_EXPORT int NQSocketConnect(NQSocketHandle handle, const NQEndPoint* ep);
 NQ_EXPORT int NQSocketConnect4(NQSocketHandle handle, const NQIPv4EndPoint* ep);
@@ -90,8 +85,7 @@ NQ_EXPORT int NQSocketSendTo(NQSocketHandle handle, const uint8_t* buf, size_t l
 NQ_EXPORT int NQSocketSendTo4(NQSocketHandle handle, const uint8_t* buf, size_t len, int flags, const NQIPv4EndPoint* ep);
 NQ_EXPORT int NQSocketSendTo6(NQSocketHandle handle, const uint8_t* buf, size_t len, int flags, const NQIPv6EndPoint* ep);
 
-NQ_EXPORT int NQSocketPair(int domain, int type, int protocol, NQSocketHandle socks[2]);
-NQ_EXPORT bool NQSocketIsSelectable(NQSocketHandle handle);
+NQ_EXPORT int NQSocketPair(int family, int type, int protocol, NQSocketHandle socks[2]);
 
 #ifdef __cplusplus
 }

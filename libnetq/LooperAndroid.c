@@ -115,7 +115,8 @@ static bool Looper_attachSource(NQLooper* looper, NQLooperSource* source)
     return false;
 
   int32_t ident = -1;
-  AInputQueue* inputQueue = NQLooperSource_getInputQueue(source);
+  AInputQueue* inputQueue = NULL;
+  NQLooperSource_getInputQueue(source, &inputQueue);
 
   NQMutex_lock(&thiz->mutex);
   if (thiz->sourcesCount < NQ_ARRAY_LENGTH(thiz->sources)) {
@@ -145,7 +146,8 @@ static bool Looper_detachSource(NQLooper* looper, NQLooperSource* source)
   while (index < thiz->sourcesCount) {
     struct Source* src = &thiz->sources[index];
     if (src->addr == source) {
-      inputQueue = NQLooperSource_getInputQueue(&src->data);
+      inputQueue = NULL;
+      NQLooperSource_getInputQueue(&src->data, &inputQueue);
       thiz->sourcesCount--;
       if (thiz->sourcesCount != 0 && thiz->sourcesCount != index)
         *src = thiz->sources[thiz->sourcesCount];
@@ -180,7 +182,8 @@ static bool Looper_getMessage(NQLooper* looper, NQMessage* message)
   if (thiz->hasPerformSource) {
     struct NQInputEvent event;
     event.type = NQ_EVENT_AINPUT;
-    event.inputQueue = NQLooperSource_getInputQueue(&thiz->performSource);
+    event.inputQueue = NULL;
+    NQLooperSource_getInputQueue(&thiz->performSource, &event.inputQueue);
     for (;;) {
       int32_t available = AInputQueue_getEvent(event.inputQueue, &event.inputEvent);
       if (available < 0)

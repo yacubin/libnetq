@@ -372,7 +372,6 @@ static struct MHDWebSocket* websocketCreate(NQNetworkLooper* looper)
   thiz->size = 0;
   thiz->extraIn = NULL;
   thiz->extraInSize = 0;
-  thiz->handle = NQ_INVALID_SOCKET;
   thiz->urh = NULL;
 
   NQMutex_init(&thiz->mutex);

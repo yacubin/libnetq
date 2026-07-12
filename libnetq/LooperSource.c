@@ -14,39 +14,47 @@
 #include <libnetq/Malloc.h>
 
 #ifdef NQ_OS_ANDROID
-AInputQueue* NQLooperSource_getInputQueue(const NQLooperSource* thiz)
+bool NQLooperSource_getInputQueue(const NQLooperSource* thiz, AInputQueue** result)
 {
-  if (thiz->type == NQ_SOURCE_AINPUT)
-    return thiz->u.getInputQueue(thiz->userdata);
+  if (thiz->type == NQ_SOURCE_AINPUT) {
+    *result = thiz->u.getInputQueue(thiz->userdata);
+    return true;
+  }
 
-  return NULL;
+  return false;
 }
 #endif
 
 #ifdef NQ_OS_WINDOWS
-HANDLE NQLooperSource_getNativeHandle(const NQLooperSource* thiz)
+bool NQLooperSource_getNativeHandle(const NQLooperSource* thiz, HANDLE* result)
 {
-  if (thiz->type == NQ_SOURCE_HANDLE)
-    return thiz->u.getNativeHandle(thiz->userdata);
+  if (thiz->type == NQ_SOURCE_HANDLE) {
+    *result = thiz->u.getNativeHandle(thiz->userdata);
+    return true;
+  }
 
-  return INVALID_HANDLE_VALUE;
+  return false;
 }
 #endif
 
-int NQLooperSource_getFileDescriptor(const NQLooperSource* thiz)
+bool NQLooperSource_getFileDescriptor(const NQLooperSource* thiz, int* result)
 {
-  if (thiz->type == NQ_SOURCE_FD)
-    return thiz->u.getFileDescriptor(thiz->userdata);
+  if (thiz->type == NQ_SOURCE_FD) {
+    *result = thiz->u.getFileDescriptor(thiz->userdata);
+    return true;
+  }
 
-  return -1;
+  return false;
 }
 
-NQSocketHandle NQLooperSource_getSocketHandle(const NQLooperSource* thiz)
+bool NQLooperSource_getSocketHandle(const NQLooperSource* thiz, NQSocketHandle* result)
 {
-  if (thiz->type == NQ_SOURCE_SOCKET)
-    return thiz->u.getSocketHandle(thiz->userdata);
+  if (thiz->type == NQ_SOURCE_SOCKET) {
+    *result = thiz->u.getSocketHandle(thiz->userdata);
+    return true;
+  }
 
-  return NQ_INVALID_SOCKET;
+  return false;
 }
 
 void NQLooperSource_destroy(NQLooperSource* thiz)

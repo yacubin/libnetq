@@ -132,12 +132,8 @@ bool NQDirectoryExists(const char* path)
 
 int NQRemoveFile(const char* path)
 {
-#if defined(NQ_OS_LINUX)
+#if defined(NQ_OS_UNIX)
   if (unlink(path) != 0)
-    return -errno;
-  return 0;
-#elif defined(NQ_OS_UNIX)
-  if (remove(path) != 0)
     return -errno;
   return 0;
 #elif defined(NQ_OS_WINDOWS)

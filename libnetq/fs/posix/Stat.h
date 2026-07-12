@@ -53,15 +53,27 @@ static inline uint64_t NQStat_size(const NQStat* st)
 }
 static inline NQTimeMs NQStat_accesseTimeMs(const NQStat* st)
 {
+#ifdef NQ_OS_DARWIN
+  return NQTimeSpecToTimeMs(&st->st_atimespec);
+#else
   return NQTimeSpecToTimeMs(&st->st_atim);
+#endif
 }
 static inline NQTimeMs NQStat_modificationTimeMs(const NQStat* st)
 {
+#ifdef NQ_OS_DARWIN
+  return NQTimeSpecToTimeMs(&st->st_mtimespec);
+#else
   return NQTimeSpecToTimeMs(&st->st_mtim);
+#endif
 }
 static inline NQTimeMs NQStat_creationTimeMs(const NQStat* st)
 {
+#ifdef NQ_OS_DARWIN
+  return NQTimeSpecToTimeMs(&st->st_ctimespec);
+#else
   return NQTimeSpecToTimeMs(&st->st_ctim);
+#endif
 }
 
 #ifdef __cplusplus

@@ -607,7 +607,7 @@ bool NQJSONWriter_writeJSON(NQJSONWriter* writer, NQJSON* json)
     success = NQJSONWriter_writeString(writer, NQJSON_asString(json));
   else if (NQJSON_isInt64(json))
     success = NQJSONWriter_writeInt64(writer, NQJSON_asInt64(json));
-#ifdef NQ_HAS_COMPILER_SSE
+#ifdef NQ_USE_FLOATING_POINT
   else if (NQJSON_isDouble(json))
     success = NQJSONWriter_writeDouble(writer, NQJSON_asDouble(json));
 #endif

@@ -52,4 +52,8 @@ template<typename T> char(&getArrayLength(T(&)[0]))[0];
 #define NQ_CONCAT2(a, b) a ## b
 #define NQ_CONCAT(a, b) NQ_CONCAT2(a, b)
 
+#ifndef NQ_OS_KERNEL
+#define NQ_USE_FLOATING_POINT
+#endif
+
 #endif /* _LIBNETQ_BASIC_H */

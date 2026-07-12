@@ -85,7 +85,8 @@ static int Looper_fillFDSet(struct Looper* thiz, int wakeup, fd_set* fdSet)
 
   NQMutex_lock(&thiz->mutex);
   while (index < thiz->sourcesCount) {
-    int fd = NQLooperSource_getFileDescriptor(&thiz->sources[index].data);
+    int fd = -1;
+    NQLooperSource_getFileDescriptor(&thiz->sources[index].data, &fd);
     FD_SET(fd, fdSet);
     fdMax = NQGetMax(fd, fdMax);
     index++;
@@ -102,7 +103,8 @@ static size_t Looper_getSourcesByFDSet(struct Looper* thiz, fd_set* fdSet, NQLoo
 
   NQMutex_lock(&thiz->mutex);
   while (index < thiz->sourcesCount) {
-    int fd = NQLooperSource_getFileDescriptor(&thiz->sources[index].data);
+    int fd = -1;
+    NQLooperSource_getFileDescriptor(&thiz->sources[index].data, &fd);
     if (FD_ISSET(fd, fdSet)) {
       *result++ = thiz->sources[index].data;
       n++;
@@ -225,7 +227,8 @@ static bool Looper_getMessage(NQLooper* looper, NQMessage* message)
   size_t index = 0;
   while (index < thiz->performSourcesCount) {
     NQLooperSource* src = &thiz->performSources[index];
-    int fd = NQLooperSource_getFileDescriptor(src);
+    int fd = -1;
+    NQLooperSource_getFileDescriptor(src, &fd);
     event.fd = fd;
     NQLooperSource_handleEvent(src, (NQEvent*)&event);
     index++;

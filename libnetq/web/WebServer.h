@@ -10,6 +10,7 @@
 #ifndef _LIBNETQ_WEB_WEBSERVER_H
 #define _LIBNETQ_WEB_WEBSERVER_H
 
+#include <libnetq/NetworkLooper.h>
 #include <libnetq/Asset.h>
 #include <libnetq/Array.h>
 #include <libnetq/string/StringData.h>
@@ -17,7 +18,6 @@
 #include <libnetq/HttpStatus.h>
 #include <libnetq/HttpMethod.h>
 #include <libnetq/PrimitiveStorage.h>
-#include <libnetq/NetworkLooper.h>
 #include <libnetq/web/HttpStatistics.h>
 #include <libnetq/web/UrlHost.h>
 #include <libnetq/json/JSON.h>

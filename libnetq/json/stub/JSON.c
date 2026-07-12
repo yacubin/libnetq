@@ -165,7 +165,7 @@ bool NQJSON_asBool(const NQJSON* json)
   return false;
 }
 
-#ifdef NQ_HAS_COMPILER_SSE
+#ifdef NQ_USE_FLOATING_POINT
 double NQJSON_asDouble(const NQJSON* json)
 {
   NQ_UNUSED_PARAM(json);

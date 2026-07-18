@@ -124,7 +124,7 @@ NQAsset* NQFileSystemAssetCreate(const char* dirname)
   thiz->base.callbacks = &s_fileSystemAssetCallbacks;
 
   memcpy(thiz->pathCharacters, dirname, len + 1);
-  if (len > 0 && NQIsPathDelimiter(thiz->pathCharacters[len - 1]))
+  if (len > 0 && NQIsPathSeparator(thiz->pathCharacters[len - 1]))
     thiz->pathCharacters[--len] = '\0';
   thiz->pathLength = (uint16_t)len;
 

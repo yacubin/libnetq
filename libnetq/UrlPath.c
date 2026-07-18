@@ -74,7 +74,7 @@ size_t urlPathInit(NQUrlPath* thiz, const char* path, const char* pattern, struc
   }
 
   if (isInit) {
-    thiz->isAbsolute = NQIsPathDelimiter(path[0]);
+    thiz->isAbsolute = NQIsPathSeparator(path[0]);
   }
 
   size_t nameLength = 0;
@@ -83,7 +83,7 @@ size_t urlPathInit(NQUrlPath* thiz, const char* path, const char* pattern, struc
   while(true) {
     char ch = *path;
 
-    if (NQIsPathDelimiter(ch) || ch == '\0') {
+    if (NQIsPathSeparator(ch) || ch == '\0') {
       if (pattern) {
         if (*pattern == ch)
           pattern++;
@@ -180,7 +180,7 @@ NQUrlPath* NQUrlPath_create(const char* path, const char* pattern, bool onlymatc
   if (path == NULL || *path == '\0')
     return NULL;
 
-  if (NQIsPathDelimiter(path[0]) && path[1] == '\0') {
+  if (NQIsPathSeparator(path[0]) && path[1] == '\0') {
     if (onlymatch && (path[0] != pattern[0] || path[1] != pattern[1]))
       return NULL;
     return &s_rootPath;
@@ -307,7 +307,7 @@ bool NQIsUrlPathPattern(const char* pattern)
     case kEmptyState:
       if (ch == '{')
         state = kNameState;
-      else if (!NQIsPathDelimiter(ch))
+      else if (!NQIsPathSeparator(ch))
         state = kValueState;
       break;
 
@@ -319,7 +319,7 @@ bool NQIsUrlPathPattern(const char* pattern)
       break;
 
     case kValueState:
-      if (NQIsPathDelimiter(ch))
+      if (NQIsPathSeparator(ch))
         state = kEmptyState;
       break;
 
@@ -331,4 +331,16 @@ bool NQIsUrlPathPattern(const char* pattern)
   }
 
   return !!namesCount;
+}
+
+bool NQUrlPathStartsWith(const char* path, const char* search)
+{
+  while (*search) {
+    if (*path == '\0' || *path != *search)
+      return false;
+    path++;
+    search++;
+  }
+
+  return *path == '\0' || NQIsPathSeparator(*path);
 }

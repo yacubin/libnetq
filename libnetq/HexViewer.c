@@ -107,7 +107,7 @@ void NQHexViewer_addData(NQHexViewer* viewer, const void* data, size_t size)
   for (i = 0; i < size; i++) {
     char* p = viewer->buffer + viewer->size;
     if ((viewer->flags & NQ_HEXVIEWER_HAS_OFFSET) && (viewer->position & 0x0F) == 0)
-      p += sprintf(p, "%08lluX: ", (unsigned long long)(viewer->offset + viewer->position));
+      p += sprintf(p, "%08llX: ", (unsigned long long)(viewer->offset + viewer->position));
 
     p += sprintf(p, "%02X", ((const uint8_t*)data)[i]);
 

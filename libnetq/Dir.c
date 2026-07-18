@@ -113,8 +113,8 @@ NQDir* NQDir_open(const char* pathname)
   if (n == 0 || n > (MAX_PATH - 3))
     return NULL;
 
-  if (winpath[n - 1] != NQ_WINPATH_DELIMITER)
-    winpath[n++] = NQ_WINPATH_DELIMITER;
+  if (winpath[n - 1] != NQ_WIN32_PATH_SEPARATOR)
+    winpath[n++] = NQ_WIN32_PATH_SEPARATOR;
   winpath[n++] = '*';
   winpath[n++] = '\0';
 

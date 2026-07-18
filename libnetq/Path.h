@@ -18,16 +18,103 @@
 extern "C" {
 #endif
 
-#define NQ_PATH_DELIMITER '/'
-#define NQ_WINPATH_DELIMITER '\\'
+#define NQ_POSIX_PATH_DELIMITER     ':'
+#define NQ_WIN32_PATH_DELIMITER     ';'
+#define NQ_POSIX_PATH_DELIMITER_STR ":"
+#define NQ_WIN32_PATH_DELIMITER_STR ";"
 
-#define NQIsPathDelimiter(c) ((c) == NQ_PATH_DELIMITER)
+#define NQ_POSIX_PATH_SEPARATOR     '/'
+#define NQ_WIN32_PATH_SEPARATOR     '\\'
+#define NQ_POSIX_PATH_SEPARATOR_STR "/"
+#define NQ_WIN32_PATH_SEPARATOR_STR "\\"
+
+#define NQ_PATH_SEPARATOR     NQ_POSIX_PATH_SEPARATOR
+#define NQ_PATH_SEPARATOR_STR NQ_POSIX_PATH_SEPARATOR_STR
+
+#define NQIsPathSeparator(c) ((c) == NQ_PATH_SEPARATOR)
+
+#define NQ_PATH_CURRENT_DIR_STR "."
+#define NQ_PATH_PARENT_DIR_STR  ".."
+
+NQ_EXPORT int NQPathJoin(const char** paths, char* buf, size_t len);
+NQ_EXPORT int NQPathResolve(const char** paths, char* buf, size_t len);
+
+static inline int NQPathJoin1(const char* path1, char* buf, size_t len)
+{
+  const char* paths[] = { path1, NULL };
+  return NQPathJoin(paths, buf, len);
+}
+
+static inline int NQPathResolve1(const char* path1, char* buf, size_t len)
+{
+  const char* paths[] = { path1, NULL };
+  return NQPathResolve(paths, buf, len);
+}
+
+static inline int NQPathJoin2(const char* path1, const char* path2, char* buf, size_t len)
+{
+  const char* paths[] = { path1, path2, NULL };
+  return NQPathJoin(paths, buf, len);
+}
+
+static inline int NQPathResolve2(const char* path1, const char* path2, char* buf, size_t len)
+{
+  const char* paths[] = { path1, path2, NULL };
+  return NQPathJoin(paths, buf, len);
+}
+
+static inline int NQPathJoin3(const char* path1, const char* path2, const char* path3, char* buf, size_t len)
+{
+  const char* paths[] = { path1, path2, path3, NULL };
+  return NQPathJoin(paths, buf, len);
+}
+
+static inline int NQPathResolve3(const char* path1, const char* path2, const char* path3, char* buf, size_t len)
+{
+  const char* paths[] = { path1, path2, path3, NULL };
+  return NQPathJoin(paths, buf, len);
+}
 
 typedef struct NQStringArray16 NQPath;
 
-NQ_EXPORT NQPath* NQPath_create(const char* path);
-NQ_EXPORT NQPath* NQPath_fromJoin2(const char* path1, const char* path2);
-NQ_EXPORT NQPath* NQPath_fromResolve2(const char* path1, const char* path2);
+NQ_EXPORT NQPath* NQPath_join(const char** paths);
+NQ_EXPORT NQPath* NQPath_resolve(const char** paths);
+
+static inline NQPath* NQPath_join1(const char* path1)
+{
+  const char* paths[] = { path1, NULL };
+  return NQPath_join(paths);
+}
+
+static inline NQPath* NQPath_resolve1(const char* path1)
+{
+  const char* paths[] = { path1, NULL };
+  return NQPath_resolve(paths);
+}
+
+static inline NQPath* NQPath_join2(const char* path1, const char* path2)
+{
+  const char* paths[] = { path1, path2, NULL };
+  return NQPath_join(paths);
+}
+
+static inline NQPath* NQPath_resolve2(const char* path1, const char* path2)
+{
+  const char* paths[] = { path1, path2, NULL };
+  return NQPath_resolve(paths);
+}
+
+static inline NQPath* NQPath_join3(const char* path1, const char* path2, const char* path3)
+{
+  const char* paths[] = { path1, path2, path3, NULL };
+  return NQPath_join(paths);
+}
+
+static inline NQPath* NQPath_resolve3(const char* path1, const char* path2, const char* path3)
+{
+  const char* paths[] = { path1, path2, path3, NULL };
+  return NQPath_resolve(paths);
+}
 
 static inline void NQPath_destroy(NQPath* thiz)
 {
@@ -50,11 +137,6 @@ struct NQPathBuilder {
 };
 
 NQ_EXPORT void NQPathBuilder_init(NQPathBuilder*);
-NQ_EXPORT bool NQPathBuilder_initPath(NQPathBuilder*, const char* path1);
-NQ_EXPORT bool NQPathBuilder_initJoin2(NQPathBuilder*, const char* path1, const char* path2);
-NQ_EXPORT bool NQPathBuilder_initJoin3(NQPathBuilder*, const char* path1, const char* path2, const char* path3);
-NQ_EXPORT bool NQPathBuilder_initResolve2(NQPathBuilder*, const char* path1, const char* path2);
-NQ_EXPORT bool NQPathBuilder_initResolve3(NQPathBuilder*, const char* path1, const char* path2, const char* path3);
 NQ_EXPORT void NQPathBuilder_finalize(NQPathBuilder*);
 
 #define NQPathBuilder_characters(thiz) (thiz)->characters
@@ -64,9 +146,14 @@ static inline size_t NQPathBuilder_length(NQPathBuilder* thiz)
 }
 
 NQ_EXPORT void NQPathBuilder_clear(NQPathBuilder*, const char* path);
-NQ_EXPORT bool NQPathBuilder_join(NQPathBuilder*, const char* path);
-NQ_EXPORT bool NQPathBuilder_add(NQPathBuilder*, const char* text);
-NQ_EXPORT void NQPathBuilder_removeLastSegment(NQPathBuilder*);
+NQ_EXPORT bool NQPathBuilder_join1(NQPathBuilder*, const char* path1);
+NQ_EXPORT bool NQPathBuilder_join2(NQPathBuilder*, const char* path1, const char* path2);
+NQ_EXPORT bool NQPathBuilder_join3(NQPathBuilder*, const char* path1, const char* path2, const char* path3);
+NQ_EXPORT bool NQPathBuilder_resolve1(NQPathBuilder*, const char* path1);
+NQ_EXPORT bool NQPathBuilder_resolve2(NQPathBuilder*, const char* path1, const char* path2);
+NQ_EXPORT bool NQPathBuilder_resolve3(NQPathBuilder*, const char* path1, const char* path2, const char* path3);
+NQ_EXPORT void NQPathBuilder_removeFilename(NQPathBuilder*);
+NQ_EXPORT bool NQPathBuilder_replaceFilename(NQPathBuilder*, const char* filename);
 
 typedef struct NQWinPathBuilder NQWinPathBuilder;
 struct NQWinPathBuilder {
@@ -98,17 +185,19 @@ NQ_EXPORT size_t NQGetAbsoluteWinPath(NQWChar* buffer, size_t n, const char* pat
 
 static inline bool NQIsAbsolutePosixPath(const char* path)
 {
-  return path[0] == NQ_PATH_DELIMITER;
+  return path[0] == NQ_PATH_SEPARATOR;
 }
 
 static inline bool NQIsRootPosixPath(const char* path)
 {
-  return path[0] == NQ_PATH_DELIMITER && path[1] == '\0';
+  return path[0] == NQ_PATH_SEPARATOR && path[1] == '\0';
 }
 
 NQ_EXPORT bool NQIsAbsolutePath(const char* path);
 NQ_EXPORT const char* NQGetFilename(const char* path);
 NQ_EXPORT const char* NQGetExtname(const char* path);
+
+NQ_EXPORT bool NQPathStartsWith(const char* path, const char* search);
 
 #ifdef __cplusplus
 }

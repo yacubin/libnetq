@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -17,7 +17,7 @@
 
 #ifdef NQ_OS_UNIX
 #include <unistd.h>
-#include <string.h>
+#include <libnetq/string/StringUtil.h>
 #endif
 
 int NQGetCommandLine(char* buffer, size_t n)
@@ -58,7 +58,7 @@ int NQGetCurrentDirectory(char* buffer, size_t n)
 
 #ifdef NQ_OS_UNIX
   if (getcwd(buffer, n) != NULL)
-    return strlen(buffer);
+    return NQStrlen(buffer);
 #endif
 
   if (n != 0)

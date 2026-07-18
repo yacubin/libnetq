@@ -18,13 +18,9 @@
 # include <linux/errno.h>
 #elif defined(NQ_OS_WINDOWS)
 # include <winerror.h>
-# include <winsock.h>
 #endif
 
 typedef int NQErrorCode;
-
-#define NQ_SUCCESS 0
-#define NQ_ERROR (-1)
 
 #if defined(NQ_OS_KERNEL) || defined(NQ_OS_UNIX) || defined(NQCONFIG_USE_ERRNO_H)
 # define NQ_ENOENT           ENOENT
@@ -66,49 +62,35 @@ typedef int NQErrorCode;
 
 #endif
 
+#if defined(NQ_OS_UNIX) || defined(NQCONFIG_USE_ERRNO_H)
 static inline NQErrorCode NQGetLastError(void)
 {
-  int ec;
-
-#ifdef NQ_OS_KERNEL
-  ec = 0;
-#endif
-
-#ifdef NQ_OS_WINDOWS
-  ec = WSAGetLastError();
-#endif
-
-#ifdef NQ_OS_UNIX
-  ec = errno;
-#endif
-
-  return ec;
+  return errno;
 }
-
 static inline void NQSetLastError(NQErrorCode ec)
 {
-#ifdef NQ_OS_KERNEL
-  NQ_UNUSED_PARAM(ec);
-#endif
-
-#ifdef NQ_OS_WINDOWS
-  WSASetLastError(ec);
-#endif
-
-#ifdef NQ_OS_UNIX
   errno = ec;
-#endif
 }
+
+#elif defined(NQ_OS_WINDOWS)
+NQ_EXPORT NQErrorCode NQGetLastError(void);
+NQ_EXPORT void NQSetLastError(NQErrorCode ec);
+
+#else
+static inline NQErrorCode NQGetLastError(void)
+{
+  return 0;
+}
+static inline void NQSetLastError(NQErrorCode ec)
+{
+  NQ_UNUSED_PARAM(ec);
+}
+
+#endif
 
 static inline void NQClearLastError(void)
 {
-#ifdef NQ_OS_WINDOWS
-  WSASetLastError(0);
-#endif
-
-#ifdef NQ_OS_UNIX
-  errno = 0;
-#endif
+  NQSetLastError(0);
 }
 
 #endif /* _LIBNETQ_ERRORCODE_H */

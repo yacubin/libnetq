@@ -84,7 +84,7 @@ bool NQSQLiteStatement_bindInt64(NQSQLiteStatement* thiz, size_t index, int64_t 
   return false;
 }
 
-#ifdef NQ_HAS_COMPILER_SSE
+#ifdef NQ_USE_FLOATING_POINT
 bool NQSQLiteStatement_bindDouble(NQSQLiteStatement* thiz, size_t index, double number)
 {
   NQ_UNUSED_PARAM(thiz);
@@ -148,7 +148,7 @@ int64_t NQSQLiteStatement_columnInt64(NQSQLiteStatement* thiz, size_t index)
   return 0;
 }
 
-#ifdef NQ_HAS_COMPILER_SSE
+#ifdef NQ_USE_FLOATING_POINT
 double NQSQLiteStatement_columnDouble(NQSQLiteStatement* thiz, size_t index)
 {
   NQ_UNUSED_PARAM(thiz);

@@ -10,143 +10,62 @@
 #include "config.h"
 #include "libnetq/SocketHandle.h"
 
-#include <libnetq/PlatformSocket.h>
-#include <libnetq/Malloc.h>
-#include <libnetq/String.h> // for memset
-#include <libnetq/Limits.h>
+#include <libnetq/net/PlatformSocket.h>
+#include <libnetq/string/String.h> // for memset
 #include <libnetq/ErrorCode.h>
 #include <libnetq/Assert.h>
 
-#ifdef NQ_OS_KERNEL
-#include <linux/socket.h>
-#include <linux/net.h> // SOCK_STREAM
-#include <uapi/linux/tcp.h> // TCP_NODELAY
-#include <uapi/linux/in.h> // sockaddr_in
-#include <uapi/linux/in6.h> // sockaddr_in6
-
-typedef int socklen_t;
-
-static inline int NQSocketGetLastError(void)
-{
-  return 0;
-}
-
-#define NQSocketInit() ((void)0)
-#define NQSocketOpenImpl(domain, type, protocol) \
-  ({ (void)(domain); (void)(type); (void)(protocol); NULL; })
-#define NQSocketConnectImpl(handle, addr, len) \
-  ({ (void)(handle); (void)(addr); (void)(len); NULL; })
-#define NQSocketAcceptImpl(handle, addr, len) \
-  ({ (void)(handle); (void)(addr); (void)(len); NULL; })
-#define NQSocketCloseImpl(handle) ((void)(handle))
-#define NQSocketShutdownImpl(handle, how) kernel_sock_shutdown(handle, how)
-
-static int getsockopt(NQSocketHandle, int, int, void*, socklen_t*) { return -1; }
-static int setsockopt(NQSocketHandle, int, int, const void*, socklen_t) { return -1; }
-static int fcntl(NQSocketHandle, int, ...) { return -1; }
-static int bind(NQSocketHandle, const struct sockaddr*, socklen_t) { return -1; }
-static int listen(NQSocketHandle, int) { return -1; }
-
-#define FD_SETSIZE 1024
-
+#ifdef NQ_OS_UNIX
+#include <sys/ioctl.h> // for ioctl
+#include <sys/select.h> // for FD_SETSIZE
+#include <fcntl.h> // for fcntl
 #endif
 
 #ifdef NQ_OS_WINDOWS
-#define WIN32_LEAN_AND_MEAN
+
 #include <libnetq/sync/Once.h>
-#include <windows.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
 
-#define NQ_SOCKET_ERROR SOCKET_ERROR
-
-#define NQSocketOpenImpl(domain, type, protocol) WSASocketW(domain, type, protocol, NULL, 0, 0)
-#define NQSocketConnectImpl(handle, addr, len) WSAConnect(handle, addr, len, NULL, NULL, NULL, NULL)
-#define NQSocketAcceptImpl(handle, addr, len) WSAAccept(handle, addr, len, NULL, 0)
-#define NQSocketCloseImpl(handle) closesocket(handle)
-#define NQSocketIoctlImpl ioctlsocket
-#define NQSocketShutdownImpl(handle, how) shutdown(handle, how)
-
-NQ_STATIC_ASSERT(sizeof(NQSocketHandle) == sizeof(SOCKET), "Socket size did not match in Windows");
+NQ_STATIC_ASSERT(sizeof(NQSocketHandle) == sizeof(NQPlatformSocket), "Socket size did not match in Windows");
 
 static WSADATA s_wsadata;
 static NQOnce s_once = NQ_ONCE_INIT;
+
 static void WSAStartupInit(void)
 {
   int status = WSAStartup(MAKEWORD(2, 2), &s_wsadata);
   NQ_ASSERT_UNUSED(status, !status);
 }
 
-static inline int NQSocketGetLastError(void)
+static inline void socketInit(void)
 {
-  return WSAGetLastError();
+  NQOnce_call(&s_once, &WSAStartupInit);
 }
 
-#define NQSocketInit() (NQOnce_call(&s_once, &WSAStartupInit))
-
-#endif
-
-#ifdef NQ_OS_UNIX
-#include <sys/ioctl.h>   // For: ioctl
-#include <sys/socket.h>
-#include <netinet/in.h>  // For: IPPROTO_TCP
-#include <netinet/tcp.h> // For: TCP_NODELAY
-#include <fcntl.h>       // For: fcntl
-#include <unistd.h>      // For: close
-#include <errno.h>
-
-#define NQ_SOCKET_ERROR (-1)
-
-#define NQSocketOpenImpl(domain, type, protocol) socket(domain, type, protocol)
-#define NQSocketConnectImpl(handle, addr, len) connect(handle, addr, len)
-#define NQSocketAcceptImpl(handle, addr, len) accept(handle, addr, len)
-#define NQSocketCloseImpl(handle) close(handle)
-#define NQSocketIoctlImpl ioctl
-#define NQSocketShutdownImpl(handle, how) shutdown(handle, how)
-
-static inline int NQSocketGetLastError(void)
+static int normalizeSockFamily(int family)
 {
-  return errno;
-}
-
-#define NQSocketInit() ((void)0)
-
-#endif
-
-typedef union NQSockAddr {
-  struct sockaddr sa;
-  struct sockaddr_in in4;
-  struct sockaddr_in6 in6;
-  struct sockaddr_storage storage;
-} NQSockAddr;
-
-static int toComposeDomain(int domain)
-{
-  switch (domain) {
-  case NQ_AF_INET4:
+  switch (family) {
+  case NQ_AF_INET:
     return AF_INET;
   case NQ_AF_INET6:
     return AF_INET6;
-  default:
-    NQ_ASSERT_NOT_REACHED();
   }
-  return domain;
+  NQ_ASSERT_NOT_REACHED();
+  return family;
 }
 
-static int toComposeType(int type)
+static int normalizeSockType(int type)
 {
   switch (type) {
   case NQ_SOCK_STREAM:
     return SOCK_STREAM;
   case NQ_SOCK_DGRAM:
     return SOCK_DGRAM;
-  default:
-    NQ_ASSERT_NOT_REACHED();
   }
+  NQ_ASSERT_NOT_REACHED();
   return type;
 }
 
-static int toComposeProtocol(int protocol)
+static int normalizeSockProtocol(int protocol)
 {
   switch (protocol) {
   case NQ_IPPROTO_IP:
@@ -155,11 +74,89 @@ static int toComposeProtocol(int protocol)
     return IPPROTO_TCP;
   case NQ_IPPROTO_UDP:
     return IPPROTO_UDP;
-  default:
-    NQ_ASSERT_NOT_REACHED();
   }
+  NQ_ASSERT_NOT_REACHED();
   return protocol;
 }
+
+static int normalizeShutdownHow(int how)
+{
+  switch (how) {
+  case NQ_SHUT_RD:
+    return SD_RECEIVE;
+  case NQ_SHUT_WR:
+    return SD_SEND;
+  case NQ_SHUT_RDWR:
+    return SD_BOTH;
+  }
+  NQ_ASSERT_NOT_REACHED();
+  return how;
+}
+
+static int normalizeOptLevel(int opt)
+{
+  switch (opt) {
+  case NQ_SOL_SOCKET:
+    return SOL_SOCKET;
+  case NQ_IPPROTO_TCP:
+    return IPPROTO_TCP;
+  }
+  NQ_ASSERT_NOT_REACHED();
+  return opt;
+}
+
+static int normalizeOptName(int opt)
+{
+  switch (opt) {
+  case NQ_SO_ERROR:
+    return SO_ERROR;
+  case NQ_SO_REUSEADDR:
+    return SO_REUSEADDR;
+  case NQ_SO_BROADCAST:
+    return SO_BROADCAST;
+  case NQ_TCP_NODELAY:
+    return TCP_NODELAY;
+  }
+  NQ_ASSERT_NOT_REACHED();
+  return opt;
+}
+#else
+
+static inline void socketInit(void)
+{
+}
+
+static inline int normalizeSockFamily(int family)
+{
+  return family;
+}
+
+static inline int normalizeSockType(int type)
+{
+  return type;
+}
+
+static int normalizeSockProtocol(int protocol)
+{
+  return protocol;
+}
+
+static inline int  normalizeShutdownHow(int how)
+{
+  return how;
+}
+
+static inline int normalizeOptLevel(int opt)
+{
+  return opt;
+}
+
+static inline int normalizeOptName(int opt)
+{
+  return opt;
+}
+
+#endif
 
 static void NQIPv4EndPoint_initWithInet4(NQIPv4EndPoint* thiz, const struct sockaddr_in* addr)
 {
@@ -167,7 +164,7 @@ static void NQIPv4EndPoint_initWithInet4(NQIPv4EndPoint* thiz, const struct sock
   thiz->port = htons(addr->sin_port);
 }
 
-static socklen_t NQIPv4EndPoint_toInet4(const NQIPv4EndPoint* ep, struct sockaddr_in* result)
+static int NQIPv4EndPoint_toInet4(const NQIPv4EndPoint* ep, struct sockaddr_in* result)
 {
   memset(result, 0, sizeof(*result));
   result->sin_family = AF_INET;
@@ -182,7 +179,7 @@ static void NQIPv6EndPoint_initWithInet6(NQIPv6EndPoint* thiz, const struct sock
   thiz->port = htons(addr->sin6_port);
 }
 
-static socklen_t NQIPv6EndPoint_toInet6(const NQIPv6EndPoint* ep, struct sockaddr_in6* result)
+static int NQIPv6EndPoint_toInet6(const NQIPv6EndPoint* ep, struct sockaddr_in6* result)
 {
   memset(result, 0, sizeof(*result));
   result->sin6_family = AF_INET6;
@@ -191,18 +188,18 @@ static socklen_t NQIPv6EndPoint_toInet6(const NQIPv6EndPoint* ep, struct sockadd
   return sizeof(*result);
 }
 
-static bool NQEndPoint_initWithInet(NQEndPoint* thiz, const struct sockaddr* addr, socklen_t len)
+static bool NQEndPoint_initWithInet(NQEndPoint* thiz, const struct sockaddr* addr, int len)
 {
   if (addr->sa_family == AF_INET) {
-    if (len < sizeof(struct sockaddr_in))
+    if (len < sizeof(NQSockAddrIn))
       return false;
-    thiz->family = NQ_AF_INET4;
+    thiz->family = NQ_AF_INET;
     NQIPv4EndPoint_initWithInet4(&thiz->ip4ep, (const struct sockaddr_in*)addr);
     return true;
   }
 
   if (addr->sa_family == AF_INET6) {
-    if (len < sizeof(struct sockaddr_in6))
+    if (len < sizeof(NQSockAddrIn6))
       return false;
     thiz->family = NQ_AF_INET6;
     NQIPv6EndPoint_initWithInet6(&thiz->ip6ep, (const struct sockaddr_in6*)addr);
@@ -212,16 +209,16 @@ static bool NQEndPoint_initWithInet(NQEndPoint* thiz, const struct sockaddr* add
   return false;
 }
 
-static socklen_t NQEndPoint_toInet(const NQEndPoint* thiz, struct sockaddr* addr, socklen_t len)
+static int NQEndPoint_toInet(const NQEndPoint* thiz, struct sockaddr* addr, int len)
 {
-  if (thiz->family == NQ_AF_INET4) {
-    if (len < sizeof(struct sockaddr_in))
+  if (thiz->family == NQ_AF_INET) {
+    if (len < sizeof(NQSockAddrIn))
       return 0;
     return NQIPv4EndPoint_toInet4(&thiz->ip4ep, (struct sockaddr_in*)addr);
   }
 
   if (thiz->family == NQ_AF_INET6) {
-    if (len < sizeof(struct sockaddr_in6))
+    if (len < sizeof(NQSockAddrIn6))
       return 0;
     return NQIPv6EndPoint_toInet6(&thiz->ip6ep, (struct sockaddr_in6*)addr);
   }
@@ -229,121 +226,53 @@ static socklen_t NQEndPoint_toInet(const NQEndPoint* thiz, struct sockaddr* addr
   return 0;
 }
 
-int NQSocketOpen(int domain, int type, int protocol, NQSocketHandle* result)
+int NQSocketOpen(int family, int type, int protocol, NQSocketHandle* result)
 {
-  NQSocketInit();
-
-  domain = toComposeDomain(domain);
-  type = toComposeType(type);
-  protocol = toComposeProtocol(protocol);
-
-  NQSocketHandle handle = NQSocketOpenImpl(domain, type, protocol);
-  if (handle == NQ_INVALID_SOCKET)
-    return -NQSocketGetLastError();
-
-  *result = handle;
-  return 0;
-}
-
-int NQSocketSend(NQSocketHandle handle, const uint8_t* buf, size_t len, int flags)
-{
-  if (NQ_INT32_MAX < len)
-    len = NQ_INT32_MAX;
-
-#ifdef NQ_OS_KERNEL
-  return -1;
-#endif
-
-#ifdef NQ_OS_WINDOWS
-  return send(handle, (const char*)buf, (int)len, flags);
-#endif
-
-#ifdef NQ_OS_UNIX
-#ifdef NQ_OS_LINUX
-  flags |= MSG_NOSIGNAL;
-#endif
-  ssize_t result = send(handle, buf, len, flags);
-  NQ_ASSERT(result <= NQ_INT32_MAX);
-  return (int)result;
-#endif
-}
-
-int NQSocketRecv(NQSocketHandle handle, uint8_t* buf, size_t len, int flags)
-{
-  if (NQ_INT32_MAX < len)
-    len = NQ_INT32_MAX;
-
-#ifdef NQ_OS_KERNEL
-  return -1;
-#endif
-
-#ifdef NQ_OS_WINDOWS
-  return recv(handle, (char*)buf, (int)len, flags);
-#endif
-
-#ifdef NQ_OS_UNIX
-#ifdef NQ_OS_LINUX
-  flags |= MSG_NOSIGNAL;
-#endif
-  // flags |= MSG_DONTWAIT; // TODO
-  ssize_t result = recv(handle, buf, len, flags);
-  NQ_ASSERT(result <= NQ_INT32_MAX);
-  return (int)result;
-#endif
+  socketInit();
+  return NQPlatformSocketOpen(normalizeSockFamily(family), normalizeSockType(type), normalizeSockProtocol(protocol), result);
 }
 
 void NQSocketClose(NQSocketHandle handle)
 {
-  NQSocketCloseImpl(handle);
+  NQPlatformSocketClose(handle);
+}
+
+int NQSocketSend(NQSocketHandle handle, const void* buf, size_t len, int flags)
+{
+  return NQPlatformSocketSend(handle, buf, len, flags);
+}
+
+int NQSocketRecv(NQSocketHandle handle, void* buf, size_t len, int flags)
+{
+  return NQPlatformSocketRecv(handle, buf, len, flags);
 }
 
 int NQSocketShutdown(NQSocketHandle handle, int how)
 {
-  switch (how) {
-  case NQ_SD_RECV:
-    how = NQ_SHUT_RD;
-    break;
-
-  case NQ_SD_SEND:
-    how = NQ_SHUT_WR;
-    break;
-
-  case NQ_SD_BOTH:
-    how = NQ_SHUT_RDWR;
-    break;
-
-  default:
-    NQ_ASSERT_NOT_REACHED();
-    break;
-  }
-
-  return NQSocketShutdownImpl(handle, how);
+  return NQPlatformSocketShutdown(handle, normalizeShutdownHow(how));
 }
 
-bool NQSocketGetOpt(NQSocketHandle handle, int level, int id, void* value, uint32_t* length)
+int NQSocketGetOpt(NQSocketHandle handle, int level, int optname, void* optval, int* optlen)
 {
-  NQ_STATIC_ASSERT(sizeof(*length) == sizeof(socklen_t), "Size of socklen_t not valid");
-  if (!getsockopt(handle, level, id, (char*)value, (socklen_t*)length))
-    return true;
-  return false;
+  return NQPlatformSocketGetOpt(handle, normalizeOptLevel(level), normalizeOptName(optname), optval, optlen);
 }
 
-bool NQSocketSetOpt(NQSocketHandle handle, int level, int id, const void* value, uint32_t length)
+int NQSocketSetOpt(NQSocketHandle handle, int level, int optname, const void* optval, int optlen)
 {
-  NQ_STATIC_ASSERT(sizeof(length) == sizeof(socklen_t), "Size of socklen_t not valid");
-  if (!setsockopt(handle, level, id, (const char*)value, (socklen_t)length))
-    return true;
-  return false;
+  return NQPlatformSocketSetOpt(handle, normalizeOptLevel(level), normalizeOptName(optname), optval, optlen);
 }
 
-bool NQSocketSetNonBlocking(NQSocketHandle handle, bool blocking)
+int NQSocketSetNonBlocking(NQSocketHandle handle, bool blocking)
 {
 #if defined(NQ_OS_WINDOWS)
   unsigned long opt = blocking ? 1 : 0;
-  if (NQSocketIoctlImpl(handle, FIONBIO, &opt) != NQ_SOCKET_ERROR)
-    return true;
+  int ret = ioctlsocket(handle, FIONBIO, &opt);
+  if (ret == SOCKET_ERROR)
+    return -WSAGetLastError();
+  return ret;
 
-#elif defined(O_NONBLOCK)
+#elif defined(NQ_OS_UNIX)
+#ifdef O_NONBLOCK
   /* FIXME: O_NONBLOCK is defined but broken on SunOS 4.1.x and AIX 3.2.5. */
   int flags = fcntl(handle, F_GETFL, 0);
   if (flags == -1)
@@ -354,164 +283,65 @@ bool NQSocketSetNonBlocking(NQSocketHandle handle, bool blocking)
   else
     flags &= ~O_NONBLOCK;
 
-  if (fcntl(handle, F_SETFL, flags) != -1)
-    return true;
+  int ret = fcntl(handle, F_SETFL, flags);
+  if (ret == -1)
+    return -errno;
+  return ret;
 
 #else
   int opt = blocking ? 1 : 0;
-  if (NQSocketIoctlImpl(handle, FIONBIO, ((char*)&opt)) != -1)
-    return true;
+  int ret = ioctl(handle, FIONBIO, &opt);
+  if (ret == -1)
+    return -errno;
+  return ret;
 
 #endif
+#else
+  return -NQ_ENOTSUPP;
 
-  return false;
-}
-
-static inline bool getBoolValue(const void* value, uint32_t length, bool* success)
-{
-  const uint8_t* start = (const uint8_t*)value;
-  const uint8_t* end = start + length;
-
-  if (success)
-    *success = (length != 0);
-
-  while (start < end) {
-    if (*start)
-      return true;
-    start++;
-  }
-
-  return false;
-}
-
-static int getoptlevel(int opt)
-{
-  switch (opt) {
-  case NQ_SOCKOPT_ERROR:
-  case NQ_SOCKOPT_REUSEADDR:
-  case NQ_SOCKOPT_BROADCAST:
-    return SOL_SOCKET;
-
-  case NQ_SOCKOPT_TCPNODELAY:
-    return IPPROTO_TCP;
-
-  default:
-    NQ_ASSERT_NOT_REACHED();
-    return -1;
-  }
-}
-
-static int getoptname(int opt)
-{
-  switch (opt) {
-  case NQ_SOCKOPT_ERROR:
-    return SO_ERROR;
-  case NQ_SOCKOPT_REUSEADDR:
-    return SO_REUSEADDR;
-  case NQ_SOCKOPT_BROADCAST:
-    return SO_BROADCAST;
-  case NQ_SOCKOPT_TCPNODELAY:
-    return TCP_NODELAY;
-
-  default:
-    NQ_ASSERT_NOT_REACHED();
-    return -1;
-  }
-}
-
-bool NQSocketGetDataOpt(NQSocketHandle handle, int opt, void* value, uint32_t* length)
-{
-  return NQSocketGetOpt(handle, getoptlevel(opt), getoptname(opt), value, length);
-}
-
-bool NQSocketSetDataOpt(NQSocketHandle handle, int opt, const void* value, uint32_t length)
-{
-  if (opt == NQ_SOCKOPT_NONBLOCK) {
-    bool success;
-    bool val = getBoolValue(value, length, &success);
-    return NQSocketSetNonBlocking(handle, val);
-  }
-
-  return NQSocketSetOpt(handle, getoptlevel(opt), getoptname(opt), value, length);
-}
-
-bool NQSocketGetBoolOpt(NQSocketHandle handle, int opt, bool* value)
-{
-  if (value == NULL)
-    return NQSocketGetDataOpt(handle, opt, NULL, 0);
-
-  int val;
-  uint32_t length = sizeof(val);
-  bool success = NQSocketGetDataOpt(handle, opt, &val, &length);
-  *value = getBoolValue(&val, length, NULL);
-  return success;
-}
-
-bool NQSocketSetBoolOpt(NQSocketHandle handle, int opt, bool value)
-{
-  int val = value ? 1 : 0;
-  return NQSocketSetDataOpt(handle, opt, &val, sizeof(val));
-}
-
-bool NQSocketGetIntOpt(NQSocketHandle handle, int opt, int* value)
-{
-  uint32_t length = sizeof(*value);
-  return NQSocketGetDataOpt(handle, opt, value, &length);
-}
-
-bool NQSocketSetIntOpt(NQSocketHandle handle, int opt, int value)
-{
-  return NQSocketSetDataOpt(handle, opt, &value, sizeof(value));
-}
-
-bool NQSocketSetNoDelay(NQSocketHandle handle, bool value)
-{
-  return NQSocketSetBoolOpt(handle, NQ_SOCKOPT_TCPNODELAY, value);
+#endif
 }
 
 int NQSocketConnect(NQSocketHandle handle, const NQEndPoint* ep)
 {
-  if (ep->family == NQ_AF_INET4)
+  if (ep->family == NQ_AF_INET)
     return NQSocketConnect4(handle, &ep->ip4ep);
 
   if (ep->family == NQ_AF_INET6)
     return NQSocketConnect6(handle, &ep->ip6ep);
 
   NQ_ASSERT_NOT_REACHED();
-  return false;
+  return -NQ_ENOTSUPP;
 }
 
 int NQSocketConnect4(NQSocketHandle handle, const NQIPv4EndPoint* ep)
 {
   NQ_ASSERT(ep);
   struct sockaddr_in addr;
-  socklen_t size = NQIPv4EndPoint_toInet4(ep, &addr);
-  if (NQSocketConnectImpl(handle, (struct sockaddr*)&addr, size) != 0)
-    return -NQSocketGetLastError();
-  return 0;
+  int size = NQIPv4EndPoint_toInet4(ep, &addr);
+  return NQPlatformSocketConnect(handle, (struct sockaddr*)&addr, size);
 }
 
 int NQSocketConnect6(NQSocketHandle handle, const NQIPv6EndPoint* ep)
 {
   NQ_ASSERT(ep);
   struct sockaddr_in6 addr;
-  socklen_t size = NQIPv6EndPoint_toInet6(ep, &addr);
-  if (NQSocketConnectImpl(handle, (struct sockaddr*)&addr, size) != 0)
-    return -NQSocketGetLastError();
-  return 0;
+  int size = NQIPv6EndPoint_toInet6(ep, &addr);
+  return NQPlatformSocketConnect(handle, (struct sockaddr*)&addr, size);
 }
 
 int NQSocketAccept(NQSocketHandle handle, NQEndPoint* ep, NQSocketHandle* result)
 {
-  NQSockAddr addr;
-  socklen_t len = sizeof(addr);
-  NQSocketHandle acceptHandle = NQSocketAcceptImpl(handle, &addr.sa, &len);
-  if (acceptHandle == NQ_INVALID_SOCKET)
-    return -NQSocketGetLastError();
+  NQUnionSockAddr addr;
+  int len = sizeof(addr);
+  NQSocketHandle acceptHandle;
+  int ret = NQPlatformSocketAccept(handle, &addr.sa, &len, &acceptHandle);
+  if (ret != 0)
+    return ret;
 
   if (ep != NULL && !NQEndPoint_initWithInet(ep, &addr.sa, len)) {
     NQ_ASSERT_NOT_REACHED();
-    NQSocketCloseImpl(acceptHandle);
+    NQPlatformSocketClose(acceptHandle);
     return -NQ_EINVAL;
   }
 
@@ -521,165 +351,136 @@ int NQSocketAccept(NQSocketHandle handle, NQEndPoint* ep, NQSocketHandle* result
 
 int NQSocketBind(NQSocketHandle handle, const NQEndPoint* ep)
 {
-  NQSockAddr addr;
-  socklen_t size = NQEndPoint_toInet(ep, &addr.sa, sizeof(addr));
-  return bind(handle, &addr.sa, size);
+  NQUnionSockAddr addr;
+  int size = NQEndPoint_toInet(ep, &addr.sa, sizeof(addr));
+  return NQPlatformSocketBind(handle, &addr.sa, size);
 }
 
 int NQSocketBind4(NQSocketHandle handle, const NQIPv4EndPoint* ep)
 {
-  NQSockAddr addr;
-  socklen_t size = NQIPv4EndPoint_toInet4(ep, &addr.in4);
-  return bind(handle, &addr.sa, size);
+  NQUnionSockAddr addr;
+  int size = NQIPv4EndPoint_toInet4(ep, &addr.in4);
+  return NQPlatformSocketBind(handle, &addr.sa, size);
 }
 
 int NQSocketBind6(NQSocketHandle handle, const NQIPv6EndPoint* ep)
 {
-  NQSockAddr addr;
-  socklen_t size = NQIPv6EndPoint_toInet6(ep, &addr.in6);
-  return bind(handle, &addr.sa, size);
+  NQUnionSockAddr addr;
+  int size = NQIPv6EndPoint_toInet6(ep, &addr.in6);
+  return NQPlatformSocketBind(handle, &addr.sa, size);
 }
 
 int NQSocketListen(NQSocketHandle handle, int backlog)
 {
-  return listen(handle, backlog);
-}
-
-static inline int NQSocketSendToImpl(NQSocketHandle handle, const uint8_t* buf, size_t len, int flags, const struct sockaddr* addr, socklen_t addrlen)
-{
-  NQ_ASSERT(NQ_INT32_MAX < len);
-
-#ifdef NQ_OS_KERNEL
-  return -1;
-#endif
-
-#ifdef NQ_OS_WINDOWS
-  return sendto(handle, (const char*)buf, (int)len, flags, addr, addrlen);
-#endif
-
-#ifdef NQ_OS_UNIX
-#ifdef NQ_OS_LINUX
-  flags |= MSG_NOSIGNAL;
-#endif
-  ssize_t result = sendto(handle, buf, len, flags, addr, addrlen);
-  NQ_ASSERT(result <= NQ_INT32_MAX);
-  return (int)result;
-#endif
+  return NQPlatformSocketListen(handle, backlog);
 }
 
 int NQSocketSendTo(NQSocketHandle handle, const uint8_t* buf, size_t len, int flags, const NQEndPoint* ep)
 {
-  if (ep->family == NQ_AF_INET4)
+  if (ep->family == NQ_AF_INET)
     return NQSocketSendTo4(handle, buf, len, flags, &ep->ip4ep);
 
   if (ep->family == NQ_AF_INET6)
     return NQSocketSendTo6(handle, buf, len, flags, &ep->ip6ep);
 
   NQ_ASSERT_NOT_REACHED();
-  return -1;
+  return -NQ_ENOTSUPP;
 }
 
 int NQSocketSendTo4(NQSocketHandle handle, const uint8_t* buf, size_t len, int flags, const NQIPv4EndPoint* ep)
 {
-  NQ_ASSERT(NQ_INT32_MAX < len);
-
-  struct sockaddr_in addr;
-  socklen_t size = NQIPv4EndPoint_toInet4(ep, &addr);
-
-  return NQSocketSendToImpl(handle, buf, len, flags, (struct sockaddr*)&addr, size);
+  NQSockAddrIn addr;
+  int size = NQIPv4EndPoint_toInet4(ep, &addr);
+  return NQPlatformSocketSendto(handle, buf, len, flags, (struct sockaddr*)&addr, size);
 }
 
 int NQSocketSendTo6(NQSocketHandle handle, const uint8_t* buf, size_t len, int flags, const NQIPv6EndPoint* ep)
 {
-  NQ_ASSERT(NQ_INT32_MAX < len);
-
-  struct sockaddr_in6 addr;
-  socklen_t size = NQIPv6EndPoint_toInet6(ep, &addr);
-
-  return NQSocketSendToImpl(handle, buf, len, flags, (struct sockaddr*)&addr, size);
-}
-
-int NQSocketPair(int domain, int type, int protocol, NQSocketHandle sock[2])
-{
-#ifdef NQ_OS_KERNEL
-  return -NQ_ENOTSUPP;
-#endif
-
-#ifdef NQ_OS_WINDOWS
-  struct sockaddr_in address;
-  NQSocketHandle listener;
-  socklen_t size = sizeof(address);
-  int reuse = 1;
-  int lastError;
-
-  NQ_ASSERT(domain == NQ_AF_INET4 || domain == NQ_AF_INET6);
-
-  sock[0] = NQ_INVALID_SOCKET;
-  sock[1] = NQ_INVALID_SOCKET;
-
-  lastError = NQSocketOpen(domain, type, protocol, &listener);
-  if (lastError)
-    return SOCKET_ERROR;
-
-  // ignore errors coming out of this setsockopt.  This is because
-  // SO_EXCLUSIVEADDRUSE requires admin privileges on WinXP, but we don't
-  // want to force socket pairs to be an admin.
-  setsockopt(listener, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char*)&reuse, (socklen_t)sizeof(reuse));
-
-  address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-  address.sin_family = AF_INET;
-  address.sin_port = 0;
-
-  for (;;) {
-    if (bind(listener, (struct sockaddr*)&address, sizeof(address)) != 0)
-      break;
-
-    if (getsockname(listener, (struct sockaddr*)&address, &size) != 0)
-      break;
-
-    if (listen(listener, 1) != 0)
-      break;
-
-    lastError = NQSocketOpen(domain, type, protocol, &sock[0]);
-    if (lastError)
-      break;
-
-    if (NQSocketConnectImpl(sock[0], (struct sockaddr*)&address, sizeof(address)) != 0)
-      break;
-
-    sock[1] = NQSocketAcceptImpl(listener, (struct sockaddr*)&address, &size);
-    if (NQ_INVALID_SOCKET == sock[1])
-      break;
-
-    NQSocketCloseImpl(listener);
-    return 0;
-  }
-
-  lastError = WSAGetLastError();
-
-  if (NQSocketIsValid(listener))
-    NQSocketCloseImpl(listener);
-
-  if (NQSocketIsValid(sock[0])) {
-    NQSocketCloseImpl(sock[0]);
-    sock[0] = NQ_INVALID_SOCKET;
-  }
-
-  if (NQSocketIsValid(sock[1])) {
-    NQSocketCloseImpl(sock[1]);
-    sock[1] = NQ_INVALID_SOCKET;
-  }
-
-  WSASetLastError(lastError);
-  return SOCKET_ERROR;
-#endif
-
-#ifdef NQ_OS_UNIX
-  return socketpair(AF_LOCAL, toComposeType(type), toComposeProtocol(protocol), sock);
-#endif
+  NQSockAddrIn6 addr;
+  int size = NQIPv6EndPoint_toInet6(ep, &addr);
+  return NQPlatformSocketSendto(handle, buf, len, flags, (struct sockaddr*)&addr, size);
 }
 
 bool NQSocketIsSelectable(NQSocketHandle handle)
 {
-  return 0 <= handle && handle < FD_SETSIZE;
+#if defined(NQ_OS_UNIX) || defined(NQ_OS_WINDOWS)
+  return handle < FD_SETSIZE;
+#else
+  return false;
+#endif
+}
+
+int NQSocketPair(int family, int type, int protocol, NQSocketHandle sock[2])
+{
+  socketInit();
+
+#if defined(NQ_OS_UNIX)
+  return socketpair(AF_LOCAL, type, protocol, sock);
+
+#elif defined(NQ_OS_WINDOWS)
+  struct sockaddr_in address;
+  NQSocketHandle listener;
+  int size = sizeof(address);
+  int ret;
+
+  NQ_ASSERT(family == NQ_AF_INET || family == NQ_AF_INET6);
+
+  ret = NQSocketOpen(family, type, protocol, &listener);
+  if (ret != 0)
+    return ret;
+
+  // ignore errors coming out of this setsockopt.  This is because
+  // SO_EXCLUSIVEADDRUSE requires admin privileges on WinXP, but we don't
+  // want to force socket pairs to be an admin.
+  int reuse = 1;
+  setsockopt(listener, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char*)&reuse, sizeof(reuse));
+
+  address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+  address.sin_family = normalizeSockFamily(family);
+  address.sin_port = 0;
+
+  if (bind(listener, (struct sockaddr*)&address, sizeof(address)) != 0) {
+    ret = -WSAGetLastError();
+    NQPlatformSocketClose(listener);
+    return ret;
+  }
+
+  if (getsockname(listener, (struct sockaddr*)&address, &size) != 0) {
+    ret = -WSAGetLastError();
+    NQPlatformSocketClose(listener);
+    return ret;
+  }
+
+  ret = NQPlatformSocketListen(listener, 1);
+  if (ret != 0) {
+    NQPlatformSocketClose(listener);
+    return ret;
+  }
+
+  ret = NQSocketOpen(family, type, protocol, &sock[0]);
+  if (ret != 0) {
+    NQPlatformSocketClose(listener);
+    return ret;
+  }
+
+  ret = NQPlatformSocketConnect(sock[0], (struct sockaddr*)&address, sizeof(address));
+  if (ret != 0) {
+    NQPlatformSocketClose(sock[0]);
+    NQPlatformSocketClose(listener);
+    return ret;
+  }
+
+  ret = NQPlatformSocketAccept(listener, (struct sockaddr*)&address, &size, &sock[1]);
+  if (ret != 0) {
+    NQPlatformSocketClose(sock[0]);
+    NQPlatformSocketClose(listener);
+    return ret;
+  }
+
+  NQPlatformSocketClose(listener);
+  return 0;
+#else
+  return -NQ_ENOTSUPP;
+
+#endif
 }

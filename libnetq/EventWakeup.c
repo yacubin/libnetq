@@ -25,14 +25,14 @@ bool NQEventWakeup_init(NQEventWakeup* thiz)
 {
 #ifdef USE_SOCKETPAIR
   NQSocketHandle socks[2];
-  int status = NQSocketPair(NQ_AF_INET4, NQ_SOCK_STREAM, NQ_IPPROTO_IP, socks);
+  int status = NQSocketPair(NQ_AF_INET, NQ_SOCK_STREAM, NQ_IPPROTO_IP, socks);
   if (status != 0) {
     thiz->fd[0] = -1;
     thiz->fd[1] = -1;
     return false;
   }
 
-  if (!NQSocketSetBoolOpt(socks[0], NQ_SOCKOPT_NONBLOCK, true) || !NQSocketSetBoolOpt(socks[1], NQ_SOCKOPT_NONBLOCK, true)) {
+  if (NQSocketSetNonBlocking(socks[0], true) || NQSocketSetNonBlocking(socks[1], true)) {
     NQSocketClose(socks[0]);
     NQSocketClose(socks[1]);
     thiz->fd[0] = -1;
@@ -80,7 +80,7 @@ void NQEventWakeup_finalize(NQEventWakeup* thiz)
 bool NQEventWakeup_sendUint64(NQEventWakeup* thiz, const uint64_t* value)
 {
 #ifdef USE_SOCKETPAIR
-  size_t sz = NQSocketSend(thiz->fd[1], (uint8_t*)value, sizeof(*value), 0);
+  size_t sz = NQSocketSend(thiz->fd[1], value, sizeof(*value), 0);
 
 #else
   ssize_t sz = write(thiz->fd[0], (uint8_t*)value, sizeof(*value));
@@ -105,9 +105,4 @@ bool NQEventWakeup_recvUint64(NQEventWakeup* thiz, uint64_t* value)
   bool success = (sz == sizeof(*value));
   NQ_ASSERT(success);
   return success;
-}
-
-int NQEventWakeup_handle(NQEventWakeup* thiz)
-{
-  return thiz->fd[0];
 }

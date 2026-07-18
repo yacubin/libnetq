@@ -11,8 +11,5 @@
 #include "libnetq/PlatformPoll.h"
 
 #ifdef NQ_OS_WINDOWS
-int NQPlatformPoll(NQPlatformPollfd* fds, unsigned long nfds, int timeout)
-{
-  return WSAPoll(fds, nfds, timeout);
-}
+
 #endif

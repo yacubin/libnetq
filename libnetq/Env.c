@@ -14,13 +14,13 @@
 #include <libnetq/Limits.h>
 #include <libnetq/Assert.h>
 
-#ifdef NQ_OS_WINDOWS
+#if defined(NQ_OS_WINDOWS)
 #include <windows.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/UTF.h>
-#endif
-
-#ifdef NQ_OS_UNIX
+#elif defined(NQ_OS_DARWIN)
+#include <crt_externs.h> // for _NSGetEnviron
+#elif defined(NQ_OS_UNIX)
 #include <unistd.h> // for environ
 #endif
 
@@ -166,6 +166,8 @@ NQEnviron* NQEnviron_create(void)
 {
 #if defined(NQ_OS_WINDOWS)
   return (NQEnviron*)GetEnvironmentStringsW();
+#elif defined(NQ_OS_DARWIN)
+  return (NQEnviron*)_NSGetEnviron();
 #elif defined(NQ_OS_UNIX)
   return (NQEnviron*)environ;
 #else

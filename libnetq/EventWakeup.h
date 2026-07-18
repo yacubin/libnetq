@@ -26,7 +26,10 @@ NQ_EXPORT void NQEventWakeup_finalize(NQEventWakeup*);
 NQ_EXPORT bool NQEventWakeup_sendUint64(NQEventWakeup*, const uint64_t* value);
 NQ_EXPORT bool NQEventWakeup_recvUint64(NQEventWakeup*, uint64_t* value);
 
-NQ_EXPORT int NQEventWakeup_handle(NQEventWakeup*);
+static inline int NQEventWakeup_handle(NQEventWakeup* thiz)
+{
+  return thiz->fd[0];
+}
 
 #ifdef __cplusplus
 }

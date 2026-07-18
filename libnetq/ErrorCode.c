@@ -8,4 +8,20 @@
  */
 
 #include "config.h"
-#include "libnetq/net/win32/SocketHandle.h"
+#include "libnetq/ErrorCode.h"
+
+#ifdef NQ_OS_WINDOWS
+
+#include <windows.h>
+
+NQErrorCode NQGetLastError(void)
+{
+  return (NQErrorCode)GetLastError();
+}
+
+void NQSetLastError(NQErrorCode ec)
+{
+  SetLastError((DWORD)ec);
+}
+
+#endif

@@ -36,7 +36,7 @@ bool NQJSON_objectGetInt64(const NQJSON* json, const char* name, int64_t* value)
   return true;
 }
 
-#ifdef NQ_HAS_COMPILER_SSE
+#ifdef NQ_USE_FLOATING_POINT
 bool NQJSON_objectGetDouble(const NQJSON* json, const char* name, double* value)
 {
   const NQJSON* item = NQJSON_objectGet(json, name);
@@ -64,7 +64,7 @@ static bool bufferWrite(void* userdata, const char* characters, size_t length)
   return NQStringPrint_writeAll(buffer, characters, length);
 }
 
-NQ_EXPORT bool NQJSON_dump(const NQJSON* json, NQStringPrint* buffer)
+bool NQJSON_dump(const NQJSON* json, NQStringPrint* buffer)
 {
   NQJSONWriter writer;
   NQJSONWriter_init(&writer, bufferWrite, buffer);

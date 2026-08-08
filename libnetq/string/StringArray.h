@@ -32,6 +32,7 @@ NQ_EXPORT NQStringArray16* NQStringArray16_alloc(size_t length);
 NQ_EXPORT NQStringArray16* NQStringArray16_create(const char* characters);
 NQ_EXPORT NQStringArray16* NQStringArray16_create2(const char* characters, size_t length);
 NQ_EXPORT void NQStringArray16_destroy(NQStringArray16*);
+NQ_EXPORT void NQStringArray16_shrink(NQStringArray16*, size_t newLength);
 
 #define NQStringArray16_characters(thiz) (thiz)->characters
 
@@ -55,6 +56,7 @@ NQ_EXPORT NQStringArray* NQStringArray_alloc(size_t length);
 NQ_EXPORT NQStringArray* NQStringArray_create(const char* characters);
 NQ_EXPORT NQStringArray* NQStringArray_create2(const char* characters, size_t length);
 NQ_EXPORT void NQStringArray_destroy(NQStringArray*);
+NQ_EXPORT void NQStringArray_shrink(NQStringArray*, size_t newLength);
 
 #define NQStringArraye_characters(thiz) (thiz)->characters
 

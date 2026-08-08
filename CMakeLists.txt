@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.16
+project(libnetq VERSION 1.0.17
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -17,10 +17,14 @@ include(CheckIncludeFiles)
 include(CheckFunctionExists)
 
 macro (LNQ_OPTION_DEFINE _name _description _type _value)
-  set(LNQ_${_name} "${_value}" CACHE STRING "${_description}")
-  if ("${_type}" STREQUAL "ENUM")
-    if (NOT "${ARGN}" STREQUAL "")
-      set_property(CACHE LNQ_${_name} PROPERTY STRINGS "${_value};${ARGN}")
+  if (_type STREQUAL "BOOLEAN")
+    option(LNQ_${_name} "${_description}" ${_value})
+  else ()
+    set(LNQ_${_name} "${_value}" CACHE STRING "${_description}")
+    if ("${_type}" STREQUAL "ENUM")
+      if (NOT "${ARGN}" STREQUAL "")
+        set_property(CACHE LNQ_${_name} PROPERTY STRINGS "${_value};${ARGN}")
+      endif ()
     endif ()
   endif ()
 endmacro ()
@@ -57,6 +61,7 @@ endmacro ()
 LNQ_OPTION_DEFINE(LIBRARY_TYPE "Choose the library type: SHARED, STATIC, OBJECT" ENUM SHARED STATIC OBJECT)
 LNQ_OPTION_DEFINE(CHECK_LEVEL "Runtime check in debug mode only" NUMBER 0)
 LNQ_OPTION_DEFINE(ENV_LOGFD "File descriptor name used for logging output" STRING "")
+LNQ_OPTION_DEFINE(USE_LOGHANDLER "External handler used for logging output" BOOLEAN FALSE)
 LNQ_FEATURE_DEFINE(USE_EXPORT "Enable symbol export as a shared library")
 
 if (NOT LNQ_USE_EXPORT STREQUAL AUTO)
@@ -69,6 +74,7 @@ endif ()
 
 set(NQ_CHECK_LEVEL ${LNQ_CHECK_LEVEL})
 set(NQ_ENV_LOGFD ${LNQ_ENV_LOGFD})
+set(NQ_USE_LOGHANDLER ${LNQ_USE_LOGHANDLER})
 
 math(EXPR NQ_VERSION_CODE "${PROJECT_VERSION_MAJOR} * 10000000 + ${PROJECT_VERSION_MINOR} * 100000 + ${PROJECT_VERSION_PATCH} * 1000")
 
@@ -388,6 +394,7 @@ set(libnetq_HEADERS
   libnetq/cpu/sparc.h
   libnetq/cpu/tms320.h
   libnetq/cpu/tms470.h
+  libnetq/cpu/wasm.h
   libnetq/cpu/x86.h
   libnetq/cpu/z.h
 
@@ -492,9 +499,12 @@ set(libnetq_HEADERS
   libnetq/web/JsonRpcResponse.h
   libnetq/web/JsonRpcTypes.h
   libnetq/web/UrlHost.h
+  libnetq/web/WebDirAccess.h
   libnetq/web/WebEnvView.h
   libnetq/web/WebFileUrlMap.h
   libnetq/web/WebFileView.h
+  libnetq/web/WebHexView.h
+  libnetq/web/WebManifest.h
   libnetq/web/WebRestArchApi.h
   libnetq/web/WebRestEnvApi.h
   libnetq/web/WebRestUsersApi.h
@@ -732,9 +742,12 @@ set(libnetq_SOURCES
   libnetq/web/HttpStatistics.c
   libnetq/web/JsonRpcResponse.c
   libnetq/web/UrlHost.c
+  libnetq/web/WebDirAccess.c
   libnetq/web/WebEnvView.c
   libnetq/web/WebFileUrlMap.c
   libnetq/web/WebFileView.c
+  libnetq/web/WebHexView.c
+  libnetq/web/WebManifest.c
   libnetq/web/WebRestArchApi.c
   libnetq/web/WebRestEnvApi.c
   libnetq/web/WebRestUsersApi.c

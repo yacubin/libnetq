@@ -339,6 +339,7 @@ void NQNetworkLooper_destroy(NQNetworkLooper* thiz)
     }
   }
 
+  NQMutex_finalize(&thiz->mutex);
   NQFree(thiz);
 }
 

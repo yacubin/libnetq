@@ -14,12 +14,8 @@
 
 #ifdef NQ_OS_UNIX
 
-# include <sys/stat.h>
-# include <errno.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <libnetq/ErrorCode.h>
+#include <sys/stat.h>
 
 #define NQ_STAT_IFMT  S_IFMT
 #define NQ_STAT_IFREG S_IFREG
@@ -31,10 +27,9 @@ typedef struct stat NQStat;
 static inline int NQGetStat(const char* path, NQStat* st)
 {
   if (stat(path, st) != 0)
-    return -errno;
+    return -NQGetLastError();
   return 0;
 }
-
 static inline bool NQStat_isFile(const NQStat* st)
 {
   return S_ISREG(st->st_mode);
@@ -76,9 +71,6 @@ static inline NQTimeMs NQStat_creationTimeMs(const NQStat* st)
 #endif
 }
 
-#ifdef __cplusplus
-}
-#endif
 #endif
 
 #endif /* _LIBNETQ_FS_POSIX_STAT_H */

@@ -117,8 +117,8 @@ int NQLibraryInfoLoad(NQLibraryInfo* info, const void* addr)
   NQ_ASSERT(filename[fnInfo.utf8Size] == '\0');
 
   for (size_t i = 0; i < fnInfo.utf8Size; i++) {
-    if (filename[i] == NQ_WINPATH_DELIMITER)
-      filename[i] = NQ_PATH_DELIMITER;
+    if (filename[i] == NQ_WIN32_PATH_SEPARATOR)
+      filename[i] = NQ_PATH_SEPARATOR;
   }
 
   info->filename = filename;

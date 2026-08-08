@@ -104,6 +104,25 @@ struct NQWebBlob {
   uint32_t size;
 };
 
+typedef struct NQWebCatalogParams NQWebCatalogParams;
+struct NQWebCatalogParams {
+  const char* mainUrl;
+  const char* title;
+  const char* description;
+
+  const char* lightIconUrl;
+  const char* darkIconUrl;
+
+  const char* lightScreenshotUrl;
+  const char* darkScreenshotUrl;
+};
+
+struct NQWebCatalogEntry {
+  NQListHead serverList;
+  NQListHead executorList;
+  NQWebCatalogParams params;
+};
+
 typedef struct NQWebServerOperations NQWebServerOperations;
 struct NQWebServerOperations {
   NQListHead list;
@@ -119,6 +138,7 @@ struct NQWebServerSupervisor {
   NQPrimitiveStorage* storage;
   NQNetworkLooper* looper;
   const NQWebServerOperations* serverOps;
+  NQKeyVal* mimetypes;
 };
 
 struct NQWebServer {
@@ -129,6 +149,7 @@ struct NQWebServer {
   NQListHead socketExecutors;
   NQListHead writerExecutors;
   NQListHead moduleList;
+  NQListHead catalogEntries;
   NQHttpStatistics* statistics;
   NQUrlHost* host;
   NQStringData email;
@@ -138,6 +159,7 @@ struct NQWebServer {
   NQString* tlsCertString;
   bool tlsEnabled;
   NQNetworkLooper* looper;
+  volatile bool isLooperRunning;
   NQAsset* asset;
   NQKeyVal* mimetypes;
   uint8_t sessionSeckey[32];
@@ -151,8 +173,9 @@ NQ_EXPORT bool NQWebServer_init(NQWebServer*, const NQWebServerParams* params, N
 NQ_EXPORT void NQWebServer_destroy(NQWebServer*);
 NQ_EXPORT void NQWebServer_finalize(NQWebServer*);
 
-NQ_EXPORT int NQWebServer_start(NQWebServer* service);
-NQ_EXPORT int NQWebServer_stop(NQWebServer* service);
+NQ_EXPORT int NQWebServer_start(NQWebServer*);
+NQ_EXPORT int NQWebServer_stop(NQWebServer*);
+NQ_EXPORT int NQWebServer_run(NQWebServer*);
 
 static inline const char* NQWebServer_email(const NQWebServer* thiz)
 {
@@ -233,7 +256,12 @@ static inline NQAsset* NQWebServer_asset(const NQWebServer* thiz)
 
 NQ_EXPORT NQUint8Array* NQWebServer_loadAssetBytes(const NQWebServer*, const char* filename);
 NQ_EXPORT const char* NQWebServer_getMimeType(const NQWebServer*, const char* filename);
-NQ_EXPORT void NQWebServer_setMimeTypes(NQWebServer*, NQKeyVal* mimetypes);
+NQ_EXPORT bool NQWebServer_addMimeType(NQWebServer*, const char* mimetype, const char* extname);
+
+NQ_EXPORT struct NQWebCatalogEntry* NQWebCatalogEntryCreate(const NQWebCatalogParams* params);
+NQ_EXPORT void NQWebCatalogEntryDestroy(struct NQWebCatalogEntry*);
+NQ_EXPORT int NQWebServer_addCatalogEntry(NQWebServer*, struct NQWebCatalogEntry* entry);
+NQ_EXPORT void NQWebServer_removeCatalogEntry(NQWebServer*, struct NQWebCatalogEntry* entry);
 
 NQ_EXPORT bool NQWebServer_initRequest(NQWebServer*, NQWebRequest* request);
 NQ_EXPORT bool NQWebServer_initSocket(NQWebServer*, NQWebRequest* request, NQWebSocket* sock);

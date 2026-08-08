@@ -14,7 +14,8 @@
 #include <libnetq/Sprintf.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
-#include <libnetq/Math.h>
+#include <libnetq/MinMax.h>
+#include <libnetq/ErrorCode.h>
 #include <libnetq/Assert.h>
 
 void NQStringPrint_init(NQStringPrint* thiz)
@@ -79,7 +80,7 @@ int NQStringPrint_vprintf(NQStringPrint* thiz, const char* format, va_list list)
   }
 
   if (!reserveCapacity(thiz, newSize))
-    return -1;
+    return -NQ_ENOMEM;
 
   int ret = vsnprintf(thiz->characters + thiz->length, thiz->capacity - thiz->length, format, list);
   
@@ -101,10 +102,10 @@ int NQStringPrint_write(NQStringPrint* thiz, const char* characters, size_t leng
 
   int newSize = thiz->length + (int)length + 1;
   if (newSize < thiz->length)
-    return -1;
+    return -NQ_EOVERFLOW;
 
   if (newSize > thiz->capacity && !reserveCapacity(thiz, newSize))
-    return -1;
+    return -NQ_ENOMEM;
 
   memcpy(thiz->characters + thiz->length, characters, length);
   thiz->length += length;

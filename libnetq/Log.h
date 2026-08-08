@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2020-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2020-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -29,6 +29,9 @@ typedef enum NQLogLevel {
 } NQLogLevel;
 
 NQ_EXPORT char NQLogLevelToChar(NQLogLevel level);
+
+typedef int (*NQLogHandler) (void* userdata, NQLogLevel level, const char* tag, const char* format, va_list args);
+NQ_EXPORT void NQLogSetHandler(NQLogHandler handler, void* userdata);
 
 NQ_EXPORT int NQLog_snprint(char* buffer, size_t size, NQLogLevel level, const char* tag, const char* format, ...) NQ_ATTRIBUTE_PRINTF(5, 6);
 NQ_EXPORT int NQLog_vsnprint(char* buffer, size_t size, NQLogLevel level, const char* tag, const char* format, va_list args);

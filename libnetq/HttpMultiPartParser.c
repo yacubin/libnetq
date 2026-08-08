@@ -34,20 +34,6 @@ enum {
 
 #define kDelimiterPrefix "\r\n--"
 #define kDelimiterLength (4)
-#define kDelimiterMax (80)
-#define kBufferMax (176)
-
-struct NQHTTPMultiPartParser {
-  void* userdata;
-  NQHTTPMultiPartParserCallback* callback;
-  int state;
-  uint8_t delimiterIndex;
-  uint8_t delimiterLength;
-  uint16_t bufferLength;
-  uint32_t totalBodyPartBytes;
-  char delimiter[kDelimiterMax];
-  char buffer[kBufferMax];
-};
 
 /*
      token          = 1*tchar
@@ -56,22 +42,28 @@ struct NQHTTPMultiPartParser {
                     / DIGIT / ALPHA
 */
 
-NQHTTPMultiPartParser* NQHTTPMultiPartParser_create(const char* boundary, NQHTTPMultiPartParserCallback callback, void* userdata)
+void NQHTTPMultiPartParser_init(NQHTTPMultiPartParser* thiz, const char* boundary, NQHTTPMultiPartParserCallback callback, void* userdata)
 {
-  if (boundary == NULL) // TODO: Check \r and \n
-    return NULL;
-
-  size_t boundaryLength = strlen(boundary);
-  if ((kDelimiterMax - kDelimiterLength) <= boundaryLength)
-    return NULL;
-
-  NQHTTPMultiPartParser* thiz = (NQHTTPMultiPartParser*)NQMalloc(sizeof(NQHTTPMultiPartParser));
-  if (thiz == NULL)
-    return NULL;
-
   thiz->callback = callback;
   thiz->userdata = userdata;
   thiz->state = kFirstToken;
+
+  size_t boundaryLength = 0;
+  if (boundary == NULL)
+    thiz->state = kErrorToken;
+  else {
+    for (;;) {
+      char ch = boundary[boundaryLength];
+      if (ch == '\0')
+        break;
+      if (ch == '\r' || ch == '\n' || (sizeof(thiz->delimiter) - kDelimiterLength) <= ++boundaryLength) {
+        thiz->state = kErrorToken;
+        boundaryLength = 0;
+        break;
+      }
+    }
+  }
+
   thiz->bufferLength = 0;
   thiz->delimiterIndex = 0;
   thiz->delimiterLength = boundaryLength + kDelimiterLength;
@@ -79,12 +71,28 @@ NQHTTPMultiPartParser* NQHTTPMultiPartParser_create(const char* boundary, NQHTTP
 
   memcpy(thiz->delimiter, kDelimiterPrefix, kDelimiterLength);
   memcpy(thiz->delimiter + kDelimiterLength, boundary, boundaryLength);
+}
+
+NQHTTPMultiPartParser* NQHTTPMultiPartParser_create(const char* boundary, NQHTTPMultiPartParserCallback callback, void* userdata)
+{
+  NQHTTPMultiPartParser* thiz;
+
+  thiz = (NQHTTPMultiPartParser*)NQMalloc(sizeof(NQHTTPMultiPartParser));
+  if (thiz == NULL)
+    return NULL;
+
+  NQHTTPMultiPartParser_init(thiz, boundary, callback, userdata);
+  if (thiz->state == kErrorToken) {
+    NQHTTPMultiPartParser_destroy(thiz);
+    return NULL;
+  }
 
   return thiz;
 }
 
 void NQHTTPMultiPartParser_destroy(NQHTTPMultiPartParser* thiz)
 {
+  NQHTTPMultiPartParser_finalize(thiz);
   NQFree(thiz);
 }
 
@@ -178,7 +186,7 @@ bool NQHTTPMultiPartParser_append(NQHTTPMultiPartParser* thiz, const char* data,
       else if (ch != '\r' && ch != '\n') { // TODO: More characters check
         if (thiz->bufferLength == 0)
           continue;
-        if (thiz->bufferLength < kBufferMax) {
+        if (thiz->bufferLength < sizeof(thiz->buffer)) {
           thiz->buffer[thiz->bufferLength++] = ch;
           continue;
         }
@@ -225,7 +233,7 @@ bool NQHTTPMultiPartParser_append(NQHTTPMultiPartParser* thiz, const char* data,
       else if (ch != '\n') { // TODO: More characters check
         if (thiz->bufferLength == 0)
           continue;
-        if (thiz->bufferLength < kBufferMax) {
+        if (thiz->bufferLength < sizeof(thiz->buffer)) {
           thiz->buffer[thiz->bufferLength++] = ch;
           continue;
         }
@@ -314,8 +322,10 @@ bool NQHTTPMultiPartParser_append(NQHTTPMultiPartParser* thiz, const char* data,
     }
     else {
       size_t len = size - (start - data);
-      if (len > kBufferMax)
+      if (len > sizeof(thiz->buffer)) {
+        thiz->state = kErrorToken;
         return false;
+      }
       memcpy(thiz->buffer, start, len);
       thiz->bufferLength = len;
     }

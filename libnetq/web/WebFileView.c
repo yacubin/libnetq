@@ -113,7 +113,7 @@ static int onGetRequest(NQWebRequest* request, NQWebResponse* response)
   size_t pathLen = NQStringPrint_length(&pathBuf);
 
   NQStat stat;
-  if (path[pathLen - 1] != NQ_PATH_DELIMITER) {
+  if (!NQIsPathSeparator(path[pathLen - 1])) {
     int err = NQGetStat(path, &stat);
     if (err) {
       NQ_LOGE("NQGetStat error %i", err);
@@ -175,10 +175,10 @@ static int onGetRequest(NQWebRequest* request, NQWebResponse* response)
   NQWebResponse_printf(response, "<!DOCTYPE html>");
   NQWebResponse_printf(response, "<html>");
   NQWebResponse_printf(response, "<head>");
-  NQWebResponse_printf(response, "<title>Index of %s</title>", url);
+  NQWebResponse_printf(response, "<title>Index of /%s</title>", relativePath);
   NQWebResponse_printf(response, "</head>");
   NQWebResponse_printf(response, "<body>");
-  NQWebResponse_printf(response, "<h1>Index of %s</h1>", url);
+  NQWebResponse_printf(response, "<h1>Index of /%s</h1>", relativePath);
   NQWebResponse_printf(response, "<hr><pre>");
 
   if (*relativePath != '\0') {
@@ -248,18 +248,20 @@ static int restApiInit(NQWebExecutor* executor, void* data)
   struct NQWebFileView* fileApi = NQ_CONTAINER_OF(executor, struct NQWebFileView, executor);
 
   NQPathBuilder pathBld;
-  if (!NQPathBuilder_initResolve2(&pathBld, NQWebServer_workDir(executor->server), params->baseDir)) {
+  NQPathBuilder_init(&pathBld);
+  if (!NQPathBuilder_resolve2(&pathBld, NQWebServer_workDir(executor->server), params->baseDir)) {
+    NQPathBuilder_finalize(&pathBld);
     return -NQ_ENOMEM;
   }
 
-  fileApi->baseDir = NQCStrFormat("%s/", NQPathBuilder_characters(&pathBld));
+  fileApi->baseDir = NQCStrFormat("%s" NQ_PATH_SEPARATOR_STR, NQPathBuilder_characters(&pathBld));
   NQPathBuilder_finalize(&pathBld);
 
   if (fileApi->baseDir == NULL) {
     return -NQ_ENOMEM;
   }
 
-  fileApi->baseUrl = NQCStrFormat("%s/", params->baseUrl);
+  fileApi->baseUrl = NQCStrFormat("%s" NQ_PATH_SEPARATOR_STR, params->baseUrl);
   if (fileApi->baseUrl == NULL) {
     NQCStrFree(fileApi->baseDir);
     return -NQ_ENOMEM;
@@ -272,7 +274,7 @@ static int restApiInit(NQWebExecutor* executor, void* data)
     return ret;
   }
 
-  ret = NQWebExecutor_addRequestListener(&fileApi->executor, &fileApi->otherListener, &kFsOps, fileApi, NQ_HTTP_GET, "%s/*", params->baseUrl);
+  ret = NQWebExecutor_addRequestListener(&fileApi->executor, &fileApi->otherListener, &kFsOps, fileApi, NQ_HTTP_GET, "%s" NQ_PATH_SEPARATOR_STR "*", params->baseUrl);
   if (ret) {
     NQWebExecutor_removeRequestListener(&fileApi->executor, &fileApi->mainListener);
     NQCStrFree(fileApi->baseDir);

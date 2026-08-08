@@ -33,6 +33,7 @@
 #include <libnetq/cpu/sparc.h>
 #include <libnetq/cpu/tms320.h>
 #include <libnetq/cpu/tms470.h>
+#include <libnetq/cpu/wasm.h>
 #include <libnetq/cpu/x86.h>
 #include <libnetq/cpu/z.h>
 

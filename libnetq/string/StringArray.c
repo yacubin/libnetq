@@ -13,6 +13,7 @@
 #include <libnetq/string/String.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Malloc.h>
+#include <libnetq/Assert.h>
 #include <libnetq/Log.h>
 
 static NQStringArray16 s_empty16 = {
@@ -61,6 +62,15 @@ void NQStringArray16_destroy(NQStringArray16* thiz)
     NQFree((void*)thiz);
 }
 
+void NQStringArray16_shrink(NQStringArray16* thiz, size_t newLength)
+{
+  NQ_ASSERT(newLength <= thiz->length);
+  if (newLength < thiz->length) {
+    thiz->characters[newLength] = '\0';
+    thiz->length = (uint16_t)newLength;
+  }
+}
+
 NQStringArray* NQStringArray_alloc(size_t length)
 {
   if (length == 0) {
@@ -95,4 +105,13 @@ void NQStringArray_destroy(NQStringArray* thiz)
 {
   if (thiz != &s_empty)
     NQFree((void*)thiz);
+}
+
+void NQStringArray_shrink(NQStringArray* thiz, size_t newLength)
+{
+  NQ_ASSERT(newLength <= thiz->length);
+  if (newLength < thiz->length) {
+    thiz->characters[newLength] = '\0';
+    thiz->length = (uint32_t)newLength;
+  }
 }

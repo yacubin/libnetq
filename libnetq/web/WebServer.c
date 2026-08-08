@@ -96,18 +96,20 @@ void NQWebServer_destroy(NQWebServer* thiz)
 
 static NQString* loadFileAsString(const char* workDir, const char* filename)
 {
-  NQPathBuilder pathBuilder;
-  if (!NQPathBuilder_initResolve2(&pathBuilder, workDir, filename)) {
+  NQPathBuilder pathBld;
+  NQPathBuilder_init(&pathBld);
+  if (!NQPathBuilder_resolve2(&pathBld, workDir, filename)) {
     NQ_LOGE("Unable to resolve path %s", filename);
+    NQPathBuilder_finalize(&pathBld);
     return NULL;
   }
 
-  NQString* result = NQString_fromFile(NQPathBuilder_characters(&pathBuilder));
+  NQString* result = NQString_fromFile(NQPathBuilder_characters(&pathBld));
   if (result == NULL) {
-    NQ_LOGE("Unable to load %s", NQPathBuilder_characters(&pathBuilder));
+    NQ_LOGE("Unable to load %s", NQPathBuilder_characters(&pathBld));
   }
 
-  NQPathBuilder_finalize(&pathBuilder);
+  NQPathBuilder_finalize(&pathBld);
   return result;
 }
 
@@ -120,6 +122,15 @@ bool NQWebServer_init(NQWebServer* thiz, const NQWebServerParams* params, NQWebS
     thiz->operations = defaultOperations();
     if (thiz->operations == NULL) {
       NQ_LOGE("No server implementation available");
+      return false;
+    }
+  }
+
+  thiz->looper = thiz->parent ? thiz->parent->looper : NULL;
+  if (thiz->looper == NULL) {
+    thiz->looper = NQNetworkLooper_create(1024, 1024, 1024);
+    if (thiz->looper == NULL) {
+      NQ_LOGE("Unable to create looper");
       return false;
     }
   }
@@ -149,13 +160,14 @@ bool NQWebServer_init(NQWebServer* thiz, const NQWebServerParams* params, NQWebS
   NQListHead_init(&thiz->socketExecutors);
   NQListHead_init(&thiz->writerExecutors);
   NQListHead_init(&thiz->moduleList);
+  NQListHead_init(&thiz->catalogEntries);
   thiz->statistics = NQHttpStatistics_create();
   NQPrimitiveStorage_init(&thiz->storage, thiz->parent ? thiz->parent->storage : NULL);
 
   NQGetCryptoRandom(thiz->sessionSeckey, sizeof(thiz->sessionSeckey));
 
-  thiz->looper = thiz->parent ? thiz->parent->looper : NULL;
-  thiz->mimetypes = NULL;
+  thiz->mimetypes = NQKeyVal_create();
+  thiz->isLooperRunning = false;
 
   thiz->userdata = NULL;
   return thiz->operations->init(thiz);
@@ -218,6 +230,12 @@ void NQWebServer_finalize(NQWebServer* thiz)
     moduleEntryRelease(thiz, entry);
   }
 
+  while (!NQListHead_isEmpty(&thiz->catalogEntries)) {
+    struct NQWebCatalogEntry* entry = NQ_CONTAINER_OF(thiz->catalogEntries.next, struct NQWebCatalogEntry, serverList);
+    NQ_LOGE("The catalog entry '%s' was not removed", entry->params.mainUrl);
+    NQListHead_remove(&entry->serverList);
+  }
+
   if (thiz->mimetypes)
     NQKeyVal_release(thiz->mimetypes);
 
@@ -240,6 +258,8 @@ void NQWebServer_finalize(NQWebServer* thiz)
   if (thiz->tlsCertString != NULL)
     NQString_release(thiz->tlsCertString);
 
+  if (thiz->parent == NULL || thiz->parent->looper != thiz->looper)
+    NQNetworkLooper_destroy(thiz->looper);
 }
 
 static bool comparePattern(const char* pattern, const char* url)
@@ -760,25 +780,113 @@ NQUint8Array* NQWebServer_loadAssetBytes(const NQWebServer* thiz, const char* fi
 
 const char* NQWebServer_getMimeType(const NQWebServer* thiz, const char* filename)
 {
-  if (thiz->mimetypes == NULL)
-    return NQ_MEDIATYPE_APPLICATION_OCTETSTREAM;
-
   const char* extension = strrchr(filename, '.');
   if (extension == NULL)
     return NQ_MEDIATYPE_APPLICATION_OCTETSTREAM;
 
-  const char* contentType = NQKeyVal_get(thiz->mimetypes, extension);
-  if (contentType == NULL)
-    return NQ_MEDIATYPE_APPLICATION_OCTETSTREAM;
+  if (thiz->mimetypes != NULL) {
+    const char* contentType = NQKeyVal_get(thiz->mimetypes, extension);
+    if (contentType != NULL)
+      return contentType;
+  }
 
-  return contentType;
+  if (thiz->parent != NULL && thiz->parent->mimetypes != NULL) {
+    const char* contentType = NQKeyVal_get(thiz->parent->mimetypes, extension);
+    if (contentType != NULL)
+      return contentType;
+  }
+
+  return NQ_MEDIATYPE_APPLICATION_OCTETSTREAM;
 }
 
-void NQWebServer_setMimeTypes(NQWebServer* thiz, NQKeyVal* mimetypes)
+bool NQWebServer_addMimeType(NQWebServer* thiz, const char* mimetype, const char* extname)
 {
-  if (thiz->mimetypes)
-    NQKeyVal_release(thiz->mimetypes);
-  thiz->mimetypes = NQKeyVal_retain(mimetypes);
+  return NQKeyVal_set(thiz->mimetypes, mimetype, extname);
+}
+
+struct NQWebCatalogEntry* NQWebCatalogEntryCreate(const NQWebCatalogParams* params)
+{
+  NQ_ASSERT(params->mainUrl != NULL);
+
+  size_t mainUrlLenz = NQStrlen(params->mainUrl) + 1;
+  size_t titleLenz = params->title ? NQStrlen(params->title) + 1 : 0;
+  size_t descriptionLenz = params->description ? NQStrlen(params->description) + 1 : 0;
+  size_t lightIconUrlLenz = params->lightIconUrl ? NQStrlen(params->lightIconUrl) + 1 : 0;
+  size_t darkIconUrlLenz = params->darkIconUrl ? NQStrlen(params->darkIconUrl) + 1 : 0;
+  size_t lightScreenshotUrlLenz = params->lightScreenshotUrl ? NQStrlen(params->lightScreenshotUrl) + 1 : 0;
+  size_t darkScreenshotUrlLenz = params->darkScreenshotUrl ? NQStrlen(params->darkScreenshotUrl) + 1 : 0;
+
+  struct NQWebCatalogEntry* entry;
+  size_t sizeInBytes = sizeof(*entry) + mainUrlLenz + titleLenz + descriptionLenz + lightIconUrlLenz + darkIconUrlLenz + lightScreenshotUrlLenz + darkScreenshotUrlLenz;
+  entry = (struct NQWebCatalogEntry*)NQZalloc(sizeInBytes);
+  if (entry == NULL)
+    return NULL;
+
+  NQListHead_init(&entry->serverList);
+  NQListHead_init(&entry->executorList);
+
+  char* ptr = (char*)entry + sizeof(*entry);
+
+  entry->params.mainUrl = ptr;
+  memcpy(ptr, params->mainUrl, mainUrlLenz);
+  ptr += mainUrlLenz;
+
+  if (titleLenz) {
+    entry->params.title = ptr;
+    memcpy(ptr, params->title, titleLenz);
+    ptr += titleLenz;
+  }
+
+  if (descriptionLenz) {
+    entry->params.description = ptr;
+    memcpy(ptr, params->description, descriptionLenz);
+    ptr += descriptionLenz;
+  }
+
+  if (lightIconUrlLenz) {
+    entry->params.lightIconUrl = ptr;
+    memcpy(ptr, params->lightIconUrl, lightIconUrlLenz);
+    ptr += lightIconUrlLenz;
+  }
+
+  if (darkIconUrlLenz) {
+    entry->params.darkIconUrl = ptr;
+    memcpy(ptr, params->darkIconUrl, darkIconUrlLenz);
+    ptr += darkIconUrlLenz;
+  }
+
+  if (lightScreenshotUrlLenz) {
+    entry->params.lightScreenshotUrl = ptr;
+    memcpy(ptr, params->lightScreenshotUrl, lightScreenshotUrlLenz);
+    ptr += lightScreenshotUrlLenz;
+  }
+
+  if (darkScreenshotUrlLenz) {
+    entry->params.darkScreenshotUrl = ptr;
+    memcpy(ptr, params->darkScreenshotUrl, darkScreenshotUrlLenz);
+    ptr += darkScreenshotUrlLenz;
+  }
+
+  NQ_ASSERT((char*)entry + sizeInBytes == ptr);
+  return entry;
+}
+
+void NQWebCatalogEntryDestroy(struct NQWebCatalogEntry* entry)
+{
+  NQ_ASSERT(NQListHead_isEmpty(&entry->serverList));
+  NQ_ASSERT(NQListHead_isEmpty(&entry->executorList));
+  NQFree(entry);
+}
+
+int NQWebServer_addCatalogEntry(NQWebServer* thiz, struct NQWebCatalogEntry* entry)
+{
+  NQListHead_addBack(&thiz->catalogEntries, &entry->serverList);
+  return 0;
+}
+
+void NQWebServer_removeCatalogEntry(NQWebServer* thiz, struct NQWebCatalogEntry* entry)
+{
+  NQListHead_remove(&entry->serverList);
 }
 
 int NQWebServer_start(NQWebServer* thiz)
@@ -789,6 +897,36 @@ int NQWebServer_start(NQWebServer* thiz)
 int NQWebServer_stop(NQWebServer* thiz)
 {
   return thiz->operations->stop(thiz);
+}
+
+static void doWork(NQWebServer* thiz)
+{
+  while (thiz->isLooperRunning) {
+    while (NQNetworkLooper_performOnce(thiz->looper)) {
+      if (!thiz->isLooperRunning)
+        return;
+    }
+    if (NQNetworkLooper_poll(thiz->looper, 500) < 0) {
+      NQ_LOGE("Looper poll failed");
+      return;
+    }
+  }
+}
+
+int NQWebServer_run(NQWebServer* thiz)
+{
+  if (thiz->parent != NULL && thiz->parent->looper == thiz->looper)
+    return -NQ_EIO;
+
+  thiz->isLooperRunning = true;
+  int ret = thiz->operations->start(thiz);
+  if (ret == 0) {
+    doWork(thiz);
+    thiz->operations->stop(thiz);
+  }
+  thiz->isLooperRunning = false;
+
+  return ret;
 }
 
 NQWebExecutor* NQWebServer_createExecutor(NQWebServer* thiz, size_t sizeInBytes, const struct NQWebExecutorOperations* operations, void* data)

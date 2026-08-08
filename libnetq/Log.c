@@ -18,6 +18,7 @@
 #include <libnetq/ErrorCode.h>
 #include <libnetq/Assert.h>
 #include <libnetq/FileHandle.h>
+#include <libnetq/ErrorCode.h>
 
 #ifdef NQ_OS_ANDROID
 #include <android/log.h>
@@ -39,6 +40,17 @@
 
 #define BUFFER_SIZE 1024
 #define DEFAULT_FILEHANDLE NQGetStdHandle(NQ_STDERR_FILENO)
+
+#ifdef NQ_USE_LOGHANDLER
+static int logNoop(void* userdata, NQLogLevel level, const char* tag, const char* format, va_list args)
+{
+  return -NQ_ENOENT;
+}
+
+static NQLogHandler s_handler = logNoop;
+static void* s_userdata = NULL;
+
+#endif
 
 char NQLogLevelToChar(NQLogLevel level)
 {
@@ -145,7 +157,14 @@ int NQLog_print(NQLogLevel level, const char* tag, const char* format, ...)
 
 int NQLog_vprint(NQLogLevel level, const char* tag, const char* format, va_list args)
 {
-#if defined(NQ_OS_KERNEL)
+#if defined(NQ_USE_LOGHANDLER)
+  va_list vargs;
+  va_copy(vargs, args);
+  int ret = s_handler(s_userdata, level, tag, format, vargs);
+  va_end(vargs);
+  return ret;
+
+#elif defined(NQ_OS_KERNEL)
   int ret;
   struct va_format vaf;
   va_list vargs;
@@ -277,4 +296,12 @@ void NQLog_assert(const char* condition, const char* tag, const char* format, ..
   }
 
   NQAbort();
+}
+
+void NQLogSetHandler(NQLogHandler handler, void* userdata)
+{
+#ifdef NQ_USE_LOGHANDLER
+  s_handler = handler;
+  s_userdata = userdata;
+#endif
 }

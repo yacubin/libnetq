@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2025-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
@@ -28,6 +28,7 @@ NQ_EXPORT bool NQUrlPath_isAbsolute(const NQUrlPath*);
 
 NQ_EXPORT bool NQIsUrlPath(const char* path);
 NQ_EXPORT bool NQIsUrlPathPattern(const char* pattern);
+NQ_EXPORT bool NQUrlPathStartsWith(const char* path, const char* search);
 
 #ifdef __cplusplus
 }

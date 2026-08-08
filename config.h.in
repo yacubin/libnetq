@@ -10,6 +10,9 @@
 /* File descriptor name used for logging output */
 #cmakedefine NQ_ENV_LOGFD "@NQ_ENV_LOGFD@"
 
+/* Handler used for logging output */
+#cmakedefine NQ_USE_LOGHANDLER 1
+
 /* Define to 1 if you have the <errno.h> header file. */
 #cmakedefine HAVE_ERRNO_H 1
 

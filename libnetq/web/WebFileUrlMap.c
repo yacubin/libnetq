@@ -10,6 +10,7 @@
 #include "config.h"
 #include "libnetq/web/WebFileUrlMap.h"
 
+#include <libnetq/Log.h>
 #include <libnetq/List.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Path.h>
@@ -17,6 +18,7 @@
 #include <libnetq/web/WebRequest.h>
 #include <libnetq/web/WebResponse.h>
 #include <libnetq/ErrorCode.h>
+#include <libnetq/Assert.h>
 
 struct NQWebFileUrlMapEntry {
   NQListHead list;
@@ -43,6 +45,7 @@ static int fileUrlMapRequest(NQWebRequest* request, NQWebResponse* response)
 
   NQUint8Array* arraybuffer = NQUint8Array_fromFile(NQPath_characters(filename));
   if (arraybuffer == NULL) {
+    NQ_LOGE("Cannot load file '%s'", NQPath_characters(filename));
     return NQ_HTTP_INTERNAL_SERVER_ERROR;
   }
 
@@ -114,14 +117,14 @@ static int restApiInit(NQWebExecutor* executor, void* data)
       return -NQ_ENOMEM;
     }
 
-    entry->file = NQPath_fromResolve2(baseDir, item->file);
+    entry->file = NQPath_resolve2(baseDir, item->file);
     if (entry->file == NULL) {
       NQFree(entry);
       fileUrlMapApiFinalize(restApi);
       return -NQ_EINVAL;
     }
 
-    entry->url = NQPath_fromResolve2(baseUrl, url);
+    entry->url = NQPath_resolve2(baseUrl, url);
     if (entry->url == NULL) {
       NQPath_destroy(entry->file);
       NQFree(entry);
@@ -162,7 +165,6 @@ static const struct NQWebExecutorOperations kWebFileUrlMapOps = {
 
 NQWebFileUrlMapApi* NQWebFileUrlMapCreate(NQWebServer* server, const struct NQWebFileUrlMapParams* params)
 {
-
   return (NQWebFileUrlMapApi*)NQWebServer_createExecutor(server, sizeof(struct NQWebFileUrlMapApi), &kWebFileUrlMapOps, (void*)params);
 }
 

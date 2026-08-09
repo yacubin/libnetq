@@ -69,15 +69,18 @@ static NQAssetFile* fileSystemAssetOpenFile(NQAsset* asset, const char* filename
 {
   struct FileSystemAsset* fsAsset = NQ_CONTAINER_OF(asset, struct FileSystemAsset, base);
 
-  // TODO: Replace to NQPathJoin
-  NQStringPrint fullpath;
-  NQStringPrint_init(&fullpath);
-  NQStringPrint_printf(&fullpath, "%s/%s", fsAsset->pathCharacters, filename);
+  NQPathBuilder fullpath;
+  NQPathBuilder_init(&fullpath);
+  if (!NQPathBuilder_join2(&fullpath, fsAsset->pathCharacters, filename)) {
+    NQPathBuilder_finalize(&fullpath);
+    return NULL;
+  }
 
-  NQFileHandle handle = NQFileOpen(NQStringPrint_characters(&fullpath), NQ_FOPEN_READ);
-  NQStringPrint_finalize(&fullpath);
+  NQFileHandle handle;
+  int ret = NQFileOpen(NQStringPrint_characters(&fullpath), NQ_FOPEN_READ, &handle);
+  NQPathBuilder_finalize(&fullpath);
 
-  if (NQIsFileInvalid(handle)) {
+  if (ret != 0) {
     return NULL;
   }
 

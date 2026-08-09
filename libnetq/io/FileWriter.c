@@ -40,9 +40,9 @@ NQFileWriter* NQFileWriter_create(const char* filename)
     NQ_LOGE("No memory");
     return NULL;
   }
-  thiz->handle = NQFileOpen(filename, NQ_FOPEN_WRITE);
-  if (NQIsFileInvalid(thiz->handle)) {
-    NQ_LOGE("File '%s' not exists", filename);
+  int ret = NQFileOpen(filename, NQ_FOPEN_WRITE, &thiz->handle);
+  if (ret != 0) {
+    NQ_LOGE("File '%s' returned error - %i", filename, -ret);
     NQFree(thiz);
     return NULL;
   }
@@ -71,9 +71,9 @@ static const struct NQIOWriterCallbacks s_fileCallbacks =
 
 bool NQFileWriter_init(NQFileWriter* thiz, const char* filename)
 {
-  thiz->handle = NQFileOpen(filename, NQ_FOPEN_WRITE);
-  if (NQIsFileInvalid(thiz->handle)) {
-    NQ_LOGE("File '%s' not exists", filename);
+  int ret = NQFileOpen(filename, NQ_FOPEN_WRITE, &thiz->handle);
+  if (ret != 0) {
+    NQ_LOGE("File '%s' returned error - %i", filename, -ret);
     return false;
   }
   thiz->base.callbacks = &s_fileCallbacks;

@@ -37,34 +37,13 @@ struct FileEntry {
 
 struct NQWebManifestExecutor {
   NQWebExecutor executor;
-  NQListHead files;
-  NQListHead entries;
+  struct NQWebManifestListeners listeners;
 };
 
 static void fileHeadersFinalize(NQListHead* headers)
 {
   while (!NQListHead_isEmpty(headers)) {
     struct HeaderEntry* entry = NQ_CONTAINER_OF(headers->next, struct HeaderEntry, list);
-    NQListHead_remove(&entry->list);
-    NQFree(entry);
-  }
-}
-
-static void NQWebManifestFinalize(struct NQWebManifestExecutor* manifest)
-{
-  while (!NQListHead_isEmpty(&manifest->entries)) {
-    struct NQWebCatalogEntry* entry = NQ_CONTAINER_OF(manifest->entries.next, struct NQWebCatalogEntry, executorList);
-    NQWebServer_removeCatalogEntry(manifest->executor.server, entry);
-    NQListHead_remove(&entry->executorList);
-    NQWebCatalogEntryDestroy(entry);
-  }
-
-  while (!NQListHead_isEmpty(&manifest->files)) {
-    struct FileEntry* entry = NQ_CONTAINER_OF(manifest->files.next, struct FileEntry, list);
-    NQWebExecutor_removeRequestListener(&manifest->executor, &entry->listener);
-    fileHeadersFinalize(&entry->headers);
-    NQCStrFree(entry->type);
-    NQPath_destroy(entry->file);
     NQListHead_remove(&entry->list);
     NQFree(entry);
   }
@@ -107,11 +86,28 @@ static const NQWebRequestOperations kFileUrlMapOps = {
   .handler = fileUrlMapRequest,
 };
 
-static int executorInit(NQWebExecutor* exec, void* data)
+void NQWebManifestListenersFinalize(NQWebExecutor* executor, struct NQWebManifestListeners* listeners)
 {
-  const char* filename = (const char*)data;
-  struct NQWebManifestExecutor* manifest = NQ_CONTAINER_OF(exec, struct NQWebManifestExecutor, executor);
+  while (!NQListHead_isEmpty(&listeners->entries)) {
+    struct NQWebCatalogEntry* entry = NQ_CONTAINER_OF(listeners->entries.next, struct NQWebCatalogEntry, executorList);
+    NQWebServer_removeCatalogEntry(executor->server, entry);
+    NQListHead_remove(&entry->executorList);
+    NQWebCatalogEntryDestroy(entry);
+  }
 
+  while (!NQListHead_isEmpty(&listeners->files)) {
+    struct FileEntry* entry = NQ_CONTAINER_OF(listeners->files.next, struct FileEntry, list);
+    NQWebExecutor_removeRequestListener(executor, &entry->listener);
+    fileHeadersFinalize(&entry->headers);
+    NQCStrFree(entry->type);
+    NQPath_destroy(entry->file);
+    NQListHead_remove(&entry->list);
+    NQFree(entry);
+  }
+}
+
+int NQWebManifestListenersInit(NQWebExecutor* executor, struct NQWebManifestListeners* listeners, const char* filename)
+{
   NQJSON* rootJson = NQJSON_fromFile(filename);
   if (!rootJson)
     return -NQ_ENOENT;
@@ -121,8 +117,8 @@ static int executorInit(NQWebExecutor* exec, void* data)
     return -NQ_EINVAL;
   }
 
-  NQListHead_init(&manifest->files);
-  NQListHead_init(&manifest->entries);
+  NQListHead_init(&listeners->files);
+  NQListHead_init(&listeners->entries);
 
   const char* name = NULL;
   const char* baseUrl = NULL;
@@ -134,7 +130,7 @@ static int executorInit(NQWebExecutor* exec, void* data)
   if (NQJSON_isArray(filesJson)) {
     size_t size = NQJSON_arraySize(filesJson);
     for (size_t index = 0; index < size; index++) {
-      NQJSON* iterJson = NQJSON_arrayAt(filesJson, index);
+      NQJSON* iterJson = NQJSON_arrayGet(filesJson, index);
 
       const char* url;
       const char* file;
@@ -144,11 +140,11 @@ static int executorInit(NQWebExecutor* exec, void* data)
         continue;
 
       if (!NQJSON_objectGetString(iterJson, "type", &type))
-        type = NQWebServer_getMimeType(manifest->executor.server, file);
+        type = NQWebServer_getMimeType(executor->server, file);
 
       struct FileEntry* fileEntry = (struct FileEntry*)NQMalloc(sizeof(struct FileEntry));
       if (fileEntry == NULL) {
-        NQWebManifestFinalize(manifest);
+        NQWebManifestListenersFinalize(executor, listeners);
         NQJSON_release(rootJson);
         return -NQ_ENOMEM;
       }
@@ -166,7 +162,7 @@ static int executorInit(NQWebExecutor* exec, void* data)
           struct HeaderEntry* hdrEntry = NQMalloc(sizeof(*hdrEntry) + NQJSON_stringLength(value) + nameLenz);
           if (hdrEntry == NULL) {
             fileHeadersFinalize(&fileEntry->headers);
-            NQWebManifestFinalize(manifest);
+            NQWebManifestListenersFinalize(executor, listeners);
             NQJSON_release(rootJson);
             return -NQ_ENOMEM;
           }
@@ -181,11 +177,11 @@ static int executorInit(NQWebExecutor* exec, void* data)
         }
       }
 
-      fileEntry->file = NQPath_join3(filename, "..", file);
+      fileEntry->file = NQPath_join3(filename, NQ_PATH_PARENT_DIR_STR, file);
       if (fileEntry->file == NULL) {
         fileHeadersFinalize(&fileEntry->headers);
         NQFree(fileEntry);
-        NQWebManifestFinalize(manifest);
+        NQWebManifestListenersFinalize(executor, listeners);
         NQJSON_release(rootJson);
         return -NQ_ENOMEM;
       }
@@ -197,24 +193,24 @@ static int executorInit(NQWebExecutor* exec, void* data)
           fileHeadersFinalize(&fileEntry->headers);
           NQPath_destroy(fileEntry->file);
           NQFree(fileEntry);
-          NQWebManifestFinalize(manifest);
+          NQWebManifestListenersFinalize(executor, listeners);
           NQJSON_release(rootJson);
           return -NQ_ENOMEM;
         }
       }
 
-      int ret = NQWebExecutor_addRequestListener(&manifest->executor, &fileEntry->listener, &kFileUrlMapOps, fileEntry, NQ_HTTP_GET, "%s", url);
+      int ret = NQWebExecutor_addRequestListener(executor, &fileEntry->listener, &kFileUrlMapOps, fileEntry, NQ_HTTP_GET, "%s", url);
       if (ret != 0) {
         fileHeadersFinalize(&fileEntry->headers);
         NQCStrFree(fileEntry->type);
         NQPath_destroy(fileEntry->file);
         NQFree(fileEntry);
-        NQWebManifestFinalize(manifest);
+        NQWebManifestListenersFinalize(executor, listeners);
         NQJSON_release(rootJson);
         return ret;
       }
 
-      NQListHead_addBack(&manifest->files, &fileEntry->list);
+      NQListHead_addBack(&listeners->files, &fileEntry->list);
     }
   }
 
@@ -222,11 +218,12 @@ static int executorInit(NQWebExecutor* exec, void* data)
   if (NQJSON_isArray(entriesJson)) {
     size_t size = NQJSON_arraySize(entriesJson);
     for (size_t index = 0; index < size; index++) {
-      NQJSON* entryJson = NQJSON_arrayAt(entriesJson, index);
+      NQJSON* entryJson = NQJSON_arrayGet(entriesJson, index);
 
       struct NQWebCatalogParams params = {
         .title = NULL,
         .mainUrl = NULL,
+        .version = NULL,
         .description = NULL,
 
         .lightIconUrl = NULL,
@@ -240,13 +237,14 @@ static int executorInit(NQWebExecutor* exec, void* data)
         continue;
 
       NQJSON_objectGetString(entryJson, "title", &params.title);
+      NQJSON_objectGetString(entryJson, "version", &params.version);
       NQJSON_objectGetString(entryJson, "description", &params.description);
 
       NQJSON* iconsJson = NQJSON_objectGet(entryJson, "icons");
       if (NQJSON_isArray(iconsJson)) {
         size_t size = NQJSON_arraySize(iconsJson);
         for (size_t index = 0; index < size; index++) {
-          NQJSON* iterJson = NQJSON_arrayAt(iconsJson, index);
+          NQJSON* iterJson = NQJSON_arrayGet(iconsJson, index);
           const char* url;
           const char* colorScheme = "light";
           if (NQJSON_objectGetString(iterJson, "url", &url)) {
@@ -263,7 +261,7 @@ static int executorInit(NQWebExecutor* exec, void* data)
       if (NQJSON_isArray(screenshotsJson)) {
         size_t size = NQJSON_arraySize(screenshotsJson);
         for (size_t index = 0; index < size; index++) {
-          NQJSON* iterJson = NQJSON_arrayAt(screenshotsJson, index);
+          NQJSON* iterJson = NQJSON_arrayGet(screenshotsJson, index);
           const char* url;
           const char* colorScheme = "light";
           if (NQJSON_objectGetString(iterJson, "url", &url)) {
@@ -278,8 +276,8 @@ static int executorInit(NQWebExecutor* exec, void* data)
 
       struct NQWebCatalogEntry* entry = NQWebCatalogEntryCreate(&params);
       if (entry) {
-        NQWebServer_addCatalogEntry(exec->server, entry);
-        NQListHead_addBack(&manifest->entries, &entry->executorList);
+        NQWebServer_addCatalogEntry(executor->server, entry);
+        NQListHead_addBack(&listeners->entries, &entry->executorList);
       }
     }
   }
@@ -288,10 +286,17 @@ static int executorInit(NQWebExecutor* exec, void* data)
   return 0;
 }
 
+static int executorInit(NQWebExecutor* exec, void* data)
+{
+  const char* filename = (const char*)data;
+  struct NQWebManifestExecutor* manifest = NQ_CONTAINER_OF(exec, struct NQWebManifestExecutor, executor);
+  return NQWebManifestListenersInit(&manifest->executor, &manifest->listeners, filename);
+}
+
 static void executorRelease(NQWebExecutor* exec)
 {
   struct NQWebManifestExecutor* manifest = NQ_CONTAINER_OF(exec, struct NQWebManifestExecutor, executor);
-  NQWebManifestFinalize(manifest);
+  NQWebManifestListenersFinalize(&manifest->executor, &manifest->listeners);
 }
 
 static const struct NQWebExecutorOperations kNQWebManifestOps = {

@@ -10,14 +10,20 @@
 #include "config.h"
 #include "libnetq/Executable.h"
 
-#ifdef NQ_OS_WINDOWS
-#include <windows.h>
-#include <libnetq/Path.h>
-#endif
+#include <libnetq/ErrorCode.h>
 
 #ifdef NQ_OS_UNIX
 #include <unistd.h>
 #include <libnetq/string/StringUtil.h>
+#endif
+
+#ifdef NQ_OS_DARWIN
+#include <mach-o/dyld.h>
+#endif
+
+#ifdef NQ_OS_WINDOWS
+#include <windows.h>
+#include <libnetq/Path.h>
 #endif
 
 int NQGetCommandLine(char* buffer, size_t n)
@@ -69,26 +75,32 @@ int NQGetCurrentDirectory(char* buffer, size_t n)
 
 int NQGetExecutablePath(char* buffer, size_t n)
 {
-#ifdef NQ_OS_WINDOWS
+#if defined(NQ_OS_WINDOWS)
   WCHAR winpath[MAX_PATH];
   DWORD length = GetModuleFileNameW(NULL, winpath, MAX_PATH);
-  if (length > 0)
-    return NQPathFrom(buffer, n, winpath);
-#endif
+  if (length >= MAX_PATH)
+    return -NQ_ENAMETOOLONG;
+  return (int)NQPathFrom(buffer, n, winpath);
 
-#ifdef NQ_OS_UNIX
+#elif defined(NQ_OS_DARWIN)
+  uint32_t iosize = (uint32_t)n;
+  if (_NSGetExecutablePath(buffer, &iosize) == 0)
+    return (int)iosize;
+  return -NQ_ENAMETOOLONG;
+
+#elif defined(NQ_OS_UNIX)
   // Linux:   /proc/self/exe
   // FreeBSD: /proc/curproc/file
   // Solaris: /proc/self/path/a.out
   ssize_t size = readlink("/proc/self/exe", buffer, n);
-  if (size > 0) {
+  if (size < 0)
+    return -NQGetLastError();
+  if ((size_t)size < n)
     buffer[size] = '\0';
-    return (size_t)size;
-  }
+  return (int)size;
+
+#else
+  return -NQ_ENOTSUPP;
+
 #endif
-
-  if (n != 0)
-    *buffer = '\0';
-
-  return 0;
 }

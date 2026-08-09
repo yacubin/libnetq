@@ -17,6 +17,7 @@
 #include <linux/mutex.h>
 
 typedef struct mutex NQMutex;
+#define NQ_MUTEX_INIT(mutexname) __MUTEX_INITIALIZER(mutexname)
 #define NQ_MUTEX_DEFINE(mutexname) DEFINE_MUTEX(mutexname)
 
 static inline int NQMutex_init(NQMutex* thiz)

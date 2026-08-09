@@ -8,7 +8,7 @@
  */
 
 #include "config.h"
-#include "libnetq/web/WebRestEnvApi.h"
+#include "libnetq/web/WebEnvRestExecutor.h"
 
 #include <libnetq/string/StringPrint.h>
 #include <libnetq/string/String.h>
@@ -23,13 +23,6 @@
 #include <libnetq/Malloc.h>
 #include <libnetq/web/WebRequest.h>
 #include <libnetq/web/WebResponse.h>
-
-struct NQWebRestEnvApi {
-  NQWebExecutor executor;
-  struct NQWebRequestListener allEnvListener;
-  struct NQWebRequestListener getEnvListener;
-  struct NQWebRequestListener setEnvListener;
-};
 
 static bool jsonWriterHandler(void* userdata, const char* characters, size_t size)
 {
@@ -154,55 +147,64 @@ static const NQWebRequestOperations kSetEnvOps = {
   .handler = setEnvRequest,
 };
 
-static int restApiInit(NQWebExecutor* restApi, void* data)
+int NQWebEnvRestListenersInit(NQWebExecutor* executor, NQWebEnvRestListeners* listeners, const NQWebEnvRestParams* params)
 {
-  struct NQWebRestEnvParams* params = (struct NQWebRestEnvParams*)data;
   if (params->baseUrl == NULL)
     return -NQ_EINVAL;
 
-  struct NQWebRestEnvApi* envApi = NQ_CONTAINER_OF(restApi, struct NQWebRestEnvApi, executor);
-
   int ret;
-  ret = NQWebExecutor_addRequestListener(&envApi->executor, &envApi->allEnvListener, &kAllEnvOps, NULL, NQ_HTTP_GET, "%s", params->baseUrl);
+  ret = NQWebExecutor_addRequestListener(executor, &listeners->allEnvListener, &kAllEnvOps, NULL, NQ_HTTP_GET, "%s", params->baseUrl);
   if (ret)
     return ret;
 
-  ret = NQWebExecutor_addRequestListener(&envApi->executor, &envApi->getEnvListener, &kGetEnvOps, NULL, NQ_HTTP_GET, "%s/{name}", params->baseUrl);
+  ret = NQWebExecutor_addRequestListener(executor, &listeners->getEnvListener, &kGetEnvOps, NULL, NQ_HTTP_GET, "%s/{name}", params->baseUrl);
   if (ret) {
-    NQWebExecutor_removeRequestListener(&envApi->executor, &envApi->allEnvListener);
+    NQWebExecutor_removeRequestListener(executor, &listeners->allEnvListener);
     return ret;
   }
 
-  ret = NQWebExecutor_addRequestListener(&envApi->executor, &envApi->setEnvListener, &kSetEnvOps, NULL, NQ_HTTP_POST, "%s/{name}", params->baseUrl);
+  ret = NQWebExecutor_addRequestListener(executor, &listeners->setEnvListener, &kSetEnvOps, NULL, NQ_HTTP_POST, "%s/{name}", params->baseUrl);
   if (ret) {
-    NQWebExecutor_removeRequestListener(&envApi->executor, &envApi->getEnvListener);
-    NQWebExecutor_removeRequestListener(&envApi->executor, &envApi->allEnvListener);
+    NQWebExecutor_removeRequestListener(executor, &listeners->getEnvListener);
+    NQWebExecutor_removeRequestListener(executor, &listeners->allEnvListener);
     return ret;
   }
 
   return 0;
 }
 
-static void restApiRelease(NQWebExecutor* restApi)
+void NQWebEnvRestListenersFinalize(NQWebExecutor* executor, NQWebEnvRestListeners* listeners)
 {
-  struct NQWebRestEnvApi* envApi = NQ_CONTAINER_OF(restApi, struct NQWebRestEnvApi, executor);
+  struct NQWebEnvRestExecutor* envApi = (NQWebEnvRestExecutor*)executor;
+  NQWebExecutor_removeRequestListener(&envApi->executor, &listeners->setEnvListener);
+  NQWebExecutor_removeRequestListener(&envApi->executor, &listeners->getEnvListener);
+  NQWebExecutor_removeRequestListener(&envApi->executor, &listeners->allEnvListener);
+}
 
-  NQWebExecutor_removeRequestListener(&envApi->executor, &envApi->setEnvListener);
-  NQWebExecutor_removeRequestListener(&envApi->executor, &envApi->getEnvListener);
-  NQWebExecutor_removeRequestListener(&envApi->executor, &envApi->allEnvListener);
+static int executorInit(NQWebExecutor* executor, void* data)
+{
+  struct NQWebEnvRestParams* params = (struct NQWebEnvRestParams*)data;
+  struct NQWebEnvRestExecutor* envApi = (NQWebEnvRestExecutor*)executor;
+  return NQWebEnvRestListenersInit(&envApi->executor, &envApi->listeners, params);
+}
+
+static void executorRelease(NQWebExecutor* executor)
+{
+  struct NQWebEnvRestExecutor* envApi = (NQWebEnvRestExecutor*)executor;
+  NQWebEnvRestListenersFinalize(&envApi->executor, &envApi->listeners);
 }
 
 static const struct NQWebExecutorOperations kWebRestEnvOps = {
-  .init = restApiInit,
-  .release = restApiRelease,
+  .init = executorInit,
+  .release = executorRelease,
 };
 
-NQWebRestEnvApi* NQWebRestEnvApiCreate(NQWebServer* server, struct NQWebRestEnvParams* params)
+NQWebEnvRestExecutor* NQWebEnvRestExecutorCreate(NQWebServer* server, struct NQWebEnvRestParams* params)
 {
-  return (NQWebRestEnvApi*)NQWebServer_createExecutor(server, sizeof(struct NQWebRestEnvApi), &kWebRestEnvOps, (void*)params);
+  return (NQWebEnvRestExecutor*)NQWebServer_createExecutor(server, sizeof(struct NQWebEnvRestExecutor), &kWebRestEnvOps, (void*)params);
 }
 
-void NQWebRestEnvApiDestroy(NQWebServer* server, NQWebRestEnvApi* restApi)
+void NQWebEnvRestExecutorDestroy(NQWebServer* server, NQWebEnvRestExecutor* restApi)
 {
   NQWebServer_destroyExecutor(server, &restApi->executor);
 }

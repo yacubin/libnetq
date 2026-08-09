@@ -19,18 +19,14 @@
 #include <unistd.h>
 
 #include <libnetq/Limits.h>
+#include <libnetq/ErrorCode.h>
 #include <libnetq/Assert.h>
 
-NQFileHandle NQFileOpen(const char* path, NQFileOpenMode mode)
+int NQFileOpen(const char* path, NQFileOpenMode mode, NQFileHandle* result)
 {
-  int flags;
+  NQ_ASSERT(path && result);
 
-  if (path == NULL) {
-    NQ_ASSERT_NOT_REACHED();
-    return NQ_INVALID_FILE;
-  }
-
-  flags = 0;
+  int flags = 0;
   switch (mode) {
   case NQ_FOPEN_READ:
     flags |= O_RDONLY;
@@ -42,10 +38,15 @@ NQFileHandle NQFileOpen(const char* path, NQFileOpenMode mode)
 
   default:
     NQ_ASSERT_NOT_REACHED();
-    return NQ_INVALID_FILE;
+    return -NQ_EINVAL;
   }
 
-  return open(path, flags, 0666);
+  int ret = open(path, flags, 0666);
+  if (ret == -1)
+    return -NQGetLastError();
+
+  *result = ret;
+  return 0;
 }
 
 void NQFileClose(NQFileHandle handle)
@@ -109,7 +110,7 @@ long long NQFileSeek(NQFileHandle handle, long long offset, NQFileSeekOrigin ori
 
   default:
     NQ_ASSERT_NOT_REACHED();
-    return -1;
+    return -NQ_EINVAL;
   }
 
   return (long long)lseek(handle, offset, whence);
@@ -119,8 +120,8 @@ long long NQFileGetSize(NQFileHandle handle)
 {
   struct stat info;
 
-  if (fstat(handle, &info))
-    return false;
+  if (fstat(handle, &info) == -1)
+    return -NQGetLastError();
 
   return info.st_size;
 }

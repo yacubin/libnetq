@@ -52,9 +52,16 @@ struct NQWebExecutor {
 };
 
 struct NQWebExecutorOperations {
+  NQListHead list;
+  const char* name;
   int  (*init)    (NQWebExecutor*, void* data);
   void (*release) (NQWebExecutor*);
+  const size_t size;
 };
+
+NQ_EXPORT struct NQWebExecutorOperations* NQWebExecutorFind(const char* name);
+NQ_EXPORT int NQWebExecutorRegister(struct NQWebExecutorOperations* ops);
+NQ_EXPORT void NQWebExecutorUnregister(struct NQWebExecutorOperations* ops);
 
 NQ_EXPORT void NQWebExecutor_init(NQWebExecutor*, const struct NQWebExecutorOperations* operations);
 NQ_EXPORT NQWebExecutor* NQWebExecutor_alloc(size_t sizeInBytes, const struct NQWebExecutorOperations* operations);
@@ -86,7 +93,6 @@ struct NQWebSocketListener {
 
 typedef struct NQWebServerParams NQWebServerParams;
 struct NQWebServerParams {
-  const char* email;
   const char* host;
 
   bool tlsEnabled;
@@ -108,6 +114,7 @@ typedef struct NQWebCatalogParams NQWebCatalogParams;
 struct NQWebCatalogParams {
   const char* mainUrl;
   const char* title;
+  const char* version;
   const char* description;
 
   const char* lightIconUrl;
@@ -152,7 +159,6 @@ struct NQWebServer {
   NQListHead catalogEntries;
   NQHttpStatistics* statistics;
   NQUrlHost* host;
-  NQStringData email;
   NQStringData workDir;
   NQStringData resourceDir;
   NQString* tlsKeyString;
@@ -176,11 +182,6 @@ NQ_EXPORT void NQWebServer_finalize(NQWebServer*);
 NQ_EXPORT int NQWebServer_start(NQWebServer*);
 NQ_EXPORT int NQWebServer_stop(NQWebServer*);
 NQ_EXPORT int NQWebServer_run(NQWebServer*);
-
-static inline const char* NQWebServer_email(const NQWebServer* thiz)
-{
-  return NQStringData_characters(&thiz->email);
-}
 
 static inline const char* NQWebServer_workDir(const NQWebServer* thiz)
 {
@@ -228,6 +229,8 @@ NQ_EXPORT bool NQWebServer_allowMetric(NQWebServer*, const char* method, const c
 
 NQ_EXPORT NQWebExecutor* NQWebServer_createExecutor(NQWebServer*, size_t sizeInBytes, const struct NQWebExecutorOperations* operations, void* data);
 NQ_EXPORT void NQWebServer_destroyExecutor(NQWebServer*, NQWebExecutor* executor);
+NQ_EXPORT int NQWebServer_loadExecutor(NQWebServer*, const char* name);
+NQ_EXPORT int NQWebServer_loadExecutorWLA(NQWebServer*, const char* name);
 
 static inline NQHttpStatistics* NQWebServer_statistics(NQWebServer* thiz)
 {

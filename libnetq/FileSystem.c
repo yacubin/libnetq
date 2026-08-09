@@ -30,7 +30,6 @@
 #endif
 
 #ifdef NQ_OS_UNIX
-#include <sys/stat.h>
 #include <unistd.h>
 #endif
 
@@ -39,9 +38,9 @@ int64_t NQReadFile(const char* path, uint8_t* data, int64_t size)
   int64_t result;
   NQFileHandle handle;
 
-  handle = NQFileOpen(path, NQ_FOPEN_READ);
-  if (!NQFileCheck(handle))
-    return -1;
+  result = NQFileOpen(path, NQ_FOPEN_READ, &handle);
+  if (result != 0)
+    return result;
 
   result = NQFileReadn(handle, data, size);
   NQFileClose(handle);
@@ -54,9 +53,9 @@ int64_t NQWriteFile(const char* path, const uint8_t* data, int64_t size)
   int64_t result;
   NQFileHandle handle;
 
-  handle = NQFileOpen(path, NQ_FOPEN_WRITE);
-  if (!NQFileCheck(handle))
-    return -1;
+  result = NQFileOpen(path, NQ_FOPEN_WRITE, &handle);
+  if (result != 0)
+    return result;
 
   result = NQFileWriten(handle, data, size);
   NQFileClose(handle);
@@ -134,13 +133,13 @@ int NQRemoveFile(const char* path)
 {
 #if defined(NQ_OS_UNIX)
   if (unlink(path) != 0)
-    return -errno;
+    return -NQGetLastError();
   return 0;
 #elif defined(NQ_OS_WINDOWS)
   WCHAR winpath[MAX_PATH];
   NQWinPathFrom(winpath, MAX_PATH, path);
   if (!DeleteFileW(winpath))
-    return -(int)GetLastError();
+    return -NQGetLastError();
   return 0;
 #else
   return -NQ_ENOTSUPP;
@@ -152,7 +151,7 @@ int NQGetLogicalDrives(void)
 #ifdef NQ_OS_WINDOWS
   DWORD ret = GetLogicalDrives();
   if (ret == 0)
-    return -(int)GetLastError();
+    return -NQGetLastError();
   return ret;
 #else
   return 0;

@@ -16,7 +16,7 @@
 extern "C" {
 #endif
 
-typedef struct NQSystem NQSystem;
+typedef struct NQContext NQContext;
 
 #ifdef NQ_COMPILER_MSVC
 # define NQ_USED
@@ -28,8 +28,8 @@ typedef struct NQSystem NQSystem;
 # define NQ_USED_SECTION(name) __attribute__((used, section(name)))
 #endif
 
-typedef int (*NQModuleInitCallback) (NQSystem*);
-typedef void (*NQModuleExitCallback) (NQSystem*);
+typedef int (*NQModuleInitCallback) (NQContext*);
+typedef void (*NQModuleExitCallback) (NQContext*);
 
 #define NQ_MODULE_INIT_NAME NQModuleInit
 #define NQ_MODULE_INIT_STR  NQ_STRINGIZE_OF(NQ_MODULE_INIT_NAME)
@@ -69,13 +69,13 @@ typedef void (*NQModuleExitCallback) (NQSystem*);
 #ifndef NQ_MODULE_INTERNAL
 
 #define NQ_MODULE_INIT(fn) \
-  NQ_EXPORT_DECLARATION int NQ_MODULE_INIT_NAME(NQSystem* system) \
+  NQ_EXPORT_DECLARATION int NQ_MODULE_INIT_NAME(NQContext* system) \
   { \
     return fn(system); \
   }
 
 #define NQ_MODULE_EXIT(fn) \
-  NQ_EXPORT_DECLARATION void NQ_MODULE_EXIT_NAME(NQSystem* system) \
+  NQ_EXPORT_DECLARATION void NQ_MODULE_EXIT_NAME(NQContext* system) \
   { \
     fn(system); \
   }

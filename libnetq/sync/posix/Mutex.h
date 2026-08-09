@@ -17,8 +17,9 @@
 #include <pthread.h>
 
 typedef pthread_mutex_t NQMutex;
-#define NQ_MUTEX_INIT PTHREAD_MUTEX_INITIALIZER
-#define NQ_MUTEX_DEFINE(mutexname) NQMutex mutexname = NQ_MUTEX_INIT
+#define NQ_MUTEX_INIT(mutexname) PTHREAD_MUTEX_INITIALIZER
+#define NQ_MUTEX_DEFINE(mutexname) \
+  NQMutex mutexname = NQ_MUTEX_INIT(mutexname)
 
 static inline int NQMutex_init(NQMutex* thiz)
 {

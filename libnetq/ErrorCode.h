@@ -35,6 +35,7 @@ typedef int NQErrorCode;
 # define NQ_EIO              EIO
 # define NQ_ENAMETOOLONG     ENAMETOOLONG
 # define NQ_EOVERFLOW        EOVERFLOW
+# define NQ_EACCES           EACCES
 
 #if defined(NQ_OS_KERNEL)
 # define NQ_ENOTSUPP         ENOTSUPP
@@ -61,6 +62,7 @@ typedef int NQErrorCode;
 # define NQ_EIO              ERROR_IO_DEVICE
 # define NQ_ENAMETOOLONG     ERROR_FILENAME_EXCED_RANGE
 # define NQ_EOVERFLOW        ERROR_ARITHMETIC_OVERFLOW
+# define NQ_EACCES           ERROR_ACCESS_DENIED
 
 #endif
 

@@ -18,7 +18,16 @@ extern "C" {
 
 #define NQ_WEBMANIFEST_FILE "manifest.json"
 
+typedef struct NQWebManifestListeners NQWebManifestListeners;
+struct NQWebManifestListeners {
+  NQListHead files;
+  NQListHead entries;
+};
+
 typedef struct NQWebManifestExecutor NQWebManifestExecutor;
+
+NQ_EXPORT int NQWebManifestListenersInit(NQWebExecutor* executor, struct NQWebManifestListeners* listeners, const char* filename);
+NQ_EXPORT void NQWebManifestListenersFinalize(NQWebExecutor* executor, struct NQWebManifestListeners* listeners);
 
 NQ_EXPORT NQWebManifestExecutor* NQWebManifestExecutorCreate(NQWebServer* server, const char* filename);
 NQ_EXPORT void NQWebManifestExecutorDestroy(NQWebServer* server, NQWebManifestExecutor* manifest);

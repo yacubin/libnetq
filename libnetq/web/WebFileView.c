@@ -123,8 +123,9 @@ static int onGetRequest(NQWebRequest* request, NQWebResponse* response)
 
     if (NQStat_isFile(&stat)) {
       const char* contentType = NQWebServer_getMimeType(server, path);
-      NQFileHandle handle = NQFileOpen(path, NQ_FOPEN_READ);
-      if (NQIsFileInvalid(handle)) {
+      NQFileHandle handle;
+      int ret = NQFileOpen(path, NQ_FOPEN_READ, &handle);
+      if (ret != 0) {
         NQStringPrint_finalize(&pathBuf);
         return NQ_HTTP_INTERNAL_SERVER_ERROR;
       }
@@ -194,7 +195,7 @@ static int onGetRequest(NQWebRequest* request, NQWebResponse* response)
     const char* name = NQDir_name(dir);
     if (name[0] == '.' && (name[1] == '\0' || (name[1] == '.' && name[2] == '\0')))
       continue;
-    size_t nlen = strlen(name);
+    size_t nlen = NQStrlen(name);
 
     const char* delimeter = "";
     const char* sizeStr = SIZE_EMPTY_STR;

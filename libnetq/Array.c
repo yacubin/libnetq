@@ -76,15 +76,22 @@ NQUint8Array* NQUint8Array_copy(const NQUint8Array* array)
 
 NQUint8Array* NQUint8Array_fromFile(const char* filename)
 {
-  NQFileHandle handle = NQFileOpen(filename, NQ_FOPEN_READ);
-  if (NQIsFileInvalid(handle)) {
-    NQ_LOGE("Can't open file %s", filename);
+  NQFileHandle handle;
+  int ret = NQFileOpen(filename, NQ_FOPEN_READ, &handle);
+  if (ret != 0) {
+    NQ_LOGE("File '%s' returned error - %i", filename, -ret);
     return NULL;
   }
 
   long long size = NQFileGetSize(handle);
+  if (size < 0) {
+    NQ_LOGE("Error %i occurred while retrieving the size", (int)size);
+    NQFileClose(handle);
+    return NULL;
+  }
   if (size > NQ_UINT32_MAX) {
     NQ_LOGE("File %s is too big", filename);
+    NQFileClose(handle);
     return NULL;
   }
 

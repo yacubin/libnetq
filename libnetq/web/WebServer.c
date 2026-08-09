@@ -31,6 +31,8 @@
 #include <libnetq/web/WebRequest.h>
 #include <libnetq/web/WebResponse.h>
 #include <libnetq/web/WebSocket.h>
+#include <libnetq/Context.h>
+#include <libnetq/Mutex.h> // For NQWebExecutorRegister
 
 struct WebWriterEntry {
   const struct NQWebWriterOperations* operations;
@@ -134,9 +136,6 @@ bool NQWebServer_init(NQWebServer* thiz, const NQWebServerParams* params, NQWebS
       return false;
     }
   }
-
-  NQStringData_init(&thiz->email);
-  NQStringData_set(&thiz->email, params->email);
 
   NQStringData_init(&thiz->workDir);
   NQStringData_set(&thiz->workDir, params->workDir);
@@ -248,7 +247,6 @@ void NQWebServer_finalize(NQWebServer* thiz)
   if (thiz->asset != NULL)
     NQAsset_destroy(thiz->asset);
 
-  NQStringData_finalize(&thiz->email);
   NQStringData_finalize(&thiz->workDir);
   NQStringData_finalize(&thiz->resourceDir);
 
@@ -581,7 +579,7 @@ struct NQWebRequestExecutor {
   struct NQWebRequestListener listeners[1];
 };
 
-void releaseRequestExecutor(NQWebExecutor* executor)
+static void releaseRequestExecutor(NQWebExecutor* executor)
 {
   struct NQWebRequestExecutor* execApi = NQ_CONTAINER_OF(executor, struct NQWebRequestExecutor, executor);
   for (size_t i = 0; i < execApi->listenerCount; i++)
@@ -662,7 +660,7 @@ struct NQWebSocketExecutor {
   struct NQWebSocketListener listeners[1];
 };
 
-void releaseSocketExecutor(NQWebExecutor* pexec)
+static void releaseSocketExecutor(NQWebExecutor* pexec)
 {
   struct NQWebSocketExecutor* execApi = NQ_CONTAINER_OF(pexec, struct NQWebSocketExecutor, executor);
   for (size_t i = 0; i < execApi->listenerCount; i++)
@@ -808,16 +806,26 @@ struct NQWebCatalogEntry* NQWebCatalogEntryCreate(const NQWebCatalogParams* para
 {
   NQ_ASSERT(params->mainUrl != NULL);
 
-  size_t mainUrlLenz = NQStrlen(params->mainUrl) + 1;
-  size_t titleLenz = params->title ? NQStrlen(params->title) + 1 : 0;
-  size_t descriptionLenz = params->description ? NQStrlen(params->description) + 1 : 0;
-  size_t lightIconUrlLenz = params->lightIconUrl ? NQStrlen(params->lightIconUrl) + 1 : 0;
-  size_t darkIconUrlLenz = params->darkIconUrl ? NQStrlen(params->darkIconUrl) + 1 : 0;
-  size_t lightScreenshotUrlLenz = params->lightScreenshotUrl ? NQStrlen(params->lightScreenshotUrl) + 1 : 0;
-  size_t darkScreenshotUrlLenz = params->darkScreenshotUrl ? NQStrlen(params->darkScreenshotUrl) + 1 : 0;
-
   struct NQWebCatalogEntry* entry;
-  size_t sizeInBytes = sizeof(*entry) + mainUrlLenz + titleLenz + descriptionLenz + lightIconUrlLenz + darkIconUrlLenz + lightScreenshotUrlLenz + darkScreenshotUrlLenz;
+  size_t sizeInBytes = sizeof(*entry);
+
+  size_t mainUrlLenz = NQStrlen(params->mainUrl) + 1;
+  sizeInBytes += mainUrlLenz;
+  size_t titleLenz = params->title ? NQStrlen(params->title) + 1 : 0;
+  sizeInBytes += titleLenz;
+  size_t versionLenz = params->version ? NQStrlen(params->version) + 1 : 0;
+  sizeInBytes += versionLenz;
+  size_t descriptionLenz = params->description ? NQStrlen(params->description) + 1 : 0;
+  sizeInBytes += descriptionLenz;
+  size_t lightIconUrlLenz = params->lightIconUrl ? NQStrlen(params->lightIconUrl) + 1 : 0;
+  sizeInBytes += lightIconUrlLenz;
+  size_t darkIconUrlLenz = params->darkIconUrl ? NQStrlen(params->darkIconUrl) + 1 : 0;
+  sizeInBytes += darkIconUrlLenz;
+  size_t lightScreenshotUrlLenz = params->lightScreenshotUrl ? NQStrlen(params->lightScreenshotUrl) + 1 : 0;
+  sizeInBytes += lightScreenshotUrlLenz;
+  size_t darkScreenshotUrlLenz = params->darkScreenshotUrl ? NQStrlen(params->darkScreenshotUrl) + 1 : 0;
+  sizeInBytes += darkScreenshotUrlLenz;
+
   entry = (struct NQWebCatalogEntry*)NQZalloc(sizeInBytes);
   if (entry == NULL)
     return NULL;
@@ -835,6 +843,12 @@ struct NQWebCatalogEntry* NQWebCatalogEntryCreate(const NQWebCatalogParams* para
     entry->params.title = ptr;
     memcpy(ptr, params->title, titleLenz);
     ptr += titleLenz;
+  }
+
+  if (versionLenz) {
+    entry->params.version = ptr;
+    memcpy(ptr, params->version, versionLenz);
+    ptr += versionLenz;
   }
 
   if (descriptionLenz) {
@@ -929,7 +943,7 @@ int NQWebServer_run(NQWebServer* thiz)
   return ret;
 }
 
-NQWebExecutor* NQWebServer_createExecutor(NQWebServer* thiz, size_t sizeInBytes, const struct NQWebExecutorOperations* operations, void* data)
+static int initExecutor(NQWebServer* thiz, size_t sizeInBytes, const struct NQWebExecutorOperations* operations, void* data, NQWebExecutor** result)
 {
   NQWebExecutor* executor = NQWebExecutor_alloc(sizeInBytes, operations);
   executor->server = thiz;
@@ -941,17 +955,51 @@ NQWebExecutor* NQWebServer_createExecutor(NQWebServer* thiz, size_t sizeInBytes,
     if (ret != 0) {
       NQListHead_remove(&executor->list);
       NQWebExecutor_release(executor);
-      return NULL;
+      return ret;
     }
   }
 
-  return executor;
+  if (result)
+    *result = executor;
+
+  return 0;
+}
+
+NQWebExecutor* NQWebServer_createExecutor(NQWebServer* thiz, size_t sizeInBytes, const struct NQWebExecutorOperations* operations, void* data)
+{
+  NQWebExecutor* executor;
+  int ret = initExecutor(thiz, sizeInBytes, operations, data, &executor);
+  return ret ? NULL : executor;
 }
 
 void NQWebServer_destroyExecutor(NQWebServer* thiz, NQWebExecutor* executor)
 {
   NQ_ASSERT(thiz == executor->server);
   moduleEntryRelease(thiz, executor);
+}
+
+int NQWebServer_loadExecutor(NQWebServer* thiz, const char* name)
+{
+  const struct NQWebExecutorOperations* operations = NQWebExecutorFind(name);
+  if (!operations)
+    return -NQ_ENOENT;
+  return initExecutor(thiz, operations->size, operations, NULL, NULL);
+}
+
+int NQWebServer_loadExecutorWLA(NQWebServer* thiz, const char* name)
+{
+  int ret = NQWebServer_loadExecutor(thiz, name);
+  if (ret == 0)
+    return 0;
+
+  if (ret != -NQ_ENOENT)
+    return ret;
+
+  ret = NQContext_loadModule(NQContext_instance(), "%s_wla", name);
+  if (ret != 0)
+    return ret;
+
+  return NQWebServer_loadExecutor(thiz, name);
 }
 
 void NQWebServerOperationsRegister(NQWebServerOperations* operations)
@@ -962,4 +1010,40 @@ void NQWebServerOperationsRegister(NQWebServerOperations* operations)
 void NQWebServerOperationsUnregister(NQWebServerOperations* operations)
 {
   NQListHead_remove(&operations->list);
+}
+
+static NQ_MUTEX_DEFINE(s_executorMutex);
+static NQ_LISTHEAD_DEFINE(s_executorList);
+
+struct NQWebExecutorOperations* NQWebExecutorFind(const char* name)
+{
+  NQListHead* iter;
+  struct NQWebExecutorOperations* result = NULL;
+
+  NQMutex_lock(&s_executorMutex);
+  for (iter = s_executorList.next; iter != &s_executorList; iter = iter->next) {
+    struct NQWebExecutorOperations* ops = NQ_CONTAINER_OF(iter, struct NQWebExecutorOperations, list);
+    if (!NQStrcmp(ops->name, name)) {
+      result = ops;
+      break;
+    }
+  }
+  NQMutex_unlock(&s_executorMutex);
+
+  return result;
+}
+
+int NQWebExecutorRegister(struct NQWebExecutorOperations* ops)
+{
+  NQMutex_lock(&s_executorMutex);
+  NQListHead_addBack(&s_executorList, &ops->list);
+  NQMutex_unlock(&s_executorMutex);
+  return 0;
+}
+
+void NQWebExecutorUnregister(struct NQWebExecutorOperations* ops)
+{
+  NQMutex_lock(&s_executorMutex);
+  NQListHead_remove(&ops->list);
+  NQMutex_unlock(&s_executorMutex);
 }

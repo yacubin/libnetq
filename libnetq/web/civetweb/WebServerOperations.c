@@ -101,7 +101,7 @@ static int requestInit(struct CivetWeRequest* request, NQWebServer* server, stru
 static void requestRelease(struct CivetWeRequest* request)
 {
   if (request->urlQuery) {
-	NQUrlQuery_destroy(request->urlQuery);
+    NQUrlQuery_destroy(request->urlQuery);
   }
 
   NQWebRequest_finalize(&request->base);
@@ -288,26 +288,26 @@ static int websocketRecive(struct mg_connection* conn, int opcode, char* data, s
   unsigned flags;
   switch (opcode & 0x0f) {
   case MG_WEBSOCKET_OPCODE_CONTINUATION:
-	flags = WEB_WSOPCODE_CONTINUATION;
-	break;
+    flags = WEB_WSOPCODE_CONTINUATION;
+    break;
   case MG_WEBSOCKET_OPCODE_TEXT:
-	flags = WEB_WSOPCODE_TEXT;
-	break;
+    flags = WEB_WSOPCODE_TEXT;
+    break;
   case MG_WEBSOCKET_OPCODE_BINARY:
-	flags = WEB_WSOPCODE_BINARY;
-	break;
+    flags = WEB_WSOPCODE_BINARY;
+    break;
   case MG_WEBSOCKET_OPCODE_CONNECTION_CLOSE:
-	flags = WEB_WSOPCODE_CONNECTION_CLOSE;
-	break;
+    flags = WEB_WSOPCODE_CONNECTION_CLOSE;
+    break;
   case MG_WEBSOCKET_OPCODE_PING:
-	flags = WEB_WSOPCODE_PING;
-	break;
+    flags = WEB_WSOPCODE_PING;
+    break;
   case MG_WEBSOCKET_OPCODE_PONG:
-	flags = WEB_WSOPCODE_PONG;
-	break;
+    flags = WEB_WSOPCODE_PONG;
+    break;
   default:
-	flags = (unsigned)opcode;
-	break;
+    flags = (unsigned)opcode;
+    break;
   }
 
   NQWebSocket_doReceive(ctx->socket, (uint8_t*)data, datasize, flags);
@@ -342,20 +342,20 @@ static int requestHandler(struct mg_connection* conn, void* userdata)
 
   const char* host = mg_get_header(conn, NQHTTP_HEADER_HOST);
   if (host == NULL) {
-	mg_send_http_error(conn, NQ_HTTP_NOT_FOUND, "Not found");
-	return NQ_HTTP_NOT_FOUND;
+    mg_send_http_error(conn, NQ_HTTP_NOT_FOUND, "Not found");
+    return NQ_HTTP_NOT_FOUND;
   }
 
   struct WebContextCivetWeb context;
   if (!contextInit(&context, server, conn)) {
-	mg_send_http_error(conn, NQ_HTTP_INTERNAL_SERVER_ERROR, "Server error");
-	return NQ_HTTP_INTERNAL_SERVER_ERROR;
+    mg_send_http_error(conn, NQ_HTTP_INTERNAL_SERVER_ERROR, "Server error");
+    return NQ_HTTP_INTERNAL_SERVER_ERROR;
   }
 
   if (!NQWebServer_initRequest(server, &context.request.base)) {
-	contextFinalize(&context);
-	mg_send_http_error(conn, NQ_HTTP_NOT_FOUND, "Not found");
-	return NQ_HTTP_NOT_FOUND;
+    contextFinalize(&context);
+    mg_send_http_error(conn, NQ_HTTP_NOT_FOUND, "Not found");
+    return NQ_HTTP_NOT_FOUND;
   }
 
   NQWebRequest* request = &context.request.base;
@@ -364,32 +364,32 @@ static int requestHandler(struct mg_connection* conn, void* userdata)
   NQHttpStatistics_inc(server->statistics, NQWebRequest_method(request), NQWebRequest_url(request));
   char receiveBuffer[2048];
   while (true) {
-	int ret = mg_read(conn, receiveBuffer, sizeof(receiveBuffer));
-	if (ret == 0)
-	  break;
-	if (ret < 0) {
-	  mg_send_http_error(conn, NQ_HTTP_INTERNAL_SERVER_ERROR, "Server error");
-	  return NQ_HTTP_INTERNAL_SERVER_ERROR;
-	}
-	if (request->operations->receive) {
-	  size_t n = request->operations->receive(request, receiveBuffer, ret);
-	}
+    int ret = mg_read(conn, receiveBuffer, sizeof(receiveBuffer));
+    if (ret == 0)
+      break;
+    if (ret < 0) {
+      mg_send_http_error(conn, NQ_HTTP_INTERNAL_SERVER_ERROR, "Server error");
+      return NQ_HTTP_INTERNAL_SERVER_ERROR;
+    }
+    if (request->operations->receive) {
+      size_t n = request->operations->receive(request, receiveBuffer, ret);
+    }
   }
 
   int statusCode = NQ_HTTP_OK;
   if (request->operations && request->operations->handler) {
-	statusCode = request->operations->handler(request, response);
-	NQWebResponse_flush(response);
+    statusCode = request->operations->handler(request, response);
+    NQWebResponse_flush(response);
   }
 
   mg_response_header_start(conn, statusCode);
   NQKeyValIter* iter = NQKeyVal_begin(context.response.headers);
   while (iter != NULL) {
-	const char* key = NQKeyValIter_key(iter);
-	const char* val = NQKeyValIter_val(iter);
+    const char* key = NQKeyValIter_key(iter);
+    const char* val = NQKeyValIter_val(iter);
 
-	mg_response_header_add(conn, key, val, -1);
-	iter = NQKeyValIter_next(iter);
+    mg_response_header_add(conn, key, val, -1);
+    iter = NQKeyValIter_next(iter);
   }
   mg_response_header_send(conn);
 
@@ -413,14 +413,14 @@ static int logAccess(const struct mg_connection* conn, const char* message)
   return 1;
 }
 
-static NQMutex g_mutex = NQ_MUTEX_INIT;
+static NQMutex g_mutex = NQ_MUTEX_INIT(g_mutex);
 static unsigned g_initCounter = 0;
 
 static bool serverInit(NQWebServer* thiz)
 {
   NQMutex_lock(&g_mutex);
   if (g_initCounter++ == 0)
-	mg_init_library(0);
+    mg_init_library(0);
   thiz->userdata = NULL;
   NQMutex_unlock(&g_mutex);
   return true;
@@ -464,8 +464,8 @@ static int serverStart(NQWebServer* thiz)
 
   struct mg_context* ctx = mg_start2(&initData, &errorData);
   if (!ctx) {
-	NQ_LOGE("Cannot start server: %s", errBuf);
-	return -NQ_ENOMEM;
+    NQ_LOGE("Cannot start server: %s", errBuf);
+    return -NQ_ENOMEM;
   }
 
   mg_set_auth_handler(ctx, "/", authorizationHandler, thiz);

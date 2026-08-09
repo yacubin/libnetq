@@ -14,7 +14,6 @@
 #include <libnetq/string/String.h>
 #include <libnetq/HttpHeader.h>
 #include <libnetq/ByteBuffer.h>
-#include <libnetq/json/JSONWriter.h>
 #include <libnetq/MediaType.h>
 #include <libnetq/web/JsonRpcTypes.h>
 #include <libnetq/Env.h>

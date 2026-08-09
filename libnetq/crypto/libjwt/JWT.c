@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <jwt.h>
 
-#include <libnetq/string/String.h>
+#include <libnetq/string/StringRange.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/ErrorCode.h>
 #include <libnetq/MinMax.h>
@@ -24,10 +24,10 @@
 struct NQJWT {
   jwt_alg_t algid;
   jwt_t* jwt;
-  NQStringVec token;
+  NQStringRange token;
 };
 
-static void clearToken(NQStringVec* token)
+static void clearToken(NQStringRange* token)
 {
   if (token->characters != NULL) {
     jwt_free_str((char*)token->characters);

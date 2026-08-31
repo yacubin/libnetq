@@ -15,18 +15,14 @@
 #include <linux/fs.h>
 
 #include <libnetq/Assert.h>
+#include <libnetq/Log.h>
 #include <libnetq/ErrorCode.h>
 
-NQFileHandle NQFileOpen(const char* path, NQFileOpenMode mode)
+int NQFileOpen(const char* path, NQFileOpenMode mode, NQFileHandle* result)
 {
-  int flags;
+  NQ_ASSERT(path && result);
 
-  if (path == NULL) {
-    NQ_ASSERT_NOT_REACHED();
-    return ERR_PTR(-NQ_EINVAL);
-  }
-
-  flags = 0;
+  int flags = 0;
   switch (mode) {
   case NQ_FOPEN_READ:
     flags |= O_RDONLY;
@@ -38,10 +34,18 @@ NQFileHandle NQFileOpen(const char* path, NQFileOpenMode mode)
 
   default:
     NQ_ASSERT_NOT_REACHED();
-    return ERR_PTR(-NQ_EINVAL);
+    return -NQ_EINVAL;
   }
 
-  return filp_open(path, flags, 0666);
+  struct file* filp = filp_open(path, flags, 0666);
+  if (IS_ERR(filp)) {
+    long err = PTR_ERR(filp);
+    NQ_LOGE("filp_open failed: %li", err);
+    return (int)err;
+  }
+
+  *result = filp;
+  return 0;
 }
 
 void NQFileClose(NQFileHandle handle)

@@ -33,6 +33,7 @@ extern "C" {
 
 #define NQIsPathSeparator(c) ((c) == NQ_PATH_SEPARATOR)
 
+#define NQ_ROOT_DIR_STR "/"
 #define NQ_PATH_CURRENT_DIR_STR "."
 #define NQ_PATH_PARENT_DIR_STR  ".."
 

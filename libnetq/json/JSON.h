@@ -66,8 +66,13 @@ NQ_EXPORT const char* NQJSON_asString(const NQJSON* json);
 NQ_EXPORT size_t NQJSON_stringLength(const NQJSON*);
 
 NQ_EXPORT size_t NQJSON_arraySize(const NQJSON*);
-NQ_EXPORT NQJSON* NQJSON_arrayAt(NQJSON*, size_t index);
+NQ_EXPORT NQJSON* NQJSON_arrayGet(const NQJSON*, size_t index);
+NQ_EXPORT bool NQJSON_arrayGetBool(const NQJSON*, size_t index, bool* value);
+NQ_EXPORT bool NQJSON_arrayGetInt64(const NQJSON*, size_t index, int64_t* value);
+NQ_EXPORT bool NQJSON_arrayGetDouble(const NQJSON*, size_t index, double* value);
+NQ_EXPORT bool NQJSON_arrayGetString(const NQJSON*, size_t index, const char** value);
 NQ_EXPORT bool NQJSON_arrayAdd(NQJSON*, NQJSON* item);
+
 NQ_EXPORT NQJSON* NQJSON_objectGet(const NQJSON*, const char* key);
 NQ_EXPORT bool NQJSON_objectGetBool(const NQJSON*, const char* name, bool* value);
 NQ_EXPORT bool NQJSON_objectGetInt64(const NQJSON*, const char* name, int64_t* value);

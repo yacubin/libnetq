@@ -179,7 +179,7 @@ size_t NQJSON_arraySize(const NQJSON* json)
   return (size_t)cJSON_GetArraySize((const cJSON*)json);
 }
 
-NQJSON* NQJSON_arrayAt(NQJSON* json, size_t index)
+NQJSON* NQJSON_arrayGet(const NQJSON* json, size_t index)
 {
   return cJSON_GetArrayItem(json, (int)index);
 }
@@ -196,7 +196,7 @@ NQJSON* NQJSON_objectGet(const NQJSON* json, const char* key)
 
 bool NQJSON_objectSet(NQJSON* json, const char* key, NQJSON* item)
 {
-  return cJSON_AddItemReferenceToObject(json, key, item) != NULL;
+  return cJSON_AddItemReferenceToObject(json, key, item) ? true : false;
 }
 
 bool NQJSON_objectSetBool(NQJSON* json, const char* key, bool value)
@@ -206,12 +206,12 @@ bool NQJSON_objectSetBool(NQJSON* json, const char* key, bool value)
 
 bool NQJSON_objectSetInt64(NQJSON* json, const char* key, int64_t value)
 {
-  return cJSON_AddNumberToObject(json, key, value) != NULL;
+  return cJSON_AddNumberToObject(json, key, (double)value) != NULL;
 }
 
 bool NQJSON_objectSetDouble(NQJSON* json, const char* key, double value)
 {
-  return cJSON_AddNumberToObject(json, key, (int64_t)value) != NULL;
+  return cJSON_AddNumberToObject(json, key, value) != NULL;
 }
 
 bool NQJSON_objectSetString(NQJSON* json, const char* key, const char* value)

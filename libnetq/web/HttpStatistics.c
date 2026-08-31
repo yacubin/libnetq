@@ -13,20 +13,17 @@
 #include <libnetq/String.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Limits.h>
+#include <libnetq/List.h>
 #include <libnetq/Hash.h>
 #include <libnetq/Random.h>
 
 #define kItemDataCount (1 << 6)
 
-struct WebStatisticIter {
-  struct WebStatisticIter* next;
+struct WebStatisticEntry {
+  volatile uint32_t counter;
+  NQSList slist;
   uint32_t ulen;
   uint32_t hash;
-};
-
-struct WebStatisticData {
-  struct WebStatisticIter base;
-  volatile uint32_t counter;
   char method[8];
   char url[1];
 };
@@ -34,14 +31,14 @@ struct WebStatisticData {
 struct NQHttpStatistics {
   uint32_t mask;
   uint32_t count;
-  struct WebStatisticIter data[1];
+  NQSList entries[1];
 };
 
 NQHttpStatistics* NQHttpStatistics_create(void)
 {
   NQHttpStatistics* thiz;
 
-  thiz = (NQHttpStatistics*)NQMalloc(sizeof(*thiz) + sizeof(thiz->data) * (kItemDataCount - 1));
+  thiz = (NQHttpStatistics*)NQMalloc(sizeof(*thiz) + sizeof(thiz->entries) * (kItemDataCount - 1));
   if (thiz == NULL)
     return NULL;
 
@@ -49,9 +46,7 @@ NQHttpStatistics* NQHttpStatistics_create(void)
   thiz->count = 0;
 
   for (size_t i = 0; i < kItemDataCount; i++) {
-    thiz->data[i].ulen = 0;
-    thiz->data[i].hash = 0;
-    thiz->data[i].next = ((i + 1) == kItemDataCount) ? NULL : &thiz->data[i + 1];
+    NQSList_init(&thiz->entries[i]);
   }
 
   return thiz;
@@ -59,56 +54,55 @@ NQHttpStatistics* NQHttpStatistics_create(void)
 
 void NQHttpStatistics_destroy(NQHttpStatistics* thiz)
 {
-  struct WebStatisticIter* iter = &thiz->data[0];
-  while (thiz->count != 0) {
-    struct WebStatisticIter* next = iter->next;
-    if (iter->ulen != 0) {
-      NQFree(iter);
-      thiz->count--;
+  for (size_t i = 0; i < kItemDataCount; i++) {
+    NQSList* iter = thiz->entries[i].next;
+    while (iter != NULL) {
+      struct WebStatisticEntry* entry = NQ_CONTAINER_OF(iter, struct WebStatisticEntry, slist);
+      iter = entry->slist.next;
+      NQFree(entry);
     }
-    iter = next;
   }
   NQFree(thiz);
 }
 
 bool NQHttpStatistics_add(NQHttpStatistics* thiz, const char* method, const char* url)
 {
-  struct WebStatisticData* curr;
-  size_t mlen = strlen(method);
-  if (mlen == 0 || sizeof(curr->method) < mlen)
+  struct WebStatisticEntry* newEntry;
+  size_t mlen = NQStrlen(method);
+  if (mlen == 0 || mlen >= sizeof(newEntry->method))
     return false;
 
-  size_t ulen = strlen(url);
+  size_t ulen = NQStrlen(url);
   if (ulen == 0 || NQ_UINT32_MAX < ulen)
     return false;
 
-  struct WebStatisticData* item;
-  item = (struct WebStatisticData*)NQMalloc(sizeof(*item) + ulen);
-  if (item == NULL)
+  newEntry = (struct WebStatisticEntry*)NQMalloc(sizeof(*newEntry) + ulen);
+  if (newEntry == NULL)
     return false;
 
-  item->counter = 0;
-  memcpy(item->method, method, mlen + 1);
-  item->base.ulen = (uint32_t)ulen;
-  memcpy(item->url, url, ulen + 1);
-  item->base.hash = NQHashString(url, ulen);
-  uint32_t index = item->base.hash & thiz->mask;
+  newEntry->counter = 0;
+  memcpy(newEntry->method, method, mlen + 1);
+  newEntry->ulen = (uint32_t)ulen;
+  memcpy(newEntry->url, url, ulen + 1);
+  newEntry->hash = NQHashString(url, ulen);
+  uint32_t index = newEntry->hash & thiz->mask;
 
-  struct WebStatisticIter* next = thiz->data[index].next;
-  struct WebStatisticIter* prev = &item->base;
-  item->base.next = next;
-  thiz->data[index].next = prev;
-  while (next != NULL && next->ulen != 0) {
-    if ((next->hash == item->base.hash) && (next->ulen == ulen)) {
-      curr = (struct WebStatisticData*)next;
-      if (memcmp(curr->method, method, mlen) == 0 && memcmp(curr->url, url, ulen) == 0) {
-        prev->next = next->next;
-        NQFree(next);
+  NQSList* iter = thiz->entries[index].next;
+  NQSList* prev = &newEntry->slist;
+  newEntry->slist.next = iter;
+  thiz->entries[index].next = prev;
+
+  while (iter != NULL) {
+    struct WebStatisticEntry* entry = NQ_CONTAINER_OF(iter, struct WebStatisticEntry, slist);
+    if ((entry->hash == newEntry->hash) && (entry->ulen == newEntry->ulen)) {
+      if (memcmp(entry->method, method, mlen + 1) == 0 && memcmp(entry->url, url, ulen) == 0) {
+        prev->next = iter->next;
+        NQFree(entry);
         return true;
       }
     }
-    prev = next;
-    next = next->next;
+    prev = &entry->slist;
+    iter = entry->slist.next;
   }
 
   thiz->count++;
@@ -117,25 +111,24 @@ bool NQHttpStatistics_add(NQHttpStatistics* thiz, const char* method, const char
 
 bool NQHttpStatistics_inc(NQHttpStatistics* thiz, const char* method, const char* url)
 {
-  struct WebStatisticData* curr;
-
-  size_t mlen = strlen(method);
-  if (mlen == 0 || sizeof(curr->method) < mlen)
+  struct WebStatisticEntry* entry;
+  size_t mlen = NQStrlen(method);
+  if (mlen == 0 || sizeof(entry->method) < mlen)
     return false;
 
-  size_t ulen = strlen(url);
+  size_t ulen = NQStrlen(url);
   if (ulen == 0)
     return false;
 
   uint32_t hash = NQHashString(url, ulen);
   uint32_t index = hash & thiz->mask;
 
-  struct WebStatisticIter* iter = thiz->data[index].next;
-  while (iter != NULL && iter->ulen != 0) {
-    if (iter->hash == hash && iter->ulen == ulen) {
-      curr = (struct WebStatisticData*)iter;
-      if (memcmp(curr->method, method, mlen) == 0 && memcmp(curr->url, url, ulen) == 0) {
-        curr->counter++;
+  NQSList* iter = thiz->entries[index].next;
+  while (iter != NULL) {
+    entry = NQ_CONTAINER_OF(iter, struct WebStatisticEntry, slist);
+    if (entry->hash == hash && entry->ulen == ulen) {
+      if (memcmp(entry->method, method, mlen) == 0 && memcmp(entry->url, url, ulen) == 0) {
+        entry->counter++;
         return true;
       }
     }
@@ -150,23 +143,25 @@ bool NQHttpStatistics_writeTo(NQHttpStatistics* thiz, NQJSONWriter* writer)
   if (!NQJSONWriter_writeArrayBegin(writer))
     return false;
 
-  for (struct WebStatisticIter* iter = thiz->data[0].next; iter != NULL ;iter = iter->next) {
-    if (iter->ulen != 0) {
-      struct WebStatisticData* curr = (struct WebStatisticData*)iter;
+  for (size_t i = 0; i < kItemDataCount; i++) {
+    NQSList* iter = thiz->entries[i].next;
+    while (iter != NULL) {
+      struct WebStatisticEntry* entry = NQ_CONTAINER_OF(iter, struct WebStatisticEntry, slist);
       if (!NQJSONWriter_writeObjectBegin(writer))
         return false;
 
-      if (!NQJSONWriter_writeKeyString(writer, "url", curr->url))
+      if (!NQJSONWriter_writeKeyString(writer, "url", entry->url))
         return false;
 
-      if (!NQJSONWriter_writeKeyString(writer, "method", curr->method))
+      if (!NQJSONWriter_writeKeyString(writer, "method", entry->method))
         return false;
 
-      if (!NQJSONWriter_writeKeyUint32(writer, "counter", curr->counter))
+      if (!NQJSONWriter_writeKeyUint32(writer, "counter", entry->counter))
         return false;
 
       if (!NQJSONWriter_writeObjectEnd(writer))
         return false;
+      iter = entry->slist.next;
     }
   }
 

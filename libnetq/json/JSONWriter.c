@@ -600,7 +600,7 @@ bool NQJSONWriter_writeJSON(NQJSONWriter* writer, NQJSON* json)
     success = NQJSONWriter_writeArrayBegin(writer);
     size_t size = NQJSON_arraySize(json);
     for (size_t index = 0; index < size; index++)
-      success &= NQJSONWriter_writeJSON(writer, NQJSON_arrayAt(json, index));
+      success &= NQJSONWriter_writeJSON(writer, NQJSON_arrayGet(json, index));
     success &= NQJSONWriter_writeArrayEnd(writer);
   }
   else if (NQJSON_isString(json))

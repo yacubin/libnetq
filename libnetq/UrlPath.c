@@ -335,12 +335,17 @@ bool NQIsUrlPathPattern(const char* pattern)
 
 bool NQUrlPathStartsWith(const char* path, const char* search)
 {
+  char lastChar = '\0';
   while (*search) {
-    if (*path == '\0' || *path != *search)
+    lastChar = *path;
+    if (lastChar == '\0' || lastChar != *search)
       return false;
     path++;
     search++;
   }
 
-  return *path == '\0' || NQIsPathSeparator(*path);
+  if (*path == '\0' || NQIsPathSeparator(*path))
+    return true;
+
+  return NQIsPathSeparator(lastChar);
 }

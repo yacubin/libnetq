@@ -17,8 +17,9 @@ struct NQMutex {
   int dummy;
 };
 
+#define NQ_MUTEX_INIT(mutexname) { 0 }
 #define NQ_MUTEX_DEFINE(mutexname) \
-  NQMutex mutexname = { 0 }
+  NQMutex mutexname = NQ_MUTEX_INIT(mutexname)
 
 static inline int NQMutex_init(NQMutex* thiz)
 {

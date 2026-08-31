@@ -15,6 +15,7 @@
 #include <libnetq/Path.h>
 #include <libnetq/Limits.h>
 #include <libnetq/Log.h>
+#include <libnetq/ErrorCode.h>
 #include <libnetq/Assert.h>
 
 static HANDLE NQFileOpenImpl(const char* path, DWORD dwDesiredAccess, DWORD dwShareMode,
@@ -27,8 +28,10 @@ static HANDLE NQFileOpenImpl(const char* path, DWORD dwDesiredAccess, DWORD dwSh
   return CreateFileA(path, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 }
 
-NQFileHandle NQFileOpen(const char* path, NQFileOpenMode mode)
+int NQFileOpen(const char* path, NQFileOpenMode mode, NQFileHandle* result)
 {
+  NQ_ASSERT(path && result);
+
   DWORD desiredAccess;
   DWORD creationDisposition;
   DWORD shareMode;
@@ -48,15 +51,18 @@ NQFileHandle NQFileOpen(const char* path, NQFileOpenMode mode)
 
   default:
     NQ_ASSERT_NOT_REACHED();
-    return NQ_INVALID_FILE;
+    return -NQ_EINVAL;
   }
 
   NQFileHandle handle = NQFileOpenImpl(path, desiredAccess, shareMode, 0, creationDisposition, FILE_ATTRIBUTE_NORMAL, 0);
   if (handle == INVALID_HANDLE_VALUE) {
-    NQ_LOGE("CreateFile returned %u", (uint32_t)GetLastError());
+    int ret = GetLastError();
+    NQ_LOGE("CreateFile returned %i", -ret);
+    return -ret;
   }
 
-  return handle;
+  *result = handle;
+  return 0;
 }
 
 void NQFileClose(NQFileHandle handle)
@@ -135,13 +141,13 @@ long long NQFileGetSize(NQFileHandle handle)
   BY_HANDLE_FILE_INFORMATION info;
 
   if (!GetFileInformationByHandle(handle, &info))
-    return false;
+    return -NQGetLastError();
 
   fileSize.HighPart = info.nFileSizeHigh;
   fileSize.LowPart = info.nFileSizeLow;
 
   if (fileSize.QuadPart > NQ_LLONG_MAX)
-    return -1;
+    return -NQ_EOVERFLOW;
 
   return (long long)fileSize.QuadPart;
 }

@@ -88,7 +88,7 @@ typedef enum NQFileSeekOrigin {
   NQ_FSEEK_END
 } NQFileSeekOrigin;
 
-NQ_EXPORT NQFileHandle NQFileOpen(const char* path, NQFileOpenMode mode);
+NQ_EXPORT int NQFileOpen(const char* path, NQFileOpenMode mode, NQFileHandle* result);
 NQ_EXPORT void NQFileClose(NQFileHandle handle);
 NQ_EXPORT int NQFileRead(NQFileHandle handle, void* data, size_t size);
 NQ_EXPORT int NQFileWrite(NQFileHandle handle, const void* data, size_t size);

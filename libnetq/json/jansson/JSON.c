@@ -187,7 +187,7 @@ size_t NQJSON_arraySize(const NQJSON* json)
   return json_array_size(json);
 }
 
-NQJSON* NQJSON_arrayAt(NQJSON* json, size_t index)
+NQJSON* NQJSON_arrayGet(const NQJSON* json, size_t index)
 {
   return json_array_get(json, index);
 }

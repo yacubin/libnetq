@@ -16,46 +16,94 @@
 #include <libnetq/string/StringPrint.h>
 #include <libnetq/json/JSONWriter.h>
 
+static inline bool jsonToBool(const NQJSON* json, bool* value)
+{
+  if (!NQJSON_isBool(json))
+    return false;
+  if (value)
+    *value = NQJSON_asBool(json);
+  return true;
+}
+
+static inline bool jsonToInt64(const NQJSON* json, int64_t* value)
+{
+  if (!NQJSON_isInt64(json))
+    return false;
+  if (value)
+    *value = NQJSON_asInt64(json);
+  return true;
+}
+
+#ifdef NQ_USE_FLOATING_POINT
+static inline bool jsonToDouble(const NQJSON* json, double* value)
+{
+  if (!NQJSON_isDouble(json))
+    return false;
+  if (value)
+    *value = NQJSON_asDouble(json);
+  return true;
+}
+#endif
+
+static inline bool jsonToString(const NQJSON* json, const char** value)
+{
+  if (!NQJSON_isString(json))
+    return false;
+  if (value)
+    *value = NQJSON_asString(json);
+  return true;
+}
+
+bool NQJSON_arrayGetBool(const NQJSON* json, size_t index, bool* value)
+{
+  const NQJSON* item = NQJSON_arrayGet(json, index);
+  return jsonToBool(item, value);
+}
+
+bool NQJSON_arrayGetInt64(const NQJSON* json, size_t index, int64_t* value)
+{
+  const NQJSON* item = NQJSON_arrayGet(json, index);
+  return jsonToInt64(item, value);
+}
+
+#ifdef NQ_USE_FLOATING_POINT
+bool NQJSON_arrayGetDouble(const NQJSON* json, size_t index, double* value)
+{
+  const NQJSON* item = NQJSON_arrayGet(json, index);
+  return jsonToDouble(item, value);
+}
+#endif
+
+bool NQJSON_arrayGetString(const NQJSON* json, size_t index, const char** value)
+{
+  const NQJSON* item = NQJSON_arrayGet(json, index);
+  return jsonToString(item, value);
+}
+
 bool NQJSON_objectGetBool(const NQJSON* json, const char* name, bool* value)
 {
   const NQJSON* item = NQJSON_objectGet(json, name);
-  if (!NQJSON_isBool(item))
-    return false;
-  if (value)
-    *value = NQJSON_asBool(item);
-  return true;
+  return jsonToBool(item, value);
 }
 
 bool NQJSON_objectGetInt64(const NQJSON* json, const char* name, int64_t* value)
 {
   const NQJSON* item = NQJSON_objectGet(json, name);
-  if (!NQJSON_isInt64(item))
-    return false;
-  if (value)
-    *value = NQJSON_asInt64(item);
-  return true;
+  return jsonToInt64(item, value);
 }
 
 #ifdef NQ_USE_FLOATING_POINT
 bool NQJSON_objectGetDouble(const NQJSON* json, const char* name, double* value)
 {
   const NQJSON* item = NQJSON_objectGet(json, name);
-  if (!NQJSON_isDouble(item))
-    return false;
-  if (value)
-    *value = NQJSON_asDouble(item);
-  return true;
+  return jsonToDouble(item, value);
 }
 #endif
 
 bool NQJSON_objectGetString(const NQJSON* json, const char* name, const char** value)
 {
   const NQJSON* item = NQJSON_objectGet(json, name);
-  if (!NQJSON_isString(item))
-    return false;
-  if (value)
-    *value = NQJSON_asString(item);
-  return true;
+  return jsonToString(item, value);
 }
 
 static bool bufferWrite(void* userdata, const char* characters, size_t length)

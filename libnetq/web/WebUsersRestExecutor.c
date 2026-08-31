@@ -8,7 +8,7 @@
  */
 
 #include "config.h"
-#include "libnetq/web/WebRestUsersApi.h"
+#include "libnetq/web/WebUsersRestExecutor.h"
 
 #include <libnetq/Malloc.h>
 #include <libnetq/Time.h>
@@ -24,13 +24,6 @@
 #include <libnetq/MediaType.h>
 #include <libnetq/ErrorCode.h>
 #include <libnetq/Log.h>
-
-struct NQWebRestUsersApi {
-  NQWebExecutor executor;
-  struct NQWebRequestListener signupListener;
-  struct NQWebRequestListener loginListener;
-  NQSQLiteDatabase* database;
-};
 
 struct NQWebUserApiRequestModule {
   struct NQWebServerModuleOperations* module;
@@ -154,11 +147,11 @@ static bool buildJWT(struct JWTClaims* claims, const void* seckey, size_t sklen,
 
 static int commonInit(NQWebRequest* request, void* data)
 {
-  struct NQWebRestUsersApi* userApi = (NQWebRestUsersApi*)data;
+  struct NQWebUsersRestExecutor* userApi = (NQWebUsersRestExecutor*)data;
   struct UserApiRequest* uas = (struct UserApiRequest*)NQMalloc(sizeof(*uas));
   if (uas == NULL)
     return -NQ_ENOMEM;
-  uas->database = userApi->database;
+  uas->database = userApi->listeners.database;
   NQStringPrint_init(&uas->recvBuffer);
   request->userdata = uas;
   return 0;
@@ -272,63 +265,70 @@ static const NQWebRequestOperations kLoginOps = {
   .release = commonPostRelease,
 };
 
-static int restApiInit(NQWebExecutor* restApi, void* data)
+int NQWebUsersRestListenersInit(NQWebExecutor* executor, NQWebUsersRestListeners* listeners, const NQWebUsersRestParams* params)
 {
-  struct NQWebRestUsersParams* params = (struct NQWebRestUsersParams*)data;
-  if (params->databasePath == NULL)
-    return -NQ_EINVAL;
-
-  struct NQWebRestUsersApi* usersApi = NQ_CONTAINER_OF(restApi, struct NQWebRestUsersApi, executor);
-  usersApi->database = NQSQLiteDatabase_open(params->databasePath, kNQSQLiteOpenCreateReadWrite);
-  if (usersApi->database == NULL) {
+  listeners->database = NQSQLiteDatabase_open(params->databasePath, kNQSQLiteOpenCreateReadWrite);
+  if (listeners->database == NULL) {
     return -NQ_EIO;
   }
 
-  if (!NQUserDataStoreInit(usersApi->database)) {
-    NQSQLiteDatabase_release(usersApi->database);
+  if (!NQUserDataStoreInit(listeners->database)) {
+    NQSQLiteDatabase_release(listeners->database);
     return -NQ_EIO;
   }
 
-  int ret = NQWebExecutor_addRequestListener(&usersApi->executor, &usersApi->signupListener, &kSignupOps, usersApi, NQ_HTTP_POST, params->signupUrl);
+  int ret = NQWebExecutor_addRequestListener(executor, &listeners->signupListener, &kSignupOps, listeners, NQ_HTTP_POST, params->signupUrl);
   if (ret) {
-    NQUserDataStoreExit(usersApi->database);
-    NQSQLiteDatabase_release(usersApi->database);
+    NQUserDataStoreExit(listeners->database);
+    NQSQLiteDatabase_release(listeners->database);
     return ret;
   }
 
-  ret = NQWebExecutor_addRequestListener(&usersApi->executor, &usersApi->loginListener, &kLoginOps, usersApi, NQ_HTTP_POST, params->loginUrl);
+  ret = NQWebExecutor_addRequestListener(executor, &listeners->loginListener, &kLoginOps, listeners, NQ_HTTP_POST, params->loginUrl);
   if (ret) {
-    NQWebExecutor_removeRequestListener(&usersApi->executor, &usersApi->signupListener);
-    NQUserDataStoreExit(usersApi->database);
-    NQSQLiteDatabase_release(usersApi->database);
+    NQWebExecutor_removeRequestListener(executor, &listeners->signupListener);
+    NQUserDataStoreExit(listeners->database);
+    NQSQLiteDatabase_release(listeners->database);
     return ret;
   }
 
   return 0;
 }
 
-static void restApiRelease(NQWebExecutor* restApi)
+void NQWebUsersRestListenersFinalize(NQWebExecutor* executor, NQWebUsersRestListeners* listeners)
 {
-  struct NQWebRestUsersApi* usersApi = NQ_CONTAINER_OF(restApi, struct NQWebRestUsersApi, executor);
+  NQWebExecutor_removeRequestListener(executor, &listeners->loginListener);
+  NQWebExecutor_removeRequestListener(executor, &listeners->signupListener);
+  NQUserDataStoreExit(listeners->database);
+  NQSQLiteDatabase_release(listeners->database);
+}
 
-  NQWebExecutor_removeRequestListener(&usersApi->executor, &usersApi->loginListener);
-  NQWebExecutor_removeRequestListener(&usersApi->executor, &usersApi->signupListener);
+static int executorInit(NQWebExecutor* executor, void* data)
+{
+  struct NQWebUsersRestParams* params = (struct NQWebUsersRestParams*)data;
+  if (params->databasePath == NULL)
+    return -NQ_EINVAL;
+  struct NQWebUsersRestExecutor* usersApi = (struct NQWebUsersRestExecutor*)executor;
+  return NQWebUsersRestListenersInit(&usersApi->executor, &usersApi->listeners, params);
+}
 
-  NQUserDataStoreExit(usersApi->database);
-  NQSQLiteDatabase_release(usersApi->database);
+static void executorRelease(NQWebExecutor* executor)
+{
+  struct NQWebUsersRestExecutor* usersApi = (struct NQWebUsersRestExecutor*)executor;
+  NQWebUsersRestListenersFinalize(&usersApi->executor, &usersApi->listeners);
 }
 
 static const struct NQWebExecutorOperations kWebRestUsersOps = {
-  .init = restApiInit,
-  .release = restApiRelease,
+  .init = executorInit,
+  .release = executorRelease,
 };
 
-NQWebRestUsersApi* NQWebRestUsersApiCreate(NQWebServer* server, const struct NQWebRestUsersParams* params)
+NQWebUsersRestExecutor* NQWebUsersRestExecutorCreate(NQWebServer* server, const struct NQWebUsersRestParams* params)
 {
-  return (NQWebRestUsersApi*)NQWebServer_createExecutor(server, sizeof(struct NQWebRestUsersApi), &kWebRestUsersOps, (void*)params);
+  return (NQWebUsersRestExecutor*)NQWebServer_createExecutor(server, sizeof(struct NQWebUsersRestExecutor), &kWebRestUsersOps, (void*)params);
 }
 
-void NQWebRestUsersApiDestroy(NQWebServer* server, NQWebRestUsersApi* usersApi)
+void NQWebUsersRestExecutorDestroy(NQWebServer* server, NQWebUsersRestExecutor* usersApi)
 {
   NQWebServer_destroyExecutor(server, &usersApi->executor);
 }

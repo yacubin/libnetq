@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.17
+project(libnetq VERSION 1.0.18
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -500,18 +500,18 @@ set(libnetq_HEADERS
   libnetq/web/JsonRpcTypes.h
   libnetq/web/UrlHost.h
   libnetq/web/WebDirAccess.h
+  libnetq/web/WebEnvRestExecutor.h
   libnetq/web/WebEnvView.h
   libnetq/web/WebFileUrlMap.h
   libnetq/web/WebFileView.h
   libnetq/web/WebHexView.h
   libnetq/web/WebManifest.h
   libnetq/web/WebRestArchApi.h
-  libnetq/web/WebRestEnvApi.h
-  libnetq/web/WebRestUsersApi.h
   libnetq/web/WebRequest.h
   libnetq/web/WebResponse.h
   libnetq/web/WebServer.h
   libnetq/web/WebSocket.h
+  libnetq/web/WebUsersRestExecutor.h
   libnetq/web/WebWriter.h
 
   libnetq/tls/CipherSuite.h
@@ -550,6 +550,7 @@ set(libnetq_HEADERS
   libnetq/Compiler.h
   libnetq/Cond.h
   libnetq/ConstExpr.h
+  libnetq/Context.h
   libnetq/CPU.h
   libnetq/CStrConverter.h
   libnetq/CType.h
@@ -743,16 +744,16 @@ set(libnetq_SOURCES
   libnetq/web/JsonRpcResponse.c
   libnetq/web/UrlHost.c
   libnetq/web/WebDirAccess.c
+  libnetq/web/WebEnvRestExecutor.c
   libnetq/web/WebEnvView.c
   libnetq/web/WebFileUrlMap.c
   libnetq/web/WebFileView.c
   libnetq/web/WebHexView.c
   libnetq/web/WebManifest.c
   libnetq/web/WebRestArchApi.c
-  libnetq/web/WebRestEnvApi.c
-  libnetq/web/WebRestUsersApi.c
   libnetq/web/WebResponse.c
   libnetq/web/WebServer.c
+  libnetq/web/WebUsersRestExecutor.c
 
   libnetq/xml/expat/XMLParser.c
   libnetq/xml/stub/XMLParser.c
@@ -772,6 +773,7 @@ set(libnetq_SOURCES
   libnetq/ByteBuffer.c
   libnetq/CoherentLooper.c
   libnetq/ColorUtils.c
+  libnetq/Context.c
   libnetq/CPU.c
   libnetq/CStrConverter.c
   libnetq/DescSet.c
@@ -1103,6 +1105,11 @@ if (WITH_PSAPI)
 endif ()
 
 if (WITH_OPENSSL)
+  if ("${OPENSSL_SSL_LIBRARY}" MATCHES "(.a|.lib)$")
+    if (TARGET ZLIB::ZLIB)
+      set_target_properties(OpenSSL::SSL PROPERTIES INTERFACE_LINK_LIBRARIES ZLIB::ZLIB)
+    endif ()
+  endif ()
   list(APPEND libnetq_LIBRARIES OpenSSL::SSL OpenSSL::Crypto)
 endif ()
 

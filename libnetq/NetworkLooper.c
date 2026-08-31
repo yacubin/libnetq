@@ -131,7 +131,7 @@ static int wakeupAction(NQSocketHandle handle, int events, void* userdata)
   if (events & NQ_POLLIN) {
     uint64_t event;
     NQEventWakeup_recvUint64(&thiz->wakeup, &event);
-    NQ_ASSERT(event == s_wakeupEvent);
+    NQ_ASSERT(event != 0 && (event % s_wakeupEvent) == 0);
   }
 
   return NQ_POLLIN;

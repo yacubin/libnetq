@@ -33,6 +33,9 @@ extern "C" {
 #elif defined(NQ_OS_UNIX)
 #define NQ_LIBRARY_PATH NQ_POSIX_LIBRARY_PATH
 #define NQ_LIBRARY_EXT NQ_POSIX_LIBRARY_EXT
+#else
+#define NQ_LIBRARY_PATH ""
+#define NQ_LIBRARY_EXT ""
 #endif
 
 typedef void* NQLibrary;

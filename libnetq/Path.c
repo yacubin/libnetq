@@ -607,14 +607,19 @@ const char* NQGetExtname(const char* path)
 
 bool NQPathStartsWith(const char* path, const char* search)
 {
+  char lastChar = '\0';
   while (*search) {
-    if (*path == '\0')
+    lastChar = *path;
+    if (lastChar == '\0')
       return false;
-    if (*path != *search && !(isAnyPathSeparator(*path) && isAnyPathSeparator(*search)))
+    if (lastChar != *search && !(isAnyPathSeparator(lastChar) && isAnyPathSeparator(*search)))
       return false;
     path++;
     search++;
   }
 
-  return *path == '\0' || isAnyPathSeparator(*path);
+  if (*path == '\0' || isAnyPathSeparator(*path))
+    return true;
+
+  return isAnyPathSeparator(lastChar);
 }

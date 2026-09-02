@@ -24,13 +24,17 @@ typedef struct NQWebUsersRestExecutor NQWebUsersRestExecutor;
 struct NQWebUsersRestParams {
   const char* signupUrl;
   const char* loginUrl;
+  const char* deleteUrl;
   const char* databasePath;
+  uint8_t passwordMin;
 };
 
 struct NQWebUsersRestListeners {
   struct NQWebRequestListener signupListener;
   struct NQWebRequestListener loginListener;
+  struct NQWebRequestListener deleteListener;
   NQSQLiteDatabase* database;
+  uint8_t passwordMin;
 };
 
 struct NQWebUsersRestExecutor {

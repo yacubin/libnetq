@@ -112,33 +112,39 @@ static bool buildJWT(struct JWTClaims* claims, const void* seckey, size_t sklen,
 
   if (!NQJWT_claimSetInt64(jwt, NQ_JWT_CLM_ISS, claims->iss)) {
     NQ_LOGE("Failed to set JWT 'iss' claim");
+    NQJWT_release(jwt);
     return false;
   }
 
   if (!NQJWT_claimSetInt64(jwt, NQ_JWT_CLM_EXP, claims->exp)) {
     NQ_LOGE("Failed to set JWT 'exp' claim");
+    NQJWT_release(jwt);
     return false;
   }
 
   n = NQSnprintf(buf, len, "%u", claims->sub);
   if (n < 0 || len <= (size_t)n) {
     NQ_LOGE("Failed to format JWT 'sub' claim");
+    NQJWT_release(jwt);
     return false;
   }
 
   if (!NQJWT_claimSetString(jwt, NQ_JWT_CLM_SUB, buf)) {
     NQ_LOGE("Failed to set JWT 'sub' claim");
+    NQJWT_release(jwt);
     return false;
   }
 
   if (!NQJWT_sign(jwt, seckey, sklen)) {
     NQ_LOGE("Failed to sign JWT");
+    NQJWT_release(jwt);
     return false;
   }
 
   n = NQJWT_token(jwt, buf, len);
   if (n < 0 || len <= (size_t)n) {
     NQ_LOGE("Failed to generate JWT token string");
+    NQJWT_release(jwt);
     return false;
   }
 
@@ -147,20 +153,20 @@ static bool buildJWT(struct JWTClaims* claims, const void* seckey, size_t sklen,
 
 static int commonInit(NQWebRequest* request, void* data)
 {
-  struct NQWebUsersRestExecutor* userApi = (NQWebUsersRestExecutor*)data;
-  struct UserApiRequest* uas = (struct UserApiRequest*)NQMalloc(sizeof(*uas));
-  if (uas == NULL)
+  struct NQWebUsersRestListeners* listeners = (NQWebUsersRestListeners*)data;
+  struct UserApiRequest* userRequest = (struct UserApiRequest*)NQMalloc(sizeof(*userRequest));
+  if (userRequest == NULL)
     return -NQ_ENOMEM;
-  uas->database = userApi->listeners.database;
-  NQStringPrint_init(&uas->recvBuffer);
-  request->userdata = uas;
+  userRequest->database = listeners->database;
+  NQStringPrint_init(&userRequest->recvBuffer);
+  request->userdata = userRequest;
   return 0;
 }
 
 static size_t commonPostReceive(NQWebRequest* request, const char* data, size_t size)
 {
-  struct UserApiRequest* uas = (struct UserApiRequest*)request->userdata;
-  return NQStringPrint_writeAll(&uas->recvBuffer, data, size) ? size : 0;
+  struct UserApiRequest* userRequest = (struct UserApiRequest*)request->userdata;
+  return NQStringPrint_writeAll(&userRequest->recvBuffer, data, size) ? size : 0;
 }
 
 static int commonPostResponse(struct UserApiRequest* uas, const char* email, NQWebResponse* response)

@@ -96,6 +96,8 @@ static int restApiInit(NQWebExecutor* executor, void* data)
   else
     return -NQ_EINVAL;
 
+  NQListHead_init(&restApi->listeners);
+
   uint32_t listenerCount = 0;
   while (true) {
     struct NQWebFileUrlMapItem* item = &params->items[listenerCount];
@@ -142,6 +144,7 @@ static int restApiInit(NQWebExecutor* executor, void* data)
     }
 
     listenerCount++;
+    NQListHead_addBack(&restApi->listeners, &entry->list);
   }
 
   if (listenerCount == 0) {

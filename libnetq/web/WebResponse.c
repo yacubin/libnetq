@@ -58,7 +58,8 @@ void NQWebResponse_finalize(NQWebResponse* thiz)
     NQWebWriter* next = iter->next;
     if (iter->operations->release)
       iter->operations->release(iter);
-    NQFree(iter);
+    if (iter != &thiz->lastWriter)
+      NQFree(iter);
     iter = next;
   }
 

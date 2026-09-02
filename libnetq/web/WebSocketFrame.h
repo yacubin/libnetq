@@ -1,14 +1,14 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023-2025  Yurii Yakubin (yurii.yakubin@gmail.com)
+ * Copyright (c) 2023-2026  Yurii Yakubin (yurii.yakubin@gmail.com)
  *
  * Permission is granted to use, copy, modify, and distribute this software
  * under the MIT License. See LICENSE file for details.
  */
 
-#ifndef _LIBNETQ_WEBSOCKETFRAME_H
-#define _LIBNETQ_WEBSOCKETFRAME_H
+#ifndef _LIBNETQ_WEB_WEBSOCKETFRAME_H
+#define _LIBNETQ_WEB_WEBSOCKETFRAME_H
 
 #include <libnetq/Basic.h>
 #include <libnetq/VA.h>
@@ -113,4 +113,4 @@ static inline size_t NQWebSocketBuffer_size(const NQWebSocketBuffer* thiz)
 }
 #endif
 
-#endif /* _LIBNETQ_WEBSOCKETFRAME_H */
+#endif /* _LIBNETQ_WEB_WEBSOCKETFRAME_H */

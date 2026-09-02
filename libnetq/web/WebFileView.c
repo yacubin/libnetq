@@ -97,7 +97,7 @@ static int onGetRequest(NQWebRequest* request, NQWebResponse* response)
   const char* url = NQWebRequest_url(request);
   const char* relativePath = getRelativePath(fileApi->baseUrl, url);
 
-  if (relativePath == NULL || strstr(url, "//") != NULL) {
+  if (relativePath == NULL || strstr(url, "//") != NULL || strstr(url, "/../") != NULL) {
     NQWebResponse_setHeader(response, NQHTTP_HEADER_LOCATION, fileApi->baseUrl);
     return NQ_HTTP_MOVED_PERMANENTLY;
   }
@@ -125,8 +125,8 @@ static int onGetRequest(NQWebRequest* request, NQWebResponse* response)
       const char* contentType = NQWebServer_getMimeType(server, path);
       NQFileHandle handle;
       int ret = NQFileOpen(path, NQ_FOPEN_READ, &handle);
+      NQStringPrint_finalize(&pathBuf);
       if (ret != 0) {
-        NQStringPrint_finalize(&pathBuf);
         return NQ_HTTP_INTERNAL_SERVER_ERROR;
       }
 

@@ -8,12 +8,12 @@
  */
 
 #include "config.h"
-#include "libnetq/WebSocketCalcAccept.h"
+#include "libnetq/web/WebSocketCalcAccept.h"
 
 #include <libnetq/String.h>
 #include <libnetq/Base64.h>
 #include <libnetq/crypto/SHA1.h>
-#include <libnetq/WebSocketTypes.h>
+#include <libnetq/web/WebSocketTypes.h>
 
 int NQWebSocketCalcAccept(const char* key, char* buf, size_t len)
 {

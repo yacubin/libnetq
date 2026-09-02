@@ -47,6 +47,7 @@
 /* 5xx – Server Errors */
 #define NQ_HTTP_INTERNAL_SERVER_ERROR         500
 #define NQ_HTTP_NOT_IMPLEMENTED               501
+#define NQ_HTTP_BAD_GATEWAY                   502
 #define NQ_HTTP_SERVICE_UNAVAILABLE           503
 
 static inline bool NQIsHttpStatusInformational(int code)

@@ -158,7 +158,7 @@ static bool WebRequest_onMultiPartParser(void* userdata, NQHTTPMultiPartType typ
         if (ctx->inFileState == kContentInit) {
           if (NQStringRangeIsEqual(&formData.name, "file")) {
             NQStringPrint_write(&ctx->filename, formData.filename.characters, formData.filename.length);
-            memcpy(ctx->lastContentType, ctx->contentType, kContentTypeMax);
+            memcpy(ctx->contentType, ctx->lastContentType, kContentTypeMax);
             ctx->inFileState = kContentProcess;
           }
         }

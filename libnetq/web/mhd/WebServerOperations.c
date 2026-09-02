@@ -15,17 +15,17 @@
 #include <microhttpd.h>
 
 #include <libnetq/Malloc.h>
-#include <libnetq/WebSocketCalcAccept.h>
 #include <libnetq/String.h>
 #include <libnetq/HttpHeader.h>
 #include <libnetq/Base64.h>
 #include <libnetq/SocketHandle.h>
-#include <libnetq/WebSocketFrame.h>
 #include <libnetq/BufferBuilder.h>
 #include <libnetq/ErrorCode.h>
 #include <libnetq/Assert.h>
 #include <libnetq/Mutex.h>
 #include <libnetq/URL.h>
+#include <libnetq/web/WebSocketCalcAccept.h>
+#include <libnetq/web/WebSocketFrame.h>
 #include <libnetq/web/WebRequest.h>
 #include <libnetq/web/WebResponse.h>
 #include <libnetq/web/WebServer.h>
@@ -123,9 +123,9 @@ static int requestInit(struct MHDWebRequest* request, const struct MHDRequestPar
   request->base.method = request->method;
   request->base.version = request->version;
 
-  strncpy(request->url, params->url, sizeof(request->url));
-  strncpy(request->method, params->method, sizeof(request->method));
-  strncpy(request->version, params->version, sizeof(request->version));
+  strncpy(request->url, params->url, sizeof(request->url) - 1);
+  strncpy(request->method, params->method, sizeof(request->method) - 1);
+  strncpy(request->version, params->version, sizeof(request->version) - 1);
 
   request->queryParams = NQKeyVal_create();
   request->cookies = NQKeyVal_create();
@@ -169,6 +169,7 @@ static const struct NQWebResponseOperations kResponseOperations = {
 static int responseInit(struct MHDWebResponse* response, NQWebRequest* request)
 {
   NQWebResponse_init(&response->base, &kResponseOperations, request);
+
   response->headers = NQKeyVal_create();
   NQStringPrint_init(&response->buffer);
   return 0;
@@ -178,6 +179,8 @@ static void responseRelease(struct MHDWebResponse* response)
 {
   NQKeyVal_destroy(response->headers);
   NQStringPrint_finalize(&response->buffer);
+
+  NQWebResponse_finalize(&response->base);
 }
 
 static int websocketSend2(struct MHDWebSocket* thiz, const uint8_t* data, size_t size, uint8_t opcode, bool fin)

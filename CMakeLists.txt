@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.12)
-project(libnetq VERSION 1.0.18
+project(libnetq VERSION 1.0.19
   DESCRIPTION "The cross-platform library"
   HOMEPAGE_URL "https://github.com/libnetq/libnetq"
   LANGUAGES "C"
@@ -163,6 +163,7 @@ LNQ_ADD_LIBRARY(SQLite3)
 LNQ_ADD_LIBRARY(CJOSE)
 LNQ_ADD_LIBRARY(LibJWT)
 LNQ_ADD_LIBRARY(MHD)
+LNQ_ADD_LIBRARY(CURL)
 
 if (LibJWT_FOUND AND LibJWT_VERSION VERSION_GREATER_EQUAL "3.0.0")
   if (LNQ_WITH_LIBJWT STREQUAL "AUTO")
@@ -431,6 +432,10 @@ set(libnetq_HEADERS
   libnetq/fs/win32/Stat.h
   libnetq/fs/Stat.h
 
+  libnetq/http/curl/CURLAdapter.h
+  libnetq/http/curl/CURLHeaders.h
+  libnetq/http/HttpRequest.h
+
   libnetq/io/kernel/UIO.h
   libnetq/io/unix/UIO.h
   libnetq/io/ByteBufferChannel.h
@@ -495,6 +500,7 @@ set(libnetq_HEADERS
   libnetq/sync/Once.h
   libnetq/sync/OnceCallback.h
 
+  libnetq/web/civetweb/CivetWebAdapter.h
   libnetq/web/HttpStatistics.h
   libnetq/web/JsonRpcResponse.h
   libnetq/web/JsonRpcTypes.h
@@ -511,6 +517,9 @@ set(libnetq_HEADERS
   libnetq/web/WebResponse.h
   libnetq/web/WebServer.h
   libnetq/web/WebSocket.h
+  libnetq/web/WebSocketCalcAccept.h
+  libnetq/web/WebSocketFrame.h
+  libnetq/web/WebSocketTypes.h
   libnetq/web/WebUsersRestExecutor.h
   libnetq/web/WebWriter.h
 
@@ -642,9 +651,6 @@ set(libnetq_HEADERS
   libnetq/VA.h
   libnetq/Version.h
   libnetq/WakeOnLan.h
-  libnetq/WebSocketCalcAccept.h
-  libnetq/WebSocketFrame.h
-  libnetq/WebSocketTypes.h
   libnetq/Window.h
   libnetq/WindowEvent.h
   libnetq/WindowManager.h
@@ -687,6 +693,10 @@ set(libnetq_SOURCES
   libnetq/dbc/DBCID.c
   libnetq/dbc/DBCJ1939.c
   libnetq/dbc/DBCTypes.c
+
+  libnetq/http/curl/CURLHeaders.c
+  libnetq/http/curl/HttpRequestCURL.c
+  libnetq/http/stub/HttpRequestStub.c
 
   libnetq/fs/kernel/Stat.c
   libnetq/fs/win32/Stat.c
@@ -753,6 +763,8 @@ set(libnetq_SOURCES
   libnetq/web/WebRestArchApi.c
   libnetq/web/WebResponse.c
   libnetq/web/WebServer.c
+  libnetq/web/WebSocketCalcAccept.c
+  libnetq/web/WebSocketFrame.c
   libnetq/web/WebUsersRestExecutor.c
 
   libnetq/xml/expat/XMLParser.c
@@ -849,8 +861,6 @@ set(libnetq_SOURCES
   libnetq/UUID.c
   libnetq/Version.c
   libnetq/WakeOnLan.c
-  libnetq/WebSocketCalcAccept.c
-  libnetq/WebSocketFrame.c
   libnetq/Window.c
   libnetq/WindowManager.c
   libnetq/Zip.c
@@ -869,6 +879,7 @@ set(libnetq_CMAKEFILES
   cmake/FindDBC.cmake
   cmake/FindExpat.cmake
   cmake/FindFreeType.cmake
+  cmake/FindGeoIP.cmake
   cmake/FindGIF.cmake
   cmake/FindGumbo.cmake
   cmake/FindIFF.cmake
@@ -1050,6 +1061,13 @@ else ()
   set(NQCONFIG_USE_STUB_JWT 1)
 endif ()
 
+if (WITH_CURL)
+  set(NQCONFIG_USE_CURL_HTTPREQUESTSYNC 1)
+else ()
+  message("! HttpRequestSync has no implementation")
+  set(NQCONFIG_USE_STUB_HTTPREQUESTSYNC 1)
+endif ()
+
 if (WITH_CIVETWEB)
   list(APPEND libnetq_LIBRARIES CivetWeb::CivetWeb)
 endif ()
@@ -1161,6 +1179,10 @@ if (WITH_MHD)
   list(APPEND libnetq_LIBRARIES MHD::MHD)
 endif ()
 
+if (WITH_CURL)
+  list(APPEND libnetq_LIBRARIES CURL::libcurl)
+endif ()
+
 configure_file(config.h.in "${CMAKE_CURRENT_BINARY_DIR}/config.h" @ONLY)
 configure_file(libnetq/GenConfig.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/GenConfig.h" @ONLY)
 configure_file(libnetq/GenVersion.h.in "${CMAKE_CURRENT_BINARY_DIR}/generated/libnetq/GenVersion.h" @ONLY)
@@ -1199,7 +1221,6 @@ foreach (_header ${libnetq_HEADERS})
 endforeach ()
 
 install(FILES ${libnetq_CMAKEFILES} DESTINATION "${CMAKE_INSTALL_DATADIR}/libnetq/cmake")
-install(FILES ${libnetq_CMAKEFILES} DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/libnetq")
 
 install(TARGETS libnetq
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
@@ -1227,4 +1248,5 @@ message(STATUS "SQLite3  . . . . . . . . . . . . . . . . . . ${WITH_SQLITE3} (HA
 message(STATUS "CJOSE  . . . . . . . . . . . . . . . . . . . ${WITH_CJOSE} (HAVE ${HAVE_CJOSE})")
 message(STATUS "LibJWT . . . . . . . . . . . . . . . . . . . ${WITH_LIBJWT} (HAVE ${HAVE_LIBJWT})")
 message(STATUS "MHD  . . . . . . . . . . . . . . . . . . . . ${WITH_MHD} (HAVE ${HAVE_MHD})")
+message(STATUS "CURL . . . . . . . . . . . . . . . . . . . . ${WITH_CURL} (HAVE ${HAVE_CURL})")
 message(STATUS "Psapi  . . . . . . . . . . . . . . . . . . . ${WITH_PSAPI} (HAVE ${HAVE_PSAPI})")

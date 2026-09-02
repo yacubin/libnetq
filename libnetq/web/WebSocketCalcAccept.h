@@ -7,8 +7,8 @@
  * under the MIT License. See LICENSE file for details.
  */
 
-#ifndef _LIBNETQ_WEBSOCKETCALCACCEPT_H
-#define _LIBNETQ_WEBSOCKETCALCACCEPT_H
+#ifndef _LIBNETQ_WEB_WEBSOCKETCALCACCEPT_H
+#define _LIBNETQ_WEB_WEBSOCKETCALCACCEPT_H
 
 #include <libnetq/Basic.h>
 
@@ -22,4 +22,4 @@ NQ_EXPORT int NQWebSocketCalcAccept(const char* key, char* buf, size_t len);
 }
 #endif
 
-#endif /* _LIBNETQ_WEBSOCKETCALCACCEPT_H */
+#endif /* _LIBNETQ_WEB_WEBSOCKETCALCACCEPT_H */

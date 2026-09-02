@@ -8,7 +8,7 @@
  */
 
 #include "config.h"
-#include "libnetq/WebSocketFrame.h"
+#include "libnetq/web/WebSocketFrame.h"
 
 #include <libnetq/String.h>
 #include <libnetq/BufferBuilder.h>
@@ -17,7 +17,7 @@
 #include <libnetq/MinMax.h>
 #include <libnetq/Sprintf.h>
 #include <libnetq/Assert.h>
-#include <libnetq/WebSocketTypes.h>
+#include <libnetq/web/WebSocketTypes.h>
 
 #define WS_FIN_MASK (0x80)
 #define WS_RSV_MASK (0x70)
@@ -229,13 +229,13 @@ static bool payloadCapacityResize(NQWebSocketBuffer* thiz, uint64_t newPayloadCa
 int NQWebSocketBuffer_vprintf(NQWebSocketBuffer* thiz, const char* format, va_list list)
 {
   va_list listCopy;
-  va_copy(listCopy, list);
 
+  va_copy(listCopy, list);
   int n = vsnprintf((char*)thiz->payloadPtr + thiz->payloadLen, thiz->payloadCapacity - thiz->payloadLen, format, listCopy);
+  va_end(listCopy);
+
   if (n <= 0)
     return n;
-
-  va_end(listCopy);
 
   uint64_t newPayloadLen = thiz->payloadLen + n;
   // For newPayloadLen == payloadCapacity need +1 byte for NIL
@@ -308,7 +308,7 @@ void NQWebSocketBuffer_complete(NQWebSocketBuffer* thiz, uint8_t opcode, bool fi
     flag2 = (WS_LEN1_MASK & WS_LEN64_MARKER);
     len2 = 0;
     len8 = (uint64_t)thiz->payloadLen;
-    thiz->headerSize += sizeof(len2);
+    thiz->headerSize += sizeof(len8);
   }
 
   if (mask) {

@@ -15,10 +15,16 @@
 #include <libnetq/string/String.h>
 #include <libnetq/Assert.h>
 
+static const char s_empty[] = "";
+
 const char* NQCStrEmpty(void)
 {
-  static const char s_cstrEmpty[] = "";
-  return s_cstrEmpty;
+  return s_empty;
+}
+
+const char* NQCStrEnsure(const char* str)
+{
+  return str ? str : s_empty;
 }
 
 void NQCStrFree(const char* str)

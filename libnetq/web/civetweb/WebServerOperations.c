@@ -13,13 +13,12 @@
 
 #ifdef WITH_CIVETWEB
 
-#include <civetweb.h>
+#include <libnetq/web/civetweb/CivetWebAdapter.h>
 
 #include <libnetq/UrlQuery.h>
 #include <libnetq/KeyVal.h>
 #include <libnetq/Malloc.h>
 #include <libnetq/Log.h>
-#include <libnetq/JSON.h>
 #include <libnetq/HttpHeader.h>
 #include <libnetq/HttpStatus.h>
 #include <libnetq/Sprintf.h>
@@ -145,6 +144,8 @@ static void responseRelease(struct CivetWeResponse* response)
 {
   NQKeyVal_destroy(response->headers);
   NQStringPrint_finalize(&response->buffer);
+
+  NQWebResponse_finalize(&response->base);
 }
 
 static bool contextInit(struct WebContextCivetWeb* thiz, NQWebServer* server, struct mg_connection* conn)
@@ -262,7 +263,7 @@ static int websocketConnect(const struct mg_connection* conn, void* userdata)
   }
 
   websocketUpgrade(context->socket, conn);
-  mg_set_user_connection_data(conn, context);
+  mg_set_user_connection_data((struct mg_connection*)conn, context);
   return 0;
 }
 
@@ -387,7 +388,6 @@ static int requestHandler(struct mg_connection* conn, void* userdata)
   while (iter != NULL) {
     const char* key = NQKeyValIter_key(iter);
     const char* val = NQKeyValIter_val(iter);
-
     mg_response_header_add(conn, key, val, -1);
     iter = NQKeyValIter_next(iter);
   }
@@ -413,7 +413,7 @@ static int logAccess(const struct mg_connection* conn, const char* message)
   return 1;
 }
 
-static NQMutex g_mutex = NQ_MUTEX_INIT(g_mutex);
+static NQ_MUTEX_DEFINE(g_mutex);
 static unsigned g_initCounter = 0;
 
 static bool serverInit(NQWebServer* thiz)
@@ -438,7 +438,7 @@ static int serverStart(NQWebServer* thiz)
 {
   uint16_t port = NQUrlHost_port(thiz->host);
   char portBuf[6];
-  snprintf(portBuf, sizeof(portBuf), "%i", port);
+  NQSnprintf(portBuf, sizeof(portBuf), "%i", port);
 
   const char* options[] = {
     "listening_ports",    portBuf,
